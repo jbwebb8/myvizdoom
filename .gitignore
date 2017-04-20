@@ -1,0 +1,14 @@
+# Python
+*.pyd
+*.pyc
+python/*.ini
+
+# Java
+*.jar
+*.class
+
+# Programs
+.vscode
+
+# Backups
+.bak
