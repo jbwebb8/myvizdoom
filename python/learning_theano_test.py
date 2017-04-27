@@ -2,8 +2,12 @@
 # -*- coding: utf-8 -*-
 
 #####################################################################
-# maze_explorer
-# Copied from examples/learning_theano.py
+# Adapted from learning_theano.py (credit: ViZDoom authors)
+# 
+# Recreates DQN consisting of an input layer, two convolutional layers,
+# one fully connected layer, and an output layer. Loads parameters
+# from previously trained network (e.g. learning_theano_train.py) and
+# allows user to watch footage of bot in action.
 #####################################################################
 
 from __future__ import division
@@ -41,11 +45,12 @@ test_episodes_per_epoch = 100
 # Other parameters
 frame_repeat = 12
 resolution = (30, 45)
-episodes_to_watch = 20
+episodes_to_watch = 10
 
-model_savefile = "/tmp/weights.dump"
+param_file_path = "../experiments/linear_track_cues_2/weights_epoch200.dump"
+
 # Configuration file path
-config_file_path = "../config/linear_track.cfg"
+config_file_path = "../config/linear_track_cues.cfg"
 
 # Converts and downsamples the input image
 def preprocess(img):
@@ -193,7 +198,8 @@ def initialize_vizdoom(config_file_path):
     print("Initializing doom...")
     game = DoomGame()
     game.load_config(config_file_path)
-    game.set_mode(Mode.PLAYER)
+    game.set_window_visible(True)
+    game.set_mode(Mode.ASYNC_PLAYER)
     game.set_screen_format(ScreenFormat.GRAY8)
     game.set_screen_resolution(ScreenResolution.RES_640X480)
     game.init()
@@ -213,66 +219,12 @@ memory = ReplayMemory(capacity=replay_memory_size)
 
 net, learn, get_q_values, get_best_action = create_network(len(actions))
 
-print("Starting the training!")
-
-time_start = time()
-for epoch in range(epochs):
-    print("\nEpoch %d\n-------" % (epoch + 1))
-    train_episodes_finished = 0
-    train_scores = []
-
-    print("Training...")
-    game.new_episode()
-    for learning_step in trange(learning_steps_per_epoch):
-        perform_learning_step(epoch)
-        if game.is_episode_finished():
-            score = game.get_total_reward()
-            train_scores.append(score)
-            game.new_episode()
-            train_episodes_finished += 1
-
-    print("%d training episodes played." % train_episodes_finished)
-
-    train_scores = np.array(train_scores)
-
-    print("Results: mean: %.1f±%.1f," % (train_scores.mean(), train_scores.std()), \
-          "min: %.1f," % train_scores.min(), "max: %.1f," % train_scores.max())
-
-    print("\nTesting...")
-    test_episode = []
-    test_scores = []
-    for test_episode in trange(test_episodes_per_epoch):
-        game.new_episode()
-        while not game.is_episode_finished():
-            state = preprocess(game.get_state().screen_buffer)
-            best_action_index = get_best_action(state)
-            game.make_action(actions[best_action_index], frame_repeat)
-        r = game.get_total_reward()
-        test_scores.append(r)
-
-    test_scores = np.array(test_scores)
-    print("Results: mean: %.1f±%.1f," % (
-        test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max())
-
-    print("Saving the network weigths to:", model_savefile)
-    pickle.dump(get_all_param_values(net), open(model_savefile, "wb"))
-
-    print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))
-
-game.close()
-print("======================================")
-print("Loading the network weigths from:", model_savefile)
-print("Training finished. It's time to watch!")
+print("Loading the network weigths from:", param_file_path)
+print("Let's watch!")
 
 # Load the network's parameters from a file
-
-params = pickle.load(open(model_savefile, "rb"))
+params = pickle.load(open(param_file_path, "rb"))
 set_all_param_values(net, params)
-
-# Reinitialize the game with window visible
-game.set_window_visible(True)
-game.set_mode(Mode.ASYNC_PLAYER)
-game.init()
 
 for _ in range(episodes_to_watch):
     game.new_episode()
