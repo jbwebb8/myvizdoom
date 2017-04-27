@@ -1,0 +1,1687 @@
+Last login: Fri Apr 21 13:05:21 on console
+james-webbs-macbook-pro:~ jameswebb$ cd DRL/ViZDoom/examples/python/
+james-webbs-macbook-pro:python jameswebb$ python basic.py
+Traceback (most recent call last):
+  File "basic.py", line 91, in <module>
+    game.init()
+vizdoom.vizdoom.MessageQueueException: Failed to create message queues: Permission denied
+james-webbs-macbook-pro:python jameswebb$ chmod 777 /private/tmp/boost_interprocess/
+chmod: Unable to change file mode on /private/tmp/boost_interprocess/: Operation not permitted
+james-webbs-macbook-pro:python jameswebb$ sudo chmod 777 /private/tmp/boost_interprocess/
+Password:
+james-webbs-macbook-pro:python jameswebb$ python basic.py
+Episode #1
+State #1
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #2
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #3
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #4
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #5
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #6
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #7
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #8
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #9
+Game variables: [ 50.]
+Reward: -6.0
+=====================
+State #10
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #11
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #12
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #13
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #14
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #15
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #16
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #17
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #18
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #19
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #20
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #21
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #22
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #23
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #24
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #25
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #26
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #27
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #28
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #29
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #30
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #31
+Game variables: [ 49.]
+Reward: 100.0
+=====================
+State #32
+Game variables: [ 48.]
+Reward: -1.0
+=====================
+Episode finished.
+Total reward: 64.0
+************************
+Episode #2
+State #1
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #2
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #3
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #4
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #5
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #6
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #7
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #8
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #9
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #10
+Game variables: [ 50.]
+Reward: -6.0
+=====================
+State #11
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #12
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #13
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #14
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #15
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #16
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #17
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+Traceback (most recent call last):
+  File "basic.py", line 126, in <module>
+    r = game.make_action(choice(actions))
+vizdoom.vizdoom.ViZDoomUnexpectedExitException: Controlled ViZDoom instance exited unexpectedly.
+james-webbs-macbook-pro:python jameswebb$ python -m pdb basic.py
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(14)<module>()
+-> from __future__ import print_function
+(Pdb) s
+--Call--
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(48)<module>()
+-> """
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(48)<module>()
+-> """
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(51)<module>()
+-> "nested_scopes",
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(52)<module>()
+-> "generators",
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(53)<module>()
+-> "division",
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(54)<module>()
+-> "absolute_import",
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(55)<module>()
+-> "with_statement",
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(56)<module>()
+-> "print_function",
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(57)<module>()
+-> "unicode_literals",
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(60)<module>()
+-> __all__ = ["all_feature_names"] + all_feature_names
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(66)<module>()
+-> CO_NESTED            = 0x0010   # nested_scopes
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(67)<module>()
+-> CO_GENERATOR_ALLOWED = 0        # generators (obsolete, was 0x1000)
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(68)<module>()
+-> CO_FUTURE_DIVISION   = 0x2000   # division
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(69)<module>()
+-> CO_FUTURE_ABSOLUTE_IMPORT = 0x4000 # perform absolute imports by default
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(70)<module>()
+-> CO_FUTURE_WITH_STATEMENT  = 0x8000   # with statement
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(71)<module>()
+-> CO_FUTURE_PRINT_FUNCTION  = 0x10000   # print function
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(72)<module>()
+-> CO_FUTURE_UNICODE_LITERALS = 0x20000 # unicode string literals
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(74)<module>()
+-> class _Feature:
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(102)<module>()
+-> nested_scopes = _Feature((2, 1, 0, "beta",  1),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(103)<module>()
+-> (2, 2, 0, "alpha", 0),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(104)<module>()
+-> CO_NESTED)
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(106)<module>()
+-> generators = _Feature((2, 2, 0, "alpha", 1),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(107)<module>()
+-> (2, 3, 0, "final", 0),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(108)<module>()
+-> CO_GENERATOR_ALLOWED)
+(Pdb) s
+--Call--
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(75)__init__()
+-> def __init__(self, optionalRelease, mandatoryRelease, compiler_flag):
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(76)__init__()
+-> self.optional = optionalRelease
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(77)__init__()
+-> self.mandatory = mandatoryRelease
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(78)__init__()
+-> self.compiler_flag = compiler_flag
+(Pdb) s
+--Return--
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(78)__init__()->None
+-> self.compiler_flag = compiler_flag
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(110)<module>()
+-> division = _Feature((2, 2, 0, "alpha", 2),
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(111)<module>()
+-> (3, 0, 0, "alpha", 0),
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(112)<module>()
+-> CO_FUTURE_DIVISION)
+(Pdb) s
+--Call--
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(75)__init__()
+-> def __init__(self, optionalRelease, mandatoryRelease, compiler_flag):
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(76)__init__()
+-> self.optional = optionalRelease
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(77)__init__()
+-> self.mandatory = mandatoryRelease
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(78)__init__()
+-> self.compiler_flag = compiler_flag
+(Pdb) s
+--Return--
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(78)__init__()->None
+-> self.compiler_flag = compiler_flag
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(114)<module>()
+-> absolute_import = _Feature((2, 5, 0, "alpha", 1),
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(115)<module>()
+-> (3, 0, 0, "alpha", 0),
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(116)<module>()
+-> CO_FUTURE_ABSOLUTE_IMPORT)
+(Pdb) s
+--Call--
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(75)__init__()
+-> def __init__(self, optionalRelease, mandatoryRelease, compiler_flag):
+(Pdb) s
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(76)__init__()
+-> self.optional = optionalRelease
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(77)__init__()
+-> self.mandatory = mandatoryRelease
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(78)__init__()
+-> self.compiler_flag = compiler_flag
+(Pdb) n
+--Return--
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(78)__init__()->None
+-> self.compiler_flag = compiler_flag
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(118)<module>()
+-> with_statement = _Feature((2, 5, 0, "alpha", 1),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(119)<module>()
+-> (2, 6, 0, "alpha", 0),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(120)<module>()
+-> CO_FUTURE_WITH_STATEMENT)
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(122)<module>()
+-> print_function = _Feature((2, 6, 0, "alpha", 2),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(123)<module>()
+-> (3, 0, 0, "alpha", 0),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(124)<module>()
+-> CO_FUTURE_PRINT_FUNCTION)
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(126)<module>()
+-> unicode_literals = _Feature((2, 6, 0, "alpha", 2),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(127)<module>()
+-> (3, 0, 0, "alpha", 0),
+(Pdb) n
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(128)<module>()
+-> CO_FUTURE_UNICODE_LITERALS)
+(Pdb) n
+--Return--
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/__future__.py(128)<module>()->None
+-> CO_FUTURE_UNICODE_LITERALS)
+(Pdb) n
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(15)<module>()
+-> from vizdoom import *
+(Pdb) n
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(17)<module>()
+-> from random import choice
+(Pdb) n
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(18)<module>()
+-> from time import sleep
+(Pdb) c
+Episode #1
+State #1
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #2
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #3
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #4
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #5
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #6
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #7
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #8
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #9
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #10
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #11
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #12
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #13
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #14
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #15
+Game variables: [ 50.]
+Reward: 100.0
+=====================
+State #16
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+Episode finished.
+Total reward: 85.0
+************************
+Episode #2
+State #1
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #2
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #3
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #4
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #5
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #6
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #7
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #8
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #9
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #10
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #11
+Game variables: [ 50.]
+Reward: -1.0
+=====================
+State #12
+Game variables: [ 50.]
+Reward: -6.0
+=====================
+State #13
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #14
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #15
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #16
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #17
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #18
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+State #19
+Game variables: [ 49.]
+Reward: -1.0
+=====================
+Traceback (most recent call last):
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/pdb.py", line 1314, in main
+    pdb._runscript(mainpyfile)
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/pdb.py", line 1233, in _runscript
+    self.run(statement)
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/bdb.py", line 400, in run
+    exec cmd in globals, locals
+  File "<string>", line 1, in <module>
+  File "basic.py", line 18, in <module>
+    from time import sleep
+ViZDoomUnexpectedExitException: Controlled ViZDoom instance exited unexpectedly.
+Uncaught exception. Entering post mortem debugging
+Running 'cont' or 'step' will restart the program
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(18)<module>()
+-> from time import sleep
+(Pdb) n
+Post mortem debugger finished. The basic.py will be restarted
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(14)<module>()
+-> from __future__ import print_function
+(Pdb) n
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(15)<module>()
+-> from vizdoom import *
+(Pdb) s
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(17)<module>()
+-> from random import choice
+(Pdb) s
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(18)<module>()
+-> from time import sleep
+(Pdb) 
+james-webbs-macbook-pro:python jameswebb$ python -m pdb basic.py
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(14)<module>()
+-> from __future__ import print_function
+(Pdb) n
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(15)<module>()
+-> from vizdoom import *
+(Pdb) s
+--Call--
+> /usr/local/lib/python2.7/site-packages/vizdoom/__init__.py(1)<module>()
+-> from .vizdoom import __version__ as __version__
+(Pdb) Traceback (most recent call last):
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/pdb.py", line 1314, in main
+    pdb._runscript(mainpyfile)
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/pdb.py", line 1233, in _runscript
+    self.run(statement)
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/bdb.py", line 400, in run
+    exec cmd in globals, locals
+  File "<string>", line 1, in <module>
+  File "basic.py", line 15, in <module>
+    from vizdoom import *
+  File "/usr/local/lib/python2.7/site-packages/vizdoom/__init__.py", line 1, in <module>
+    from .vizdoom import __version__ as __version__
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/bdb.py", line 51, in trace_dispatch
+    return self.dispatch_call(frame, arg)
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/bdb.py", line 80, in dispatch_call
+    self.user_call(frame, arg)
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/pdb.py", line 148, in user_call
+    self.interaction(frame, None)
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/pdb.py", line 210, in interaction
+    self.cmdloop()
+  File "/usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/cmd.py", line 130, in cmdloop
+    line = raw_input(self.prompt)
+KeyboardInterrupt
+Uncaught exception. Entering post mortem debugging
+Running 'cont' or 'step' will restart the program
+> /usr/local/Cellar/python/2.7.12_2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/cmd.py(130)cmdloop()
+-> line = raw_input(self.prompt)
+(Pdb) 
+Post mortem debugger finished. The basic.py will be restarted
+> /Users/jameswebb/DRL/ViZDoom/examples/python/basic.py(14)<module>()
+-> from __future__ import print_function
+(Pdb) 
+james-webbs-macbook-pro:python jameswebb$ open /user
+The file /user does not exist.
+james-webbs-macbook-pro:python jameswebb$ open /usr
+james-webbs-macbook-pro:python jameswebb$ cd ..
+james-webbs-macbook-pro:examples jameswebb$ cd ..
+james-webbs-macbook-pro:ViZDoom jameswebb$ cd myviz
+-bash: cd: myviz: No such file or directory
+james-webbs-macbook-pro:ViZDoom jameswebb$ cd myvizdoom/
+james-webbs-macbook-pro:myvizdoom jameswebb$ git status
+On branch develop
+Your branch is behind 'origin/develop' by 5 commits, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   scenarios/README.md
+	modified:   scenarios/wmaze-short.wad
+	modified:   scenarios/wmaze-short.wad.bak
+
+no changes added to commit (use "git add" and/or "git commit -a")
+james-webbs-macbook-pro:myvizdoom jameswebb$ git commit -a -m "Updates"
+[develop 50a1d7d] Updates
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+james-webbs-macbook-pro:myvizdoom jameswebb$ git pull
+CONFLICT (modify/delete): scenarios/wmaze-short.wad.bak deleted in 589f962f2dc930d9ec0573b5efc8ed1fd7dae1ae and modified in HEAD. Version HEAD of scenarios/wmaze-short.wad.bak left in tree.
+Removing scenarios/linear_track.wad.bak
+Removing scenarios/foo.txt
+Removing python/_vizdoom.ini
+Removing config/foo.txt
+Automatic merge failed; fix conflicts and then commit the result.
+james-webbs-macbook-pro:myvizdoom jameswebb$ git branch
+* develop
+  master
+james-webbs-macbook-pro:myvizdoom jameswebb$ git push
+To https://github.com/jbwebb8/myvizdoom.git
+ ! [rejected]        develop -> develop (non-fast-forward)
+error: failed to push some refs to 'https://github.com/jbwebb8/myvizdoom.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. Integrate the remote changes (e.g.
+hint: 'git pull ...') before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+james-webbs-macbook-pro:myvizdoom jameswebb$ git pull 
+error: Pulling is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
+james-webbs-macbook-pro:myvizdoom jameswebb$ git status
+On branch develop
+Your branch and 'origin/develop' have diverged,
+and have 1 and 5 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Changes to be committed:
+
+	new file:   .gitignore
+	modified:   config/linear_track.cfg
+	modified:   python/maze_explorer.py
+
+Unmerged paths:
+  (use "git add/rm <file>..." as appropriate to mark resolution)
+
+	deleted by them: scenarios/wmaze-short.wad.bak
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	deleted:    config/foo.txt
+	deleted:    python/_vizdoom.ini
+	deleted:    scenarios/foo.txt
+	deleted:    scenarios/linear_track.wad.bak
+
+james-webbs-macbook-pro:myvizdoom jameswebb$ git rm scenarios/wmaze-short.wad.bak 
+scenarios/wmaze-short.wad.bak: needs merge
+rm 'scenarios/wmaze-short.wad.bak'
+james-webbs-macbook-pro:myvizdoom jameswebb$ git rm config/foo.txt scenarios/foo.txt
+rm 'config/foo.txt'
+rm 'scenarios/foo.txt'
+james-webbs-macbook-pro:myvizdoom jameswebb$ git status
+On branch develop
+Your branch and 'origin/develop' have diverged,
+and have 1 and 5 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)
+
+Changes to be committed:
+
+	new file:   .gitignore
+	modified:   config/linear_track.cfg
+	modified:   python/maze_explorer.py
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	deleted:    config/foo.txt
+	deleted:    python/_vizdoom.ini
+	deleted:    scenarios/foo.txt
+	deleted:    scenarios/linear_track.wad.bak
+	deleted:    scenarios/wmaze-short.wad.bak
+
+james-webbs-macbook-pro:myvizdoom jameswebb$ git commit
+[develop 85565ff] Merge branch 'develop' of https://github.com/jbwebb8/myvizdoom into develop
+james-webbs-macbook-pro:myvizdoom jameswebb$ git status
+On branch develop
+Your branch is ahead of 'origin/develop' by 2 commits.
+  (use "git push" to publish your local commits)
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	deleted:    config/foo.txt
+	deleted:    python/_vizdoom.ini
+	deleted:    scenarios/foo.txt
+	deleted:    scenarios/linear_track.wad.bak
+	deleted:    scenarios/wmaze-short.wad.bak
+
+no changes added to commit (use "git add" and/or "git commit -a")
+james-webbs-macbook-pro:myvizdoom jameswebb$ git pull
+Already up-to-date.
+james-webbs-macbook-pro:myvizdoom jameswebb$ git status
+On branch develop
+Your branch is up-to-date with 'origin/develop'.
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	deleted:    python/_vizdoom.ini
+	deleted:    python/foo.txt
+	deleted:    scenarios/linear_track.wad.bak
+	deleted:    scenarios/wmaze-short.wad.bak
+
+no changes added to commit (use "git add" and/or "git commit -a")
+james-webbs-macbook-pro:myvizdoom jameswebb$ git add .
+james-webbs-macbook-pro:myvizdoom jameswebb$ git status
+On branch develop
+Your branch is up-to-date with 'origin/develop'.
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+	deleted:    python/_vizdoom.ini
+	deleted:    python/foo.txt
+	deleted:    scenarios/linear_track.wad.bak
+	deleted:    scenarios/wmaze-short.wad.bak
+
+james-webbs-macbook-pro:myvizdoom jameswebb$ git commit
+[develop 97135cd] Deleted placeholders and newly ignored files
+ 4 files changed, 571 deletions(-)
+ delete mode 100644 python/_vizdoom.ini
+ delete mode 100644 python/foo.txt
+ delete mode 100644 scenarios/linear_track.wad.bak
+ delete mode 100644 scenarios/wmaze-short.wad.bak
+james-webbs-macbook-pro:myvizdoom jameswebb$ git push origin develop
+Counting objects: 4, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (4/4), 393 bytes | 0 bytes/s, done.
+Total 4 (delta 2), reused 0 (delta 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To https://github.com/jbwebb8/myvizdoom.git
+   09f8591..97135cd  develop -> develop
+james-webbs-macbook-pro:myvizdoom jameswebb$ cd python
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_train.py
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Starting the training!
+
+Epoch 1
+-------
+Training...
+  0%|                                                  | 0/2000 [00:00<?, ?it/s]/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 56.39it/s]
+72 training episodes played.
+Results: mean: 188.9±107.3, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.07it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ~/DRL/Experiments/weights.dump
+Traceback (most recent call last):
+  File "maze_explorer_train.py", line 258, in <module>
+    pickle.dump(get_all_param_values(net), open(model_savefile, "wb"))
+IOError: [Errno 2] No such file or directory: '~/DRL/Experiments/weights.dump'
+james-webbs-macbook-pro:python jameswebb$ cd ~/DRL/Experiments/
+james-webbs-macbook-pro:Experiments jameswebb$ ls
+james-webbs-macbook-pro:Experiments jameswebb$ open /tmp
+james-webbs-macbook-pro:Experiments jameswebb$ cd ../ViZDoom/examples/python/
+james-webbs-macbook-pro:python jameswebb$ cd ../../myvizdoom/python/
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_train.py 
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Starting the training!
+
+Epoch 1
+-------
+Training...
+  0%|                                                  | 0/2000 [00:00<?, ?it/s]/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+100%|███████████████████████████████████████| 2000/2000 [00:34<00:00, 57.61it/s]
+73 training episodes played.
+Results: mean: 178.4±101.2, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.16it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 0.85 minutes
+======================================
+Loading the network weigths from: ../../../Experiments/weights.dump
+Training finished. It's time to watch!
+Total score:  74.0
+Traceback (most recent call last):
+  File "maze_explorer_train.py", line 286, in <module>
+    game.advance_action()
+vizdoom.vizdoom.ViZDoomUnexpectedExitException: Controlled ViZDoom instance exited unexpectedly.
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_test.py 
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Loading the network weigths from: ~/DRL/Experiments/weights.dump
+Let's watch!
+Traceback (most recent call last):
+  File "maze_explorer_test.py", line 221, in <module>
+    params = pickle.load(open(param_file_path, "rb"))
+IOError: [Errno 2] No such file or directory: '~/DRL/Experiments/weights.dump'
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_test.py 
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Loading the network weigths from: ../../../Experiments/weights.dump
+Let's watch!
+/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+^CTotal score:  75.0
+Traceback (most recent call last):
+  File "maze_explorer_test.py", line 230, in <module>
+    game.new_episode()
+vizdoom.vizdoom.SignalException: Signal SIGINT received. ViZDoom instance has been closed.
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_test.py 
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Loading the network weigths from: ../../../Experiments/weights.dump
+Let's watch!
+/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Total score:  75.0
+Traceback (most recent call last):
+  File "maze_explorer_test.py", line 230, in <module>
+    game.new_episode()
+vizdoom.vizdoom.ViZDoomUnexpectedExitException: Controlled ViZDoom instance exited unexpectedly.
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_train.py
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Starting the training!
+
+Epoch 1
+-------
+Training...
+  0%|                                                  | 0/2000 [00:00<?, ?it/s]/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+  2%|▊                                        | 41/2000 [00:00<00:25, 76.37it/s]
+Traceback (most recent call last):
+  File "maze_explorer_train.py", line 227, in <module>
+    perform_learning_step(epoch)
+  File "maze_explorer_train.py", line 180, in perform_learning_step
+    reward = game.make_action(actions[a], frame_repeat)
+vizdoom.vizdoom.ViZDoomUnexpectedExitException: Controlled ViZDoom instance exited unexpectedly.
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_train.py
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Starting the training!
+
+Epoch 1
+-------
+Training...
+  0%|                                                  | 0/2000 [00:00<?, ?it/s]/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 57.04it/s]
+71 training episodes played.
+Results: mean: 195.1±99.0, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  6.12it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 0.93 minutes
+
+Epoch 2
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:34<00:00, 58.14it/s]
+74 training episodes played.
+Results: mean: 168.6±96.4, min: 75.0, max: 271.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:28<00:00,  3.87it/s]
+Results: mean: 435.0±0.0, min: 435.0 max: 435.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 1.98 minutes
+
+Epoch 3
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.36it/s]
+73 training episodes played.
+Results: mean: 182.9±95.6, min: 75.0, max: 271.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.22it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 2.87 minutes
+
+Epoch 4
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 56.57it/s]
+74 training episodes played.
+Results: mean: 169.1±105.4, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.17it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 3.73 minutes
+
+Epoch 5
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.35it/s]
+71 training episodes played.
+Results: mean: 197.4±98.1, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.90it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 4.67 minutes
+
+Epoch 6
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 56.19it/s]
+74 training episodes played.
+Results: mean: 171.7±96.9, min: 75.0, max: 271.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.93it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 5.61 minutes
+
+Epoch 7
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 56.07it/s]
+72 training episodes played.
+Results: mean: 183.5±99.4, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.10it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 6.57 minutes
+
+Epoch 8
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:41<00:00, 48.44it/s]
+75 training episodes played.
+Results: mean: 162.6±96.4, min: 75.0, max: 271.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:19<00:00,  5.30it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 7.59 minutes
+
+Epoch 9
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:40<00:00, 49.52it/s]
+71 training episodes played.
+Results: mean: 193.8±102.7, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:18<00:00,  5.30it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 8.58 minutes
+
+Epoch 10
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.15it/s]
+74 training episodes played.
+Results: mean: 169.1±101.2, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.19it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 9.48 minutes
+
+Epoch 11
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 56.30it/s]
+74 training episodes played.
+Results: mean: 167.3±99.7, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.90it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 10.41 minutes
+
+Epoch 12
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.33it/s]
+72 training episodes played.
+Results: mean: 187.6±102.2, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.93it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 11.35 minutes
+
+Epoch 13
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.58it/s]
+74 training episodes played.
+Results: mean: 172.2±101.7, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.93it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 12.31 minutes
+
+Epoch 14
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 55.93it/s]
+73 training episodes played.
+Results: mean: 182.1±106.0, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  5.49it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 13.18 minutes
+
+Epoch 15
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 55.62it/s]
+71 training episodes played.
+Results: mean: 194.7±109.6, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.20it/s]
+Results: mean: 75.0±0.0, min: 75.0 max: 75.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 14.05 minutes
+
+Epoch 16
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 55.68it/s]
+71 training episodes played.
+Results: mean: 203.5±96.8, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.88it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 14.99 minutes
+
+Epoch 17
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.55it/s]
+68 training episodes played.
+Results: mean: 237.1±114.8, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.92it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 15.93 minutes
+
+Epoch 18
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.51it/s]
+69 training episodes played.
+Results: mean: 221.5±118.5, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.92it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 16.87 minutes
+
+Epoch 19
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.54it/s]
+66 training episodes played.
+Results: mean: 256.9±125.2, min: 75.0, max: 599.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.91it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 17.81 minutes
+
+Epoch 20
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 55.60it/s]
+69 training episodes played.
+Results: mean: 224.9±130.7, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.91it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 18.75 minutes
+
+Epoch 21
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.53it/s]
+67 training episodes played.
+Results: mean: 248.4±157.9, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.94it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 19.69 minutes
+
+Epoch 22
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.47it/s]
+65 training episodes played.
+Results: mean: 268.8±118.7, min: 75.0, max: 599.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.80it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 20.65 minutes
+
+Epoch 23
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:35<00:00, 56.05it/s]
+62 training episodes played.
+Results: mean: 303.6±122.5, min: 75.0, max: 599.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.90it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 21.59 minutes
+
+Epoch 24
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:41<00:00, 48.20it/s]
+61 training episodes played.
+Results: mean: 321.3±136.3, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:23<00:00,  4.84it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 22.67 minutes
+
+Epoch 25
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 51.79it/s]
+61 training episodes played.
+Results: mean: 321.3±152.8, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.81it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 23.67 minutes
+
+Epoch 26
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.26it/s]
+60 training episodes played.
+Results: mean: 343.4±185.1, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.87it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 24.64 minutes
+
+Epoch 27
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 52.87it/s]
+57 training episodes played.
+Results: mean: 385.1±179.2, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.92it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 25.62 minutes
+
+Epoch 28
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.12it/s]
+60 training episodes played.
+Results: mean: 333.1±176.1, min: 75.0, max: 991.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:26<00:00,  3.83it/s]
+Results: mean: 435.0±0.0, min: 435.0 max: 435.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 26.69 minutes
+
+Epoch 29
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.62it/s]
+62 training episodes played.
+Results: mean: 315.9±156.9, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.90it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 27.65 minutes
+
+Epoch 30
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.50it/s]
+61 training episodes played.
+Results: mean: 323.1±136.1, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.88it/s]
+Results: mean: 435.0±0.0, min: 435.0 max: 435.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 28.69 minutes
+
+Epoch 31
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.31it/s]
+62 training episodes played.
+Results: mean: 304.8±131.0, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.93it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 29.63 minutes
+
+Epoch 32
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.39it/s]
+60 training episodes played.
+Results: mean: 344.1±134.0, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.84it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 30.58 minutes
+
+Epoch 33
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.31it/s]
+62 training episodes played.
+Results: mean: 319.1±137.3, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.91it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 31.52 minutes
+
+Epoch 34
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.35it/s]
+65 training episodes played.
+Results: mean: 276.6±91.6, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.94it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 32.46 minutes
+
+Epoch 35
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.00it/s]
+65 training episodes played.
+Results: mean: 270.6±72.7, min: 239.0, max: 599.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.89it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 33.41 minutes
+
+Epoch 36
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.86it/s]
+65 training episodes played.
+Results: mean: 272.1±103.5, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.93it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 34.35 minutes
+
+Epoch 37
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:39<00:00, 50.51it/s]
+64 training episodes played.
+Results: mean: 289.9±123.1, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.72it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 35.37 minutes
+
+Epoch 38
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:39<00:00, 54.40it/s]
+65 training episodes played.
+Results: mean: 273.2±100.9, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.86it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 36.37 minutes
+
+Epoch 39
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.38it/s]
+66 training episodes played.
+Results: mean: 269.1±98.4, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.99it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 37.31 minutes
+
+Epoch 40
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.48it/s]
+64 training episodes played.
+Results: mean: 288.9±122.9, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.93it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 38.25 minutes
+
+Epoch 41
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.49it/s]
+65 training episodes played.
+Results: mean: 270.6±73.8, min: 75.0, max: 435.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.65it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 39.19 minutes
+
+Epoch 42
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 52.55it/s]
+63 training episodes played.
+Results: mean: 299.1±96.8, min: 75.0, max: 599.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.94it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 40.16 minutes
+
+Epoch 43
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 51.93it/s]
+61 training episodes played.
+Results: mean: 323.1±128.0, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.31it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 41.16 minutes
+
+Epoch 44
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 52.87it/s]
+62 training episodes played.
+Results: mean: 315.9±156.5, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.79it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 42.14 minutes
+
+Epoch 45
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:39<00:00, 50.83it/s]
+60 training episodes played.
+Results: mean: 346.3±152.7, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.82it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 43.14 minutes
+
+Epoch 46
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.06it/s]
+58 training episodes played.
+Results: mean: 364.0±148.8, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.92it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 44.08 minutes
+
+Epoch 47
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.45it/s]
+61 training episodes played.
+Results: mean: 321.4±110.5, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.88it/s]
+Results: mean: 435.0±0.0, min: 435.0 max: 435.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 45.11 minutes
+
+Epoch 48
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 52.92it/s]
+61 training episodes played.
+Results: mean: 325.8±128.8, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.93it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 46.08 minutes
+
+Epoch 49
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.06it/s]
+63 training episodes played.
+Results: mean: 308.0±139.5, min: 75.0, max: 795.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.97it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 47.02 minutes
+
+Epoch 50
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.38it/s]
+61 training episodes played.
+Results: mean: 324.2±134.4, min: 75.0, max: 631.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.86it/s]
+Results: mean: 239.0±0.0, min: 239.0 max: 239.0
+Saving the network weigths to: ../../../Experiments/weights.dump
+Total elapsed time: 47.97 minutes
+======================================
+Loading the network weigths from: ../../../Experiments/weights.dump
+Training finished. It's time to watch!
+Total score:  432.0
+Total score:  593.0
+Total score:  235.0
+Total score:  434.0
+^Z
+[1]+  Stopped                 python maze_explorer_train.py
+james-webbs-macbook-pro:python jameswebb$ jobs -l
+[1]+ 13838 Suspended: 18           python maze_explorer_train.py
+james-webbs-macbook-pro:python jameswebb$ fg
+python maze_explorer_train.py
+Total score:  595.0
+Total score:  434.0
+Total score:  434.0
+Total score:  585.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  433.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  237.0
+Total score:  596.0
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_test.py
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Loading the network weigths from: ./experiments/linear_track_1/params.dump
+Let's watch!
+Traceback (most recent call last):
+  File "maze_explorer_test.py", line 221, in <module>
+    params = pickle.load(open(param_file_path, "rb"))
+IOError: [Errno 2] No such file or directory: './experiments/linear_track_1/params.dump'
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_test.py
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Loading the network weigths from: ../experiments/linear_track_1/params.dump
+Let's watch!
+/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+Total score:  435.0
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_test.py
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Loading the network weigths from: ../experiments/linear_track_1/params.dump
+Let's watch!
+/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+Total score:  238.0
+Total score:  238.0
+Total score:  238.0
+Total score:  235.0
+Total score:  238.0
+Total score:  238.0
+Total score:  237.0
+Total score:  238.0
+^CTraceback (most recent call last):
+  File "maze_explorer_test.py", line 234, in <module>
+    game.advance_action()
+vizdoom.vizdoom.SignalException: Signal SIGINT received. ViZDoom instance has been closed.
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_test.py
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Loading the network weigths from: ../experiments/linear_track_1/params_final.dump
+Let's watch!
+/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+Total score:  434.0
+^CTraceback (most recent call last):
+  File "maze_explorer_test.py", line 234, in <module>
+    game.advance_action()
+vizdoom.vizdoom.SignalException: Signal SIGINT received. ViZDoom instance has been closed.
+james-webbs-macbook-pro:python jameswebb$ 

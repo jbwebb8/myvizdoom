@@ -1,0 +1,2673 @@
+Last login: Tue Apr 25 23:32:42 on ttys001
+james-webbs-macbook-pro:~ jameswebb$ cd DRL/ViZDoom/myvizdoom/python/
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_train.py 
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Starting the training!
+
+Epoch 1
+-------
+Training...
+  0%|                                                  | 0/2000 [00:00<?, ?it/s]/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.54it/s]
+73 training episodes played.
+Results: mean: 179.1±99.5, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  5.85it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 0.88 minutes
+
+Epoch 2
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.56it/s]
+74 training episodes played.
+Results: mean: 169.7±100.2, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:17<00:00,  5.83it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 1.78 minutes
+
+Epoch 3
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.33it/s]
+74 training episodes played.
+Results: mean: 169.3±99.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.05it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 2.66 minutes
+
+Epoch 4
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.70it/s]
+72 training episodes played.
+Results: mean: 179.7±96.4, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  5.96it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 3.55 minutes
+
+Epoch 5
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 50.25it/s]
+73 training episodes played.
+Results: mean: 176.0±95.0, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.14it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 4.44 minutes
+
+Epoch 6
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.32it/s]
+72 training episodes played.
+Results: mean: 182.0±95.7, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:17<00:00,  5.91it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 5.34 minutes
+
+Epoch 7
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.89it/s]
+74 training episodes played.
+Results: mean: 163.1±96.8, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.04it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 6.23 minutes
+
+Epoch 8
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.86it/s]
+75 training episodes played.
+Results: mean: 155.2±97.3, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.00it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 7.13 minutes
+
+Epoch 9
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.38it/s]
+72 training episodes played.
+Results: mean: 179.7±100.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  5.93it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 8.03 minutes
+
+Epoch 10
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 49.88it/s]
+74 training episodes played.
+Results: mean: 165.3±100.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:23<00:00,  4.45it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch10.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 9.03 minutes
+
+Epoch 11
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 56.68it/s]
+73 training episodes played.
+Results: mean: 172.0±105.1, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.95it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 9.98 minutes
+
+Epoch 12
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.56it/s]
+74 training episodes played.
+Results: mean: 162.2±96.1, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:26<00:00,  3.79it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 11.04 minutes
+
+Epoch 13
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.87it/s]
+73 training episodes played.
+Results: mean: 176.9±100.1, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.96it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 11.99 minutes
+
+Epoch 14
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 52.44it/s]
+74 training episodes played.
+Results: mean: 170.1±100.5, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.45it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 12.99 minutes
+
+Epoch 15
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 51.60it/s]
+78 training episodes played.
+Results: mean: 136.9±91.1, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.75it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 13.97 minutes
+
+Epoch 16
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.30it/s]
+74 training episodes played.
+Results: mean: 160.0±100.7, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.87it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 14.94 minutes
+
+Epoch 17
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.00it/s]
+70 training episodes played.
+Results: mean: 196.9±97.4, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.83it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 15.90 minutes
+
+Epoch 18
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.81it/s]
+74 training episodes played.
+Results: mean: 164.0±95.4, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:22<00:00,  4.54it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 16.91 minutes
+
+Epoch 19
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 52.19it/s]
+73 training episodes played.
+Results: mean: 172.0±100.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:23<00:00,  4.23it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 17.94 minutes
+
+Epoch 20
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:53<00:00, 37.23it/s]
+74 training episodes played.
+Results: mean: 163.1±96.8, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  4.48it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch20.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 19.26 minutes
+
+Epoch 21
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:40<00:00, 49.54it/s]
+76 training episodes played.
+Results: mean: 152.4±95.5, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:23<00:00,  3.84it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 20.32 minutes
+
+Epoch 22
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:41<00:00, 54.58it/s]
+75 training episodes played.
+Results: mean: 156.6±96.4, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  4.22it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 21.43 minutes
+
+Epoch 23
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:39<00:00, 50.69it/s]
+73 training episodes played.
+Results: mean: 170.6±102.0, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:22<00:00,  4.34it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 22.46 minutes
+
+Epoch 24
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 52.76it/s]
+75 training episodes played.
+Results: mean: 159.6±97.0, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:22<00:00,  4.57it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 23.46 minutes
+
+Epoch 25
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:39<00:00, 50.21it/s]
+74 training episodes played.
+Results: mean: 165.7±101.3, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.90it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 24.49 minutes
+
+Epoch 26
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:40<00:00, 49.88it/s]
+71 training episodes played.
+Results: mean: 193.3±96.8, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:23<00:00,  4.05it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 25.54 minutes
+
+Epoch 27
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 51.74it/s]
+71 training episodes played.
+Results: mean: 193.3±101.4, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.76it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 26.54 minutes
+
+Epoch 28
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:41<00:00, 43.42it/s]
+72 training episodes played.
+Results: mean: 185.7±102.6, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:24<00:00,  4.35it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 27.63 minutes
+
+Epoch 29
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 52.93it/s]
+72 training episodes played.
+Results: mean: 184.8±102.1, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  5.02it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 28.62 minutes
+
+Epoch 30
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 51.44it/s]
+70 training episodes played.
+Results: mean: 202.0±90.3, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:23<00:00,  4.18it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch30.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 29.66 minutes
+
+Epoch 31
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.52it/s]
+73 training episodes played.
+Results: mean: 177.8±105.0, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:17<00:00,  5.92it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 30.57 minutes
+
+Epoch 32
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 56.05it/s]
+73 training episodes played.
+Results: mean: 177.8±107.2, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:22<00:00,  4.36it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 31.58 minutes
+
+Epoch 33
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:42<00:00, 47.57it/s]
+71 training episodes played.
+Results: mean: 194.7±99.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:23<00:00,  4.61it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 32.67 minutes
+
+Epoch 34
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 55.68it/s]
+72 training episodes played.
+Results: mean: 183.4±111.7, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.59it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 33.63 minutes
+
+Epoch 35
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:41<00:00, 48.45it/s]
+71 training episodes played.
+Results: mean: 199.8±111.0, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:24<00:00,  4.04it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 34.72 minutes
+
+Epoch 36
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:39<00:00, 50.69it/s]
+70 training episodes played.
+Results: mean: 203.9±88.7, min: 69.0, max: 265.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.93it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 35.72 minutes
+
+Epoch 37
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 54.04it/s]
+72 training episodes played.
+Results: mean: 182.5±107.0, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:26<00:00,  3.86it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 36.77 minutes
+
+Epoch 38
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.78it/s]
+73 training episodes played.
+Results: mean: 172.4±105.5, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.99it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 37.73 minutes
+
+Epoch 39
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.22it/s]
+70 training episodes played.
+Results: mean: 207.2±112.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.97it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 38.67 minutes
+
+Epoch 40
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:39<00:00, 50.72it/s]
+69 training episodes played.
+Results: mean: 221.1±116.0, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.14it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch40.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 39.60 minutes
+
+Epoch 41
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.96it/s]
+70 training episodes played.
+Results: mean: 204.4±93.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.48it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 40.63 minutes
+
+Epoch 42
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.85it/s]
+68 training episodes played.
+Results: mean: 227.6±103.3, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:22<00:00,  4.52it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 41.61 minutes
+
+Epoch 43
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.32it/s]
+72 training episodes played.
+Results: mean: 182.5±107.0, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:19<00:00,  5.02it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 42.54 minutes
+
+Epoch 44
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.18it/s]
+70 training episodes played.
+Results: mean: 208.1±100.3, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.10it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 43.42 minutes
+
+Epoch 45
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.37it/s]
+69 training episodes played.
+Results: mean: 219.1±95.6, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.16it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 44.30 minutes
+
+Epoch 46
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.37it/s]
+70 training episodes played.
+Results: mean: 202.5±115.1, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.15it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 45.17 minutes
+
+Epoch 47
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.36it/s]
+69 training episodes played.
+Results: mean: 218.2±109.0, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.12it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 46.05 minutes
+
+Epoch 48
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.17it/s]
+71 training episodes played.
+Results: mean: 193.3±101.4, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.13it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 46.92 minutes
+
+Epoch 49
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.13it/s]
+68 training episodes played.
+Results: mean: 228.1±103.4, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.09it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 47.81 minutes
+
+Epoch 50
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.20it/s]
+69 training episodes played.
+Results: mean: 220.6±103.1, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.55it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch50.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 48.78 minutes
+
+Epoch 51
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.18it/s]
+67 training episodes played.
+Results: mean: 236.3±98.4, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.12it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 49.66 minutes
+
+Epoch 52
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.80it/s]
+67 training episodes played.
+Results: mean: 241.8±114.7, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.08it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 50.54 minutes
+
+Epoch 53
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.23it/s]
+68 training episodes played.
+Results: mean: 231.0±106.2, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.07it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 51.42 minutes
+
+Epoch 54
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.28it/s]
+68 training episodes played.
+Results: mean: 227.1±109.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.58it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 52.39 minutes
+
+Epoch 55
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.21it/s]
+68 training episodes played.
+Results: mean: 218.9±110.1, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:22<00:00,  4.54it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 53.36 minutes
+
+Epoch 56
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.22it/s]
+69 training episodes played.
+Results: mean: 220.1±115.1, min: 69.0, max: 593.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:23<00:00,  4.58it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 54.36 minutes
+
+Epoch 57
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.25it/s]
+71 training episodes played.
+Results: mean: 196.5±107.4, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.16it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 55.24 minutes
+
+Epoch 58
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.08it/s]
+67 training episodes played.
+Results: mean: 239.3±101.2, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.10it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 56.12 minutes
+
+Epoch 59
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 49.07it/s]
+66 training episodes played.
+Results: mean: 248.3±107.0, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.06it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 57.00 minutes
+
+Epoch 60
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.09it/s]
+66 training episodes played.
+Results: mean: 247.8±119.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.13it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch60.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 57.88 minutes
+
+Epoch 61
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.29it/s]
+68 training episodes played.
+Results: mean: 229.1±114.4, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:22<00:00,  4.54it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 58.86 minutes
+
+Epoch 62
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.08it/s]
+67 training episodes played.
+Results: mean: 233.9±95.6, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:21<00:00,  4.54it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 59.83 minutes
+
+Epoch 63
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.25it/s]
+68 training episodes played.
+Results: mean: 229.6±122.5, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.13it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 60.70 minutes
+
+Epoch 64
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.22it/s]
+68 training episodes played.
+Results: mean: 227.2±109.9, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:22<00:00,  4.53it/s]
+Results: mean: 265.0±0.0, min: 265.0 max: 265.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 61.68 minutes
+
+Epoch 65
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.08it/s]
+66 training episodes played.
+Results: mean: 255.8±122.5, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:16<00:00,  6.14it/s]
+Results: mean: 69.0±0.0, min: 69.0 max: 69.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 62.55 minutes
+
+Epoch 66
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.23it/s]
+66 training episodes played.
+Results: mean: 265.8±126.8, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:19<00:00,  5.04it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 63.49 minutes
+
+Epoch 67
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.28it/s]
+66 training episodes played.
+Results: mean: 262.8±117.9, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:19<00:00,  5.04it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 64.42 minutes
+
+Epoch 68
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.16it/s]
+66 training episodes played.
+Results: mean: 267.3±116.4, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.93it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 65.45 minutes
+
+Epoch 69
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.19it/s]
+64 training episodes played.
+Results: mean: 282.2±122.3, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.40it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 66.55 minutes
+
+Epoch 70
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.05it/s]
+66 training episodes played.
+Results: mean: 257.4±113.4, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  5.01it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch70.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 67.49 minutes
+
+Epoch 71
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.11it/s]
+65 training episodes played.
+Results: mean: 283.0±118.1, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.94it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 68.52 minutes
+
+Epoch 72
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.84it/s]
+65 training episodes played.
+Results: mean: 276.4±118.5, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:22<00:00,  4.99it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 69.50 minutes
+
+Epoch 73
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.09it/s]
+66 training episodes played.
+Results: mean: 259.8±128.1, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.93it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 70.53 minutes
+
+Epoch 74
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.89it/s]
+65 training episodes played.
+Results: mean: 265.8±111.1, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.37it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 71.63 minutes
+
+Epoch 75
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.11it/s]
+65 training episodes played.
+Results: mean: 271.3±126.8, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.92it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 72.66 minutes
+
+Epoch 76
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.04it/s]
+67 training episodes played.
+Results: mean: 250.7±128.8, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  5.00it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 73.60 minutes
+
+Epoch 77
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.08it/s]
+64 training episodes played.
+Results: mean: 280.1±125.5, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.96it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 74.55 minutes
+
+Epoch 78
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 55.15it/s]
+66 training episodes played.
+Results: mean: 262.8±147.9, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.90it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 75.58 minutes
+
+Epoch 79
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.86it/s]
+64 training episodes played.
+Results: mean: 282.6±100.1, min: 69.0, max: 593.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  5.03it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 76.52 minutes
+
+Epoch 80
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.90it/s]
+63 training episodes played.
+Results: mean: 297.5±105.7, min: 69.0, max: 429.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.90it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch80.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 77.48 minutes
+
+Epoch 81
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.49it/s]
+65 training episodes played.
+Results: mean: 275.3±130.2, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  5.00it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 78.43 minutes
+
+Epoch 82
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.57it/s]
+63 training episodes played.
+Results: mean: 309.0±124.8, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.36it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 79.54 minutes
+
+Epoch 83
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.54it/s]
+61 training episodes played.
+Results: mean: 333.5±119.4, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.87it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 80.58 minutes
+
+Epoch 84
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.54it/s]
+62 training episodes played.
+Results: mean: 321.8±120.6, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.37it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 81.69 minutes
+
+Epoch 85
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.62it/s]
+61 training episodes played.
+Results: mean: 323.8±130.7, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.88it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 82.73 minutes
+
+Epoch 86
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.45it/s]
+59 training episodes played.
+Results: mean: 363.5±109.1, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.96it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 83.67 minutes
+
+Epoch 87
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.63it/s]
+62 training episodes played.
+Results: mean: 309.6±127.1, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.91it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 84.71 minutes
+
+Epoch 88
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.54it/s]
+61 training episodes played.
+Results: mean: 339.4±130.8, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:27<00:00,  3.85it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 85.78 minutes
+
+Epoch 89
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.39it/s]
+58 training episodes played.
+Results: mean: 368.6±120.2, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:31<00:00,  3.19it/s]
+Results: mean: 625.0±0.0, min: 625.0 max: 625.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 86.92 minutes
+
+Epoch 90
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.58it/s]
+61 training episodes played.
+Results: mean: 334.6±135.8, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.37it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch90.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 88.03 minutes
+
+Epoch 91
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.40it/s]
+62 training episodes played.
+Results: mean: 317.1±104.9, min: 69.0, max: 593.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.29it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 89.14 minutes
+
+Epoch 92
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.46it/s]
+58 training episodes played.
+Results: mean: 372.0±107.6, min: 69.0, max: 593.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.36it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 90.25 minutes
+
+Epoch 93
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.64it/s]
+60 training episodes played.
+Results: mean: 352.7±151.1, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 91.44 minutes
+
+Epoch 94
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+59 training episodes played.
+Results: mean: 367.4±129.7, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.39it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 92.55 minutes
+
+Epoch 95
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.55it/s]
+61 training episodes played.
+Results: mean: 336.7±133.9, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 93.75 minutes
+
+Epoch 96
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.64it/s]
+61 training episodes played.
+Results: mean: 332.9±118.1, min: 69.0, max: 593.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 94.95 minutes
+
+Epoch 97
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.41it/s]
+59 training episodes played.
+Results: mean: 361.9±144.4, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.37it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 96.06 minutes
+
+Epoch 98
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.61it/s]
+58 training episodes played.
+Results: mean: 383.3±142.1, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.90it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 97.09 minutes
+
+Epoch 99
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.53it/s]
+57 training episodes played.
+Results: mean: 380.8±177.1, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:20<00:00,  4.96it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 98.04 minutes
+
+Epoch 100
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.41it/s]
+56 training episodes played.
+Results: mean: 411.5±159.7, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.85it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch100.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 99.24 minutes
+
+Epoch 101
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.58it/s]
+54 training episodes played.
+Results: mean: 452.0±141.6, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.34it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 100.35 minutes
+
+Epoch 102
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.58it/s]
+56 training episodes played.
+Results: mean: 402.1±144.8, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.93it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 101.39 minutes
+
+Epoch 103
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.45it/s]
+56 training episodes played.
+Results: mean: 413.9±170.1, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 102.64 minutes
+
+Epoch 104
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.56it/s]
+56 training episodes played.
+Results: mean: 407.4±154.8, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:31<00:00,  3.36it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 103.78 minutes
+
+Epoch 105
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.48it/s]
+57 training episodes played.
+Results: mean: 395.8±126.6, min: 233.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.36it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 104.88 minutes
+
+Epoch 106
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.61it/s]
+57 training episodes played.
+Results: mean: 391.7±137.5, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.91it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 105.92 minutes
+
+Epoch 107
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.45it/s]
+58 training episodes played.
+Results: mean: 390.2±144.6, min: 69.0, max: 625.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.94it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 106.96 minutes
+
+Epoch 108
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.34it/s]
+56 training episodes played.
+Results: mean: 406.3±154.4, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:26<00:00,  3.89it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 108.01 minutes
+
+Epoch 109
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.54it/s]
+54 training episodes played.
+Results: mean: 448.4±141.9, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.93it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 109.05 minutes
+
+Epoch 110
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.65it/s]
+54 training episodes played.
+Results: mean: 442.4±157.7, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.83it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch110.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 110.25 minutes
+
+Epoch 111
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.39it/s]
+55 training episodes played.
+Results: mean: 434.5±159.2, min: 233.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.83it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 111.45 minutes
+
+Epoch 112
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.56it/s]
+54 training episodes played.
+Results: mean: 448.5±164.3, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.85it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 112.65 minutes
+
+Epoch 113
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.40it/s]
+50 training episodes played.
+Results: mean: 517.5±174.7, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:30<00:00,  3.22it/s]
+Results: mean: 628.3±75.3, min: 593.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 113.77 minutes
+
+Epoch 114
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.30it/s]
+53 training episodes played.
+Results: mean: 474.8±176.4, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:19<00:00,  5.01it/s]
+Results: mean: 233.0±0.0, min: 233.0 max: 233.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 114.72 minutes
+
+Epoch 115
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.69it/s]
+52 training episodes played.
+Results: mean: 491.4±186.3, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.82it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 115.92 minutes
+
+Epoch 116
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.45it/s]
+50 training episodes played.
+Results: mean: 524.0±191.1, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:31<00:00,  3.15it/s]
+Results: mean: 640.0±83.7, min: 593.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 117.05 minutes
+
+Epoch 117
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.60it/s]
+50 training episodes played.
+Results: mean: 511.6±192.7, min: 69.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.34it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 118.16 minutes
+
+Epoch 118
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.58it/s]
+48 training episodes played.
+Results: mean: 571.7±163.5, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.83it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 119.36 minutes
+
+Epoch 119
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.52it/s]
+48 training episodes played.
+Results: mean: 561.4±179.3, min: 233.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 120.56 minutes
+
+Epoch 120
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.69it/s]
+46 training episodes played.
+Results: mean: 612.7±199.1, min: 69.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:31<00:00,  3.38it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch120.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 121.69 minutes
+
+Epoch 121
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.40it/s]
+46 training episodes played.
+Results: mean: 609.2±156.9, min: 233.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 122.90 minutes
+
+Epoch 122
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.59it/s]
+45 training episodes played.
+Results: mean: 632.0±188.1, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.83it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 124.09 minutes
+
+Epoch 123
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.59it/s]
+47 training episodes played.
+Results: mean: 587.2±193.3, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:25<00:00,  3.85it/s]
+Results: mean: 429.0±0.0, min: 429.0 max: 429.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 125.13 minutes
+
+Epoch 124
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.53it/s]
+47 training episodes played.
+Results: mean: 600.4±161.3, min: 233.0, max: 789.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.61it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 126.38 minutes
+
+Epoch 125
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.49it/s]
+46 training episodes played.
+Results: mean: 602.0±151.3, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 127.64 minutes
+
+Epoch 126
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+44 training episodes played.
+Results: mean: 674.5±169.4, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.57it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 128.90 minutes
+
+Epoch 127
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.54it/s]
+44 training episodes played.
+Results: mean: 669.4±156.4, min: 265.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:33<00:00,  2.90it/s]
+Results: mean: 732.2±88.9, min: 593.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 130.07 minutes
+
+Epoch 128
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.59it/s]
+44 training episodes played.
+Results: mean: 648.5±184.0, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.83it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 131.28 minutes
+
+Epoch 129
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.37it/s]
+43 training episodes played.
+Results: mean: 697.7±179.9, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 132.53 minutes
+
+Epoch 130
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.62it/s]
+46 training episodes played.
+Results: mean: 621.9±195.5, min: 69.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.57it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch130.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 133.79 minutes
+
+Epoch 131
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.45it/s]
+45 training episodes played.
+Results: mean: 651.7±210.1, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.62it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 135.04 minutes
+
+Epoch 132
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.52it/s]
+44 training episodes played.
+Results: mean: 664.2±175.0, min: 429.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 136.24 minutes
+
+Epoch 133
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.38it/s]
+44 training episodes played.
+Results: mean: 672.4±198.2, min: 69.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 137.44 minutes
+
+Epoch 134
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.49it/s]
+44 training episodes played.
+Results: mean: 675.3±184.2, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:31<00:00,  3.07it/s]
+Results: mean: 661.6±93.5, min: 593.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 138.58 minutes
+
+Epoch 135
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.61it/s]
+46 training episodes played.
+Results: mean: 611.3±206.1, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:34<00:00,  3.71it/s]
+Results: mean: 716.0±301.3, min: 233.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 139.77 minutes
+
+Epoch 136
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.49it/s]
+46 training episodes played.
+Results: mean: 622.0±239.0, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.57it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 141.03 minutes
+
+Epoch 137
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.90it/s]
+43 training episodes played.
+Results: mean: 684.1±181.3, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 142.29 minutes
+
+Epoch 138
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+43 training episodes played.
+Results: mean: 684.8±161.1, min: 69.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.85it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 143.49 minutes
+
+Epoch 139
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.54it/s]
+45 training episodes played.
+Results: mean: 643.7±146.4, min: 429.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.83it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 144.69 minutes
+
+Epoch 140
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.52it/s]
+44 training episodes played.
+Results: mean: 667.9±141.3, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:33<00:00,  2.82it/s]
+Results: mean: 754.6±160.1, min: 593.0 max: 953.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch140.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 145.87 minutes
+
+Epoch 141
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.47it/s]
+46 training episodes played.
+Results: mean: 626.2±198.2, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.38it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 146.98 minutes
+
+Epoch 142
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.62it/s]
+45 training episodes played.
+Results: mean: 636.4±158.2, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 148.23 minutes
+
+Epoch 143
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.55it/s]
+46 training episodes played.
+Results: mean: 620.5±166.3, min: 69.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.75it/s]
+Results: mean: 823.6±136.3, min: 593.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 149.44 minutes
+
+Epoch 144
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.43it/s]
+45 training episodes played.
+Results: mean: 644.4±218.4, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 150.64 minutes
+
+Epoch 145
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.53it/s]
+44 training episodes played.
+Results: mean: 675.3±186.5, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 151.90 minutes
+
+Epoch 146
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.52it/s]
+42 training episodes played.
+Results: mean: 702.5±166.0, min: 265.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.83it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 153.09 minutes
+
+Epoch 147
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.59it/s]
+44 training episodes played.
+Results: mean: 664.8±181.3, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.36it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 154.20 minutes
+
+Epoch 148
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+44 training episodes played.
+Results: mean: 677.5±198.3, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 155.40 minutes
+
+Epoch 149
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.68it/s]
+44 training episodes played.
+Results: mean: 659.0±192.0, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 156.66 minutes
+
+Epoch 150
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.60it/s]
+45 training episodes played.
+Results: mean: 631.3±194.4, min: 69.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:31<00:00,  3.25it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch150.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 157.80 minutes
+
+Epoch 151
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.90it/s]
+42 training episodes played.
+Results: mean: 724.4±188.5, min: 265.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.57it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 159.06 minutes
+
+Epoch 152
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.44it/s]
+43 training episodes played.
+Results: mean: 675.7±159.1, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.85it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 160.26 minutes
+
+Epoch 153
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.50it/s]
+43 training episodes played.
+Results: mean: 700.8±187.9, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 161.52 minutes
+
+Epoch 154
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.44it/s]
+44 training episodes played.
+Results: mean: 659.6±182.6, min: 69.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 162.78 minutes
+
+Epoch 155
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.66it/s]
+42 training episodes played.
+Results: mean: 719.8±227.6, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 163.98 minutes
+
+Epoch 156
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.54it/s]
+42 training episodes played.
+Results: mean: 723.7±199.1, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.85it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 165.18 minutes
+
+Epoch 157
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.62it/s]
+41 training episodes played.
+Results: mean: 748.4±135.1, min: 429.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.57it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 166.43 minutes
+
+Epoch 158
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.58it/s]
+42 training episodes played.
+Results: mean: 717.5±167.8, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 167.63 minutes
+
+Epoch 159
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.61it/s]
+41 training episodes played.
+Results: mean: 746.0±190.4, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 168.89 minutes
+
+Epoch 160
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.58it/s]
+41 training episodes played.
+Results: mean: 749.2±155.3, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:44<00:00,  2.27it/s]
+Results: mean: 1149.0±0.0, min: 1149.0 max: 1149.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch160.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 170.24 minutes
+
+Epoch 161
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.52it/s]
+41 training episodes played.
+Results: mean: 734.9±163.8, min: 429.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 171.50 minutes
+
+Epoch 162
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.54it/s]
+40 training episodes played.
+Results: mean: 782.6±171.6, min: 429.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:44<00:00,  2.26it/s]
+Results: mean: 1149.0±0.0, min: 1149.0 max: 1149.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 172.85 minutes
+
+Epoch 163
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.29it/s]
+41 training episodes played.
+Results: mean: 754.9±194.3, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 174.05 minutes
+
+Epoch 164
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.43it/s]
+43 training episodes played.
+Results: mean: 700.8±138.9, min: 265.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 175.31 minutes
+
+Epoch 165
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 51.42it/s]
+42 training episodes played.
+Results: mean: 735.4±186.1, min: 69.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:44<00:00,  2.28it/s]
+Results: mean: 1149.0±0.0, min: 1149.0 max: 1149.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 176.70 minutes
+
+Epoch 166
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.61it/s]
+41 training episodes played.
+Results: mean: 740.4±188.9, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 177.89 minutes
+
+Epoch 167
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.56it/s]
+41 training episodes played.
+Results: mean: 737.2±146.6, min: 265.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.83it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 179.09 minutes
+
+Epoch 168
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.48it/s]
+42 training episodes played.
+Results: mean: 723.7±199.7, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.37it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 180.20 minutes
+
+Epoch 169
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.55it/s]
+42 training episodes played.
+Results: mean: 715.1±150.7, min: 265.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 181.40 minutes
+
+Epoch 170
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.56it/s]
+41 training episodes played.
+Results: mean: 746.9±180.0, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:40<00:00,  2.36it/s]
+Results: mean: 1033.4±96.4, min: 953.0 max: 1149.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch170.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 182.69 minutes
+
+Epoch 171
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.60it/s]
+41 training episodes played.
+Results: mean: 730.0±163.8, min: 429.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 183.89 minutes
+
+Epoch 172
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.65it/s]
+41 training episodes played.
+Results: mean: 734.9±157.6, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.50it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 185.15 minutes
+
+Epoch 173
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:37<00:00, 53.02it/s]
+39 training episodes played.
+Results: mean: 831.1±149.5, min: 429.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:36<00:00,  2.77it/s]
+Results: mean: 844.8±77.7, min: 789.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 186.39 minutes
+
+Epoch 174
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.49it/s]
+41 training episodes played.
+Results: mean: 738.9±206.6, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.82it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 187.59 minutes
+
+Epoch 175
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+40 training episodes played.
+Results: mean: 772.0±188.4, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 188.84 minutes
+
+Epoch 176
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.57it/s]
+41 training episodes played.
+Results: mean: 735.6±209.1, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:44<00:00,  2.26it/s]
+Results: mean: 1149.0±0.0, min: 1149.0 max: 1149.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 190.19 minutes
+
+Epoch 177
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+42 training episodes played.
+Results: mean: 726.0±234.0, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.37it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 191.30 minutes
+
+Epoch 178
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+41 training episodes played.
+Results: mean: 766.9±200.2, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:44<00:00,  2.27it/s]
+Results: mean: 1149.0±0.0, min: 1149.0 max: 1149.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 192.65 minutes
+
+Epoch 179
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.61it/s]
+40 training episodes played.
+Results: mean: 795.7±235.7, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:45<00:00,  2.26it/s]
+Results: mean: 1149.0±0.0, min: 1149.0 max: 1149.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 194.03 minutes
+
+Epoch 180
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+40 training episodes played.
+Results: mean: 782.6±170.2, min: 265.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch180.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 195.28 minutes
+
+Epoch 181
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.48it/s]
+42 training episodes played.
+Results: mean: 733.0±192.1, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.37it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 196.39 minutes
+
+Epoch 182
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.40it/s]
+40 training episodes played.
+Results: mean: 772.8±221.9, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.37it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 197.50 minutes
+
+Epoch 183
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.87it/s]
+40 training episodes played.
+Results: mean: 772.8±184.6, min: 265.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:34<00:00,  2.92it/s]
+Results: mean: 763.5±65.9, min: 593.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 198.69 minutes
+
+Epoch 184
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.60it/s]
+41 training episodes played.
+Results: mean: 755.6±188.1, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:29<00:00,  3.36it/s]
+Results: mean: 593.0±0.0, min: 593.0 max: 593.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 199.80 minutes
+
+Epoch 185
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.45it/s]
+40 training episodes played.
+Results: mean: 795.7±199.9, min: 233.0, max: 1313.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 201.00 minutes
+
+Epoch 186
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.54it/s]
+43 training episodes played.
+Results: mean: 705.5±227.5, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:35<00:00,  2.84it/s]
+Results: mean: 789.0±0.0, min: 789.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 202.19 minutes
+
+Epoch 187
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.52it/s]
+41 training episodes played.
+Results: mean: 740.4±198.3, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:39<00:00,  2.46it/s]
+Results: mean: 996.1±81.2, min: 953.0 max: 1149.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 203.47 minutes
+
+Epoch 188
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.59it/s]
+40 training episodes played.
+Results: mean: 769.5±191.8, min: 69.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 204.73 minutes
+
+Epoch 189
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+41 training episodes played.
+Results: mean: 766.9±205.3, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.60it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 205.99 minutes
+
+Epoch 190
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.44it/s]
+40 training episodes played.
+Results: mean: 783.4±171.1, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch190.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 207.25 minutes
+
+Epoch 191
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.43it/s]
+42 training episodes played.
+Results: mean: 736.1±228.0, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.68it/s]
+Results: mean: 918.6±172.8, min: 789.0 max: 1149.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 208.50 minutes
+
+Epoch 192
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.57it/s]
+42 training episodes played.
+Results: mean: 721.3±208.4, min: 265.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 925.2±229.8, min: 789.0 max: 1313.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 209.76 minutes
+
+Epoch 193
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.57it/s]
+44 training episodes played.
+Results: mean: 673.8±185.6, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 211.01 minutes
+
+Epoch 194
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:38<00:00, 51.48it/s]
+40 training episodes played.
+Results: mean: 774.4±213.9, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.58it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 212.31 minutes
+
+Epoch 195
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.61it/s]
+41 training episodes played.
+Results: mean: 739.6±221.3, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 213.57 minutes
+
+Epoch 196
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.66it/s]
+40 training episodes played.
+Results: mean: 786.7±174.4, min: 429.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:36<00:00,  2.77it/s]
+Results: mean: 828.4±70.0, min: 789.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 214.78 minutes
+
+Epoch 197
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.33it/s]
+40 training episodes played.
+Results: mean: 776.8±205.1, min: 69.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 216.04 minutes
+
+Epoch 198
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.47it/s]
+42 training episodes played.
+Results: mean: 726.0±183.5, min: 233.0, max: 985.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:33<00:00,  2.90it/s]
+Results: mean: 736.1±87.0, min: 593.0 max: 789.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 217.21 minutes
+
+Epoch 199
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.33it/s]
+43 training episodes played.
+Results: mean: 703.9±190.3, min: 233.0, max: 953.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:38<00:00,  2.59it/s]
+Results: mean: 953.0±0.0, min: 953.0 max: 953.0
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 218.47 minutes
+
+Epoch 200
+-------
+Training...
+100%|███████████████████████████████████████| 2000/2000 [00:36<00:00, 54.51it/s]
+40 training episodes played.
+Results: mean: 799.8±198.0, min: 233.0, max: 1149.0,
+
+Testing...
+100%|█████████████████████████████████████████| 100/100 [00:40<00:00,  2.46it/s]
+Results: mean: 1013.8±90.6, min: 953.0 max: 1149.0
+Storing network weights in: ../experiments/linear_track_cues_2/weights_epoch200.dump
+Saving the network weigths to: ../experiments/linear_track_cues_2/weights.dump
+Total elapsed time: 219.76 minutes
+======================================
+Loading the network weigths from: ../experiments/linear_track_cues_2/weights.dump
+Training finished. It's time to watch!
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  1147.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+james-webbs-macbook-pro:python jameswebb$ python maze_explorer_test.py
+Initializing doom...
+Doom initialized.
+Compiling the network ...
+Network compiled.
+Loading the network weigths from: ../experiments/linear_track_cues_2/weights_epoch200.dump
+Let's watch!
+/usr/local/lib/python2.7/site-packages/skimage/transform/_warps.py:84: UserWarning: The default mode, 'constant', will be changed to 'reflect' in skimage 0.15.
+  warn("The default mode, 'constant', will be changed to 'reflect' in "
+Total score:  951.0
+Total score:  948.0
+Total score:  574.0
+Total score:  786.0
+Total score:  787.0
+Total score:  952.0
+Total score:  425.0
+Total score:  952.0
+Total score:  952.0
+Total score:  952.0
+james-webbs-macbook-pro:python jameswebb$ 
