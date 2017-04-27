@@ -5,6 +5,7 @@ The maze consists of a simple rectangle with spawn sites for medikits on either 
 
 ### Rewards
 Pick up medikit: +100
+
 ---
 ## W-maze
 ### Description
@@ -12,4 +13,5 @@ The maze consists of a single long hallway with three branches, each of which co
 
 ### Rewards
 Pick up medikit: +100
+
 ---
