@@ -10,5 +10,6 @@ python/*.ini
 # Programs
 .vscode
 
-# Backups
-.bak
+# Miscellaneous
+*.bak
+*.cfg
