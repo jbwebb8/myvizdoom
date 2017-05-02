@@ -1,5 +1,7 @@
 {
     "network_args": {
+        "name": "dqn_basic",
+        "type": "dqn",
         "alpha": 0.00025,
         "gamma": 0.99
     },
@@ -9,8 +11,9 @@
        "epsilon_const_rate": 0.6,
        "epsilon_decay_rate": 0.1
     },
-
-"replay_memory_size": 10000,
+    "memory_args": {
+        "replay_memory_size": 10000
+    },
 "batch_size": 64,
 "test_episodes_per_epoch": 100
 }

@@ -15,6 +15,8 @@ from __future__ import print_function
 from vizdoom import *
 import itertools as it
 import pickle
+import argparse
+import json
 from random import sample, randint, random
 from time import time, sleep
 import numpy as np
@@ -29,6 +31,41 @@ import theano
 from theano import tensor
 from tqdm import trange
 
+# TODO: could call action class to ensure args make sense (e.g. json file)
+parser = argparse.ArgumentParser(description='train an agent')
+parser.add_argument("agent_file", help="json file for network and learning arguments for agent")
+parser.add_argument("-e", "--epochs", type=int, default=100, 
+                    help="number of epochs to train")
+parser.add_argument("-s", "--learning-steps", type=int, default=2000, 
+                    help="learning steps per epoch")
+parser.add_argument("-t", "--test-episodes", type=int, default=100, 
+                    help="test episodes per epoch")
+parser.add_argument("-f", "--save-freq", type=int, default=0, 
+                    help="save params every x epochs")
+parser.add_argument("-w", "--watch-episodes", type=bool, action=set_const_true, default=False
+                    help="watch test episodes after training (default=false)")
+args = parser.parse_args()
+
+agent_file = args.agent_file
+if not agent_file.lower().endswith(".json"): raise Exception("No agent JSON file.")
+agent = json.loads(open(agent_file).read())
+agent_name = agent["network_args"]["name"]
+agent_type = agent["network_args"]["type"]
+alpha = agent["network_args"]["alpha"]
+gamma = agent["network_args"]["gamma"]
+epsilon_start = agent["learning_args"]["epsilon_start"]
+epsilon_end = agent["learning_args"]["gamma"]
+gamma = agent["network_args"]["gamma"]
+gamma = agent["network_args"]["gamma"]
+gamma = agent["network_args"]["gamma"]
+gamma = agent["network_args"]["gamma"]
+gamma = agent["network_args"]["gamma"]
+epochs = args.epochs
+learning_steps_per_epoch = args.steps
+test_episodes_per_epoch = args.tests
+save_freq = args.save_freq
+
+"""
 # Q-learning settings
 learning_rate = 0.00025
 discount_factor = 0.99
@@ -54,7 +91,7 @@ store_freq = 10
 
 # Configuration file path
 config_file_path = "../config/linear_track_cues.cfg"
-
+"""
 # Converts and downsamples the input image
 def preprocess(img):
     img = skimage.transform.resize(img, resolution)
@@ -127,7 +164,7 @@ def create_network(available_actions_count):
 
     # Update the parameters according to the computed gradient using RMSProp.
     params = get_all_params(dqn, trainable=True)
-    updates = rmsprop(loss, params, learning_rate)
+    updates = rmsprop(loss, params, agent["network_args"]["alpha"])
 
     # Compile the theano functions
     print("Compiling the network ...")
