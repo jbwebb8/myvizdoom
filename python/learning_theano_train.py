@@ -32,66 +32,54 @@ from theano import tensor
 from tqdm import trange
 
 # TODO: could call action class to ensure args make sense (e.g. json file)
+# Command line arguments
 parser = argparse.ArgumentParser(description='train an agent')
-parser.add_argument("agent_file", help="json file for network and learning arguments for agent")
-parser.add_argument("-e", "--epochs", type=int, default=100, 
+parser.add_argument("agent_file_path",
+                    help="json file containing agent net and learning args")
+parser.add_argument("config_file_path", help="config file for scenario")
+parser.add_argument("results_directory",
+                    help="directory where results will be saved")
+parser.add_argument("-e", "--epochs", type=int, default=100,
                     help="number of epochs to train")
-parser.add_argument("-s", "--learning-steps", type=int, default=2000, 
+parser.add_argument("-s", "--learning-steps", type=int, default=2000,
                     help="learning steps per epoch")
-parser.add_argument("-t", "--test-episodes", type=int, default=100, 
+parser.add_argument("-t", "--test-episodes", type=int, default=100,
                     help="test episodes per epoch")
-parser.add_argument("-f", "--save-freq", type=int, default=0, 
+parser.add_argument("-f", "--save-freq", type=int, default=0,
                     help="save params every x epochs")
-parser.add_argument("-w", "--watch-episodes", type=bool, action=set_const_true, default=False
-                    help="watch test episodes after training (default=false)")
+parser.add_argument("-w", "--watch-episodes", type=bool, 
+                    action=set_const_true, default=False,
+                    help="watch episodes after training (default=false)")
 args = parser.parse_args()
 
-agent_file = args.agent_file
+# Grab arguments from agent file and command line args
+agent_file_path = args.agent_file_path
 if not agent_file.lower().endswith(".json"): raise Exception("No agent JSON file.")
-agent = json.loads(open(agent_file).read())
+agent = json.loads(open(agent_file_path).read())
 agent_name = agent["network_args"]["name"]
 agent_type = agent["network_args"]["type"]
 alpha = agent["network_args"]["alpha"]
 gamma = agent["network_args"]["gamma"]
 epsilon_start = agent["learning_args"]["epsilon_start"]
-epsilon_end = agent["learning_args"]["gamma"]
-gamma = agent["network_args"]["gamma"]
-gamma = agent["network_args"]["gamma"]
-gamma = agent["network_args"]["gamma"]
-gamma = agent["network_args"]["gamma"]
-gamma = agent["network_args"]["gamma"]
+epsilon_end = agent["learning_args"]["epsilon_end"]
+epsilon_const_epochs = agent["learning_args"]["epsilon_const_epochs"]
+epsilon_decay_epochs = agent["learning_args"]["epsilon_decay_epochs"]
+batch_size = agent["learning_args"]["batch_size"]
+replay_memory_size = agent["memory_args"]["replay_memory_size"]
+
+config_file_path = args.config_file_path
+results_directory = args.results_directory
 epochs = args.epochs
 learning_steps_per_epoch = args.steps
 test_episodes_per_epoch = args.tests
 save_freq = args.save_freq
-
-"""
-# Q-learning settings
-learning_rate = 0.00025
-discount_factor = 0.99
-epochs = 200
-learning_steps_per_epoch = 2000
-replay_memory_size = 10000
-
-# NN learning settings
-batch_size = 64
-
-# Training regime
-test_episodes_per_epoch = 100
+watch_episodes = args.watch_episodes
 
 # Other parameters
 frame_repeat = 12
 resolution = (30, 45)
-episodes_to_watch = 20
+episodes_to_watch = 10
 
-# Saving weights
-model_savefile = "../experiments/linear_track_cues_2/weights.dump"
-model_storefilepath = "../experiments/linear_track_cues_2/"
-store_freq = 10
-
-# Configuration file path
-config_file_path = "../config/linear_track_cues.cfg"
-"""
 # Converts and downsamples the input image
 def preprocess(img):
     img = skimage.transform.resize(img, resolution)
@@ -199,25 +187,25 @@ def perform_learning_step(epoch):
 
     def exploration_rate(epoch):
         """# Define exploration rate change over time"""
-        start_eps = 1.0
-        end_eps = 0.1
-        const_eps_epochs = 0.1 * epochs  # 10% of learning time
-        eps_decay_epochs = 0.6 * epochs  # 60% of learning time
+        epsilon_start = 1.0
+        epsilon_end = 0.1
+        epsilon_const_epochs = 0.1 * epochs  # 10% of learning time
+        epsilon_decay_epochs = 0.6 * epochs  # 60% of learning time
 
-        if epoch < const_eps_epochs:
-            return start_eps
-        elif epoch < eps_decay_epochs:
+        if epoch < epsilon_const_epochs:
+            return epsilon_start
+        elif epoch < epsilon_decay_epochs:
             # Linear decay
-            return start_eps - (epoch - const_eps_epochs) / \
-                               (eps_decay_epochs - const_eps_epochs) * (start_eps - end_eps)
+            return epsilon_start - (epoch - epsilon_const_epochs) / \
+                               (epsilon_decay_epochs - epsilon_const_epochs) * (epsilon_start - epsilon_end)
         else:
-            return end_eps
+            return epsilon_end
 
     s1 = preprocess(game.get_state().screen_buffer)
 
-    # With probability eps make a random action.
-    eps = exploration_rate(epoch)
-    if random() <= eps:
+    # With probability epsilon make a random action.
+    epsilon = exploration_rate(epoch)
+    if random() <= epsilon:
         a = randint(0, len(actions) - 1)
     else:
         # Choose the best action according to the network.
@@ -256,16 +244,19 @@ actions = [list(a) for a in it.product([0, 1], repeat=n)]
 # Create replay memory which will store the transitions
 memory = ReplayMemory(capacity=replay_memory_size)
 
+# Create dqn
 net, learn, get_q_values, get_best_action = create_network(len(actions))
 
 print("Starting the training!")
 
+# Train and test agent for specified number of epochs
 time_start = time()
 for epoch in range(epochs):
     print("\nEpoch %d\n-------" % (epoch + 1))
     train_episodes_finished = 0
     train_scores = []
 
+    # Training
     print("Training...")
     game.new_episode()
     for learning_step in trange(learning_steps_per_epoch):
@@ -275,14 +266,12 @@ for epoch in range(epochs):
             train_scores.append(score)
             game.new_episode()
             train_episodes_finished += 1
-
     print("%d training episodes played." % train_episodes_finished)
-
     train_scores = np.array(train_scores)
-
     print("Results: mean: %.1f±%.1f," % (train_scores.mean(), train_scores.std()), \
           "min: %.1f," % train_scores.min(), "max: %.1f," % train_scores.max())
-
+    
+    # Testing
     print("\nTesting...")
     test_episode = []
     test_scores = []
@@ -294,47 +283,54 @@ for epoch in range(epochs):
             game.make_action(actions[best_action_index], frame_repeat)
         r = game.get_total_reward()
         test_scores.append(r)
-
     test_scores = np.array(test_scores)
     print("Results: mean: %.1f±%.1f," % (
         test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max())
 
-    if (epoch+1) % store_freq == 0:
-        model_storefile = model_storefilepath + "weights_epoch" + str(epoch+1) + ".dump"
-        print("Storing network weights in:", model_storefile)
-        pickle.dump(get_all_param_values(net), open(model_storefile, "wb"))
-    print("Saving the network weigths to:", model_savefile)
-    pickle.dump(get_all_param_values(net), open(model_savefile, "wb"))
+    # Save network params after specified number of epochs; otherwise store temporarily after each epoch
+    if epoch + 1 == epochs:
+        results_file_path = results_directory + "weights_final.dump"
+        print("Saving network weights in:", results_file_path)
+        pickle.dump(get_all_param_values(net), open(results_file_path, "wb"))
+    elif (epoch + 1) % save_freq == 0:
+        results_file_path = results_directory + "weights_epoch" + str(epoch+1) + ".dump"
+        print("Saving network weights in:", results_file_path)
+        pickle.dump(get_all_param_values(net), open(results_file_path, "wb"))
+    else:
+        results_file_path = results_directory + "weights.dump"
+        print("Stashing network weights in:", results_file_path)
+        pickle.dump(get_all_param_values(net), open(results_file_path, "wb"))
 
     print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))
 
 game.close()
 print("======================================")
-print("Loading the network weigths from:", model_savefile)
-print("Training finished. It's time to watch!")
 
-# Load the network's parameters from a file
+if watch_episodes:
+    print("Loading the network weights from:", results_file_path)
+    print("Training finished. It's time to watch!")
 
-params = pickle.load(open(model_savefile, "rb"))
-set_all_param_values(net, params)
+    # Load the network's parameters from a file
+    params = pickle.load(open(results_file_path, "rb"))
+    set_all_param_values(net, params)
 
-# Reinitialize the game with window visible
-game.set_window_visible(True)
-game.set_mode(Mode.ASYNC_PLAYER)
-game.init()
+    # Reinitialize the game with window visible
+    game.set_window_visible(True)
+    game.set_mode(Mode.ASYNC_PLAYER)
+    game.init()
 
-for _ in range(episodes_to_watch):
-    game.new_episode()
-    while not game.is_episode_finished():
-        state = preprocess(game.get_state().screen_buffer)
-        best_action_index = get_best_action(state)
+    for _ in range(episodes_to_watch):
+        game.new_episode()
+        while not game.is_episode_finished():
+            state = preprocess(game.get_state().screen_buffer)
+            best_action_index = get_best_action(state)
 
-        # Instead of make_action(a, frame_repeat) in order to make the animation smooth
-        game.set_action(actions[best_action_index])
-        for _ in range(frame_repeat):
-            game.advance_action()
+            # Instead of make_action(a, frame_repeat) in order to make the animation smooth
+            game.set_action(actions[best_action_index])
+            for _ in range(frame_repeat):
+                game.advance_action()
 
-    # Sleep between episodes
-    sleep(1.0)
-    score = game.get_total_reward()
-    print("Total score: ", score)
+        # Sleep between episodes
+        sleep(1.0)
+        score = game.get_total_reward()
+        print("Total score: ", score)
