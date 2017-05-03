@@ -17,6 +17,7 @@ import itertools as it
 import pickle
 import argparse
 import json
+import os
 from random import sample, randint, random
 from time import time, sleep
 import numpy as np
@@ -47,14 +48,14 @@ parser.add_argument("-t", "--test-episodes", type=int, default=100,
                     help="test episodes per epoch")
 parser.add_argument("-f", "--save-freq", type=int, default=0,
                     help="save params every x epochs")
-parser.add_argument("-w", "--watch-episodes", type=bool, 
-                    action=set_const_true, default=False,
-                    help="watch episodes after training (default=false)")
+parser.add_argument("-w", "--watch-episodes", action="store_true", default=False,
+                    help="watch episodes after training")
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
 agent_file_path = args.agent_file_path
-if not agent_file.lower().endswith(".json"): raise Exception("No agent JSON file.")
+if not agent_file_path.lower().endswith(".json"): 
+    raise Exception("No agent JSON file.")
 agent = json.loads(open(agent_file_path).read())
 agent_name = agent["network_args"]["name"]
 agent_type = agent["network_args"]["type"]
@@ -69,16 +70,25 @@ replay_memory_size = agent["memory_args"]["replay_memory_size"]
 
 config_file_path = args.config_file_path
 results_directory = args.results_directory
+if not results_directory.endswith("/"): 
+    results_directory += "/"
+try:
+    os.makedirs(results_directory)
+except OSError as exception:
+    if exception.errno != errno.EEXIST:
+        raise
 epochs = args.epochs
-learning_steps_per_epoch = args.steps
-test_episodes_per_epoch = args.tests
+learning_steps_per_epoch = args.learning_steps
+test_episodes_per_epoch = args.test_episodes
 save_freq = args.save_freq
+if save_freq == 0: save_freq = epochs
 watch_episodes = args.watch_episodes
 
 # Other parameters
 frame_repeat = 12
 resolution = (30, 45)
 episodes_to_watch = 10
+
 
 # Converts and downsamples the input image
 def preprocess(img):
@@ -87,6 +97,7 @@ def preprocess(img):
     return img
 
 
+# Stores and learns from memory
 class ReplayMemory:
     def __init__(self, capacity):
         state_shape = (capacity, 1, resolution[0], resolution[1])
@@ -116,6 +127,7 @@ class ReplayMemory:
         return self.s1[i], self.a[i], self.s2[i], self.isterminal[i], self.r[i]
 
 
+# Builds DQN
 def create_network(available_actions_count):
     # Create the input variables
     s1 = tensor.tensor4("State")
@@ -147,7 +159,7 @@ def create_network(available_actions_count):
     q = get_output(dqn)
     # target differs from q only for the selected action. The following means:
     # target_Q(s,a) = r + gamma * max Q(s2,_) if isterminal else r
-    target_q = tensor.set_subtensor(q[tensor.arange(q.shape[0]), a], r + discount_factor * (1 - isterminal) * q2)
+    target_q = tensor.set_subtensor(q[tensor.arange(q.shape[0]), a], r + gamma * (1 - isterminal) * q2)
     loss = squared_error(q, target_q).mean()
 
     # Update the parameters according to the computed gradient using RMSProp.
@@ -306,6 +318,7 @@ for epoch in range(epochs):
 game.close()
 print("======================================")
 
+# Watch newly trained agent play episodes
 if watch_episodes:
     print("Loading the network weights from:", results_file_path)
     print("Training finished. It's time to watch!")
