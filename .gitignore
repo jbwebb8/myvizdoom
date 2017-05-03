@@ -13,4 +13,4 @@ python/*.ini
 # Miscellaneous
 *.bak
 *.cfg
-temp
+tmp
