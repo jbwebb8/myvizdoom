@@ -8,8 +8,8 @@
     "learning_args": {
        "epsilon_start": 1.0,
        "epsilon_end": 0.1,
-       "epsilon_const_rate": 0.6,
-       "epsilon_decay_rate": 0.1,
+       "epsilon_const_epochs": 0.6,
+       "epsilon_decay_epochs": 0.1,
        "batch_size": 64
     },
     "memory_args": {
