@@ -17,7 +17,7 @@ import itertools as it
 import pickle
 import argparse
 import json
-import os
+import os, errno
 from random import sample, randint, random
 from time import time, sleep
 import numpy as np
