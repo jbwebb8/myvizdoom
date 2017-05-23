@@ -34,19 +34,19 @@ from tqdm import trange
 
 # TODO: could call action class to ensure args make sense (e.g. json file)
 # Command line arguments
-parser = argparse.ArgumentParser(description='train an agent')
+parser = argparse.ArgumentParser(description='Train an agent.')
 parser.add_argument("agent_file_path",
                     help="json file containing agent net and learning args")
 parser.add_argument("config_file_path", help="config file for scenario")
 parser.add_argument("results_directory",
                     help="directory where results will be saved")
-parser.add_argument("-e", "--epochs", type=int, default=100,
+parser.add_argument("-e", "--epochs", type=int, default=100, metavar="",
                     help="number of epochs to train")
-parser.add_argument("-s", "--learning-steps", type=int, default=2000,
+parser.add_argument("-s", "--learning-steps", type=int, default=2000, metavar="",
                     help="learning steps per epoch")
-parser.add_argument("-t", "--test-episodes", type=int, default=100,
+parser.add_argument("-t", "--test-episodes", type=int, default=100, metavar="",
                     help="test episodes per epoch")
-parser.add_argument("-f", "--save-freq", type=int, default=0,
+parser.add_argument("-f", "--save-freq", type=int, default=0, metavar="",
                     help="save params every x epochs")
 parser.add_argument("-w", "--watch-episodes", action="store_true", default=False,
                     help="watch episodes after training")
