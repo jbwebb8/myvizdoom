@@ -154,8 +154,9 @@ for test_episode in range(test_episodes):
         game.set_action(actions[best_action_index])
         for _ in range(frame_repeat):
             game.advance_action()
+            agent.track_position()
         
-        agent.track_position()
+        
 
     # Sleep between episodes
     sleep(1.0)
