@@ -14,3 +14,4 @@ python/*.ini
 *.bak
 *.cfg
 tmp
+temp
