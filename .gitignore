@@ -10,7 +10,10 @@ python/*.ini
 # Programs
 .vscode
 
-# Miscellaneous
+# Temporary files
 *.bak
-*.cfg
 tmp
+temp
+
+# Miscellaneous
+*.cfg

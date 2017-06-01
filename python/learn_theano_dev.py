@@ -17,7 +17,8 @@ import itertools as it
 import pickle
 import argparse
 import json
-import os
+import os, errno
+import warnings
 from random import sample, randint, random
 from time import time, sleep
 import numpy as np
@@ -34,19 +35,19 @@ from tqdm import trange
 
 # TODO: could call action class to ensure args make sense (e.g. json file)
 # Command line arguments
-parser = argparse.ArgumentParser(description='train an agent')
+parser = argparse.ArgumentParser(description='Train an agent.')
 parser.add_argument("agent_file_path",
                     help="json file containing agent net and learning args")
 parser.add_argument("config_file_path", help="config file for scenario")
 parser.add_argument("results_directory",
                     help="directory where results will be saved")
-parser.add_argument("-e", "--epochs", type=int, default=100,
+parser.add_argument("-e", "--epochs", type=int, default=100, metavar="",
                     help="number of epochs to train")
-parser.add_argument("-s", "--learning-steps", type=int, default=2000,
+parser.add_argument("-s", "--learning-steps", type=int, default=2000, metavar="",
                     help="learning steps per epoch")
-parser.add_argument("-t", "--test-episodes", type=int, default=100,
+parser.add_argument("-t", "--test-episodes", type=int, default=100, metavar="",
                     help="test episodes per epoch")
-parser.add_argument("-f", "--save-freq", type=int, default=0,
+parser.add_argument("-f", "--save-freq", type=int, default=0, metavar="",
                     help="save params every x epochs")
 parser.add_argument("-w", "--watch-episodes", action="store_true", default=False,
                     help="watch episodes after training")
@@ -88,19 +89,29 @@ watch_episodes = args.watch_episodes
 frame_repeat = 12
 resolution = (30, 45)
 episodes_to_watch = 10
+phi = 4 # stacked input frames
+frame_skip = 4
+current_state = []
 
 
 # Converts and downsamples the input image
 def preprocess(img):
-    img = skimage.transform.resize(img, resolution)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        img = skimage.transform.resize(img, resolution)
     img = img.astype(np.float32)
     return img
 
+def update_state(state, new_img):
+    img = preprocess(new_img)
+    state.append(img)
+    _ = state.pop(0)
+    return state
 
 # Stores and learns from memory
 class ReplayMemory:
     def __init__(self, capacity):
-        state_shape = (capacity, 1, resolution[0], resolution[1])
+        state_shape = (capacity, phi, resolution[0], resolution[1])
         self.s1 = np.zeros(state_shape, dtype=np.float32)
         self.s2 = np.zeros(state_shape, dtype=np.float32)
         self.a = np.zeros(capacity, dtype=np.int32)
@@ -137,18 +148,21 @@ def create_network(available_actions_count):
     isterminal = tensor.vector("IsTerminal", dtype="int8")
 
     # Create the input layer of the network.
-    dqn = InputLayer(shape=[None, 1, resolution[0], resolution[1]], input_var=s1)
+    dqn = InputLayer(shape=[None, phi, resolution[0], resolution[1]], input_var=s1)
 
     # Add 2 convolutional layers with ReLu activation
-    dqn = Conv2DLayer(dqn, num_filters=8, filter_size=[6, 6],
+    dqn = Conv2DLayer(dqn, num_filters=32, filter_size=[8, 8],
                       nonlinearity=rectify, W=HeUniform("relu"),
-                      b=Constant(.1), stride=3)
-    dqn = Conv2DLayer(dqn, num_filters=8, filter_size=[3, 3],
+                      b=Constant(.1), stride=[4, 4])
+    dqn = Conv2DLayer(dqn, num_filters=64, filter_size=[4, 4],
                       nonlinearity=rectify, W=HeUniform("relu"),
-                      b=Constant(.1), stride=2)
+                      b=Constant(.1), stride=[2,2])
+    dqn = Conv2DLayer(dqn, num_filters=64, filter_size=[3, 3],
+                      nonlinearity=rectify, W=HeUniform("relu"),
+                      b=Constant(.1), stride=[1, 1])
 
     # Add a single fully-connected layer.
-    dqn = DenseLayer(dqn, num_units=128, nonlinearity=rectify, W=HeUniform("relu"),
+    dqn = DenseLayer(dqn, num_units=512, nonlinearity=rectify, W=HeUniform("relu"),
                      b=Constant(.1))
 
     # Add the output layer (also fully-connected).
@@ -174,7 +188,8 @@ def create_network(available_actions_count):
     print("Network compiled.")
 
     def simple_get_best_action(state):
-        return function_get_best_action(state.reshape([1, 1, resolution[0], resolution[1]]))
+        game.set_episode_start_time = phi
+        return function_get_best_action(state.reshape([1, phi, resolution[0], resolution[1]]))
 
     # Returns Theano objects for the net and functions.
     return dqn, function_learn, function_get_q_values, simple_get_best_action
@@ -213,7 +228,8 @@ def perform_learning_step(epoch):
         else:
             return epsilon_end
 
-    s1 = preprocess(game.get_state().screen_buffer)
+        current_screen = preprocess(game.get_state().screen_buffer)
+        s1 = update_state(current_state, current_screen)
 
     # With probability epsilon make a random action.
     epsilon = exploration_rate(epoch)
@@ -225,7 +241,10 @@ def perform_learning_step(epoch):
     reward = game.make_action(actions[a], frame_repeat)
 
     isterminal = game.is_episode_finished()
-    s2 = preprocess(game.get_state().screen_buffer) if not isterminal else None
+    
+    if not isterminal:
+        current_screen = preprocess(game.get_state().screen_buffer)
+        s2 = update_state(current_state, current_screen)
 
     # Remember the transition that was just experienced.
     memory.add_transition(s1, a, s2, isterminal, reward)
@@ -270,7 +289,14 @@ for epoch in range(epochs):
 
     # Training
     print("Training...")
+    if (game.get_episode_start_time < phi*frame_skip):
+        game.set_episode_start_time = phi*frame_skip
     game.new_episode()
+    while (game.get_episode_time <= game.get_episode_start_time):
+        current_screen = preprocess(game.get_state().screen_buffer)
+        current_state = update_state(current_screen, current_state)
+        if (len(current_state) > phi):
+            _ = current_state.pop(0)
     for learning_step in trange(learning_steps_per_epoch):
         perform_learning_step(epoch)
         if game.is_episode_finished():
@@ -290,7 +316,8 @@ for epoch in range(epochs):
     for test_episode in trange(test_episodes_per_epoch):
         game.new_episode()
         while not game.is_episode_finished():
-            state = preprocess(game.get_state().screen_buffer)
+            current_screen = preprocess(game.get_state().screen_buffer)
+            current_state = update_state(current_screen, current_state)
             best_action_index = get_best_action(state)
             game.make_action(actions[best_action_index], frame_repeat)
         r = game.get_total_reward()
@@ -335,7 +362,9 @@ if watch_episodes:
     for _ in range(episodes_to_watch):
         game.new_episode()
         while not game.is_episode_finished():
-            state = preprocess(game.get_state().screen_buffer)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                state = preprocess(game.get_state().screen_buffer)
             best_action_index = get_best_action(state)
 
             # Instead of make_action(a, frame_repeat) in order to make the animation smooth
