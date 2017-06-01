@@ -25,7 +25,7 @@ import numpy as np
 import skimage.color, skimage.transform
 from lasagne.init import HeUniform, Constant
 from lasagne.layers import Conv2DLayer, InputLayer, DenseLayer, get_output, \
-    get_all_params, get_all_param_values, set_all_param_values
+    get_all_params, get_all_param_values, set_all_param_values, get_output_shape
 from lasagne.nonlinearities import rectify
 from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop
@@ -86,12 +86,12 @@ if save_freq == 0: save_freq = epochs
 watch_episodes = args.watch_episodes
 
 # Other parameters
-frame_repeat = 12
+phi = 4 # stacked input frames
+current_state = []
+frame_repeat = 4
 resolution = (30, 45)
 episodes_to_watch = 10
-phi = 4 # stacked input frames
-frame_skip = 4
-current_state = []
+
 
 
 # Converts and downsamples the input image
@@ -123,10 +123,10 @@ class ReplayMemory:
         self.pos = 0
 
     def add_transition(self, s1, action, s2, isterminal, reward):
-        self.s1[self.pos, 0] = s1
+        self.s1[self.pos, 0] = np.asarray(s1)
         self.a[self.pos] = action
         if not isterminal:
-            self.s2[self.pos, 0] = s2
+            self.s2[self.pos, 0] = np.asarray(s2)
         self.isterminal[self.pos] = isterminal
         self.r[self.pos] = reward
 
@@ -149,26 +149,28 @@ def create_network(available_actions_count):
 
     # Create the input layer of the network.
     dqn = InputLayer(shape=[None, phi, resolution[0], resolution[1]], input_var=s1)
-
+    print(get_output_shape(dqn))
     # Add 2 convolutional layers with ReLu activation
-    dqn = Conv2DLayer(dqn, num_filters=32, filter_size=[8, 8],
+    dqn = Conv2DLayer(dqn, num_filters=16, filter_size=[6, 6],
                       nonlinearity=rectify, W=HeUniform("relu"),
-                      b=Constant(.1), stride=[4, 4])
-    dqn = Conv2DLayer(dqn, num_filters=64, filter_size=[4, 4],
+                      b=Constant(.1), stride=[3, 3])
+    print(get_output_shape(dqn))
+    dqn = Conv2DLayer(dqn, num_filters=32, filter_size=[4, 4],
                       nonlinearity=rectify, W=HeUniform("relu"),
-                      b=Constant(.1), stride=[2,2])
-    dqn = Conv2DLayer(dqn, num_filters=64, filter_size=[3, 3],
+                      b=Constant(.1), stride=[1,1])
+    print(get_output_shape(dqn))
+    dqn = Conv2DLayer(dqn, num_filters=32, filter_size=[2, 2],
                       nonlinearity=rectify, W=HeUniform("relu"),
                       b=Constant(.1), stride=[1, 1])
-
+    print(get_output_shape(dqn))
     # Add a single fully-connected layer.
     dqn = DenseLayer(dqn, num_units=512, nonlinearity=rectify, W=HeUniform("relu"),
                      b=Constant(.1))
-
+    print(get_output_shape(dqn))
     # Add the output layer (also fully-connected).
     # (no nonlinearity as it is for approximating an arbitrary real function)
     dqn = DenseLayer(dqn, num_units=available_actions_count, nonlinearity=None)
-
+    print(get_output_shape(dqn))
     # Define the loss function
     q = get_output(dqn)
     # target differs from q only for the selected action. The following means:
@@ -228,8 +230,8 @@ def perform_learning_step(epoch):
         else:
             return epsilon_end
 
-        current_screen = preprocess(game.get_state().screen_buffer)
-        s1 = update_state(current_state, current_screen)
+    current_screen = preprocess(game.get_state().screen_buffer)
+    s1 = update_state(current_state, current_screen)
 
     # With probability epsilon make a random action.
     epsilon = exploration_rate(epoch)
@@ -289,14 +291,16 @@ for epoch in range(epochs):
 
     # Training
     print("Training...")
-    if (game.get_episode_start_time < phi*frame_skip):
-        game.set_episode_start_time = phi*frame_skip
+    if (game.get_episode_start_time() < phi*frame_repeat):
+        game.set_episode_start_time(phi*frame_repeat)
     game.new_episode()
-    while (game.get_episode_time <= game.get_episode_start_time):
+    while (game.get_episode_time() <= game.get_episode_start_time()):
         current_screen = preprocess(game.get_state().screen_buffer)
-        current_state = update_state(current_screen, current_state)
+        current_state.append(current_screen)
         if (len(current_state) > phi):
             _ = current_state.pop(0)
+        game.advance_action(1, False)
+    print(*current_state, sep='\n')
     for learning_step in trange(learning_steps_per_epoch):
         perform_learning_step(epoch)
         if game.is_episode_finished():
@@ -317,7 +321,7 @@ for epoch in range(epochs):
         game.new_episode()
         while not game.is_episode_finished():
             current_screen = preprocess(game.get_state().screen_buffer)
-            current_state = update_state(current_screen, current_state)
+            current_state = update_state(current_state, current_screen)
             best_action_index = get_best_action(state)
             game.make_action(actions[best_action_index], frame_repeat)
         r = game.get_total_reward()
