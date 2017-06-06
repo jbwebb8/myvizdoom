@@ -146,7 +146,7 @@ np.savetxt(results_directory + "action_indices.txt", agent.action_indices)
 print("Loading the network weigths from:", params_file_path)
 print("Let's watch!")
 
-# Load the neagent.actionstwork's parameters from a file
+# Load the network's parameters from a file
 params = pickle.load(open(params_file_path, "rb"), encoding="latin1")
 set_all_param_values(net, params)
 

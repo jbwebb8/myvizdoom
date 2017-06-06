@@ -18,6 +18,7 @@ import pickle
 import argparse
 import json
 import os, errno
+import warnings
 from random import sample, randint, random
 from time import time, sleep
 import numpy as np
@@ -92,7 +93,9 @@ episodes_to_watch = 10
 
 # Converts and downsamples the input image
 def preprocess(img):
-    img = skimage.transform.resize(img, resolution)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        img = skimage.transform.resize(img, resolution)
     img = img.astype(np.float32)
     return img
 
