@@ -270,6 +270,7 @@ for epoch in range(epochs):
     print("\nEpoch %d\n-------" % (epoch + 1))
     train_episodes_finished = 0
     train_scores = []
+    tracking_scores = []
 
     # Training
     print("Training...")
@@ -279,17 +280,23 @@ for epoch in range(epochs):
         if game.is_episode_finished():
             score = game.get_total_reward()
             train_scores.append(score)
+            tracking = doom_fixed_to_double(game.get_game_variable(GameVariable.USER1))
+            tracking_scores.append(tracking)
             game.new_episode()
             train_episodes_finished += 1
     print("%d training episodes played." % train_episodes_finished)
     train_scores = np.array(train_scores)
     print("Results: mean: %.1f±%.1f," % (train_scores.mean(), train_scores.std()), \
           "min: %.1f," % train_scores.min(), "max: %.1f," % train_scores.max())
-    
+    tracking_scores = np.array(tracking_scores)
+    print("Tracking: mean: %.1f±%.1f," % (tracking_scores.mean(), tracking_scores.std()), \
+          "min: %.1f," % tracking_scores.min(), "max: %.1f," % tracking_scores.max())
+
     # Testing
     print("\nTesting...")
     test_episode = []
     test_scores = []
+    tracking_scores = []
     for test_episode in trange(test_episodes_per_epoch):
         game.new_episode()
         while not game.is_episode_finished():
@@ -298,9 +305,14 @@ for epoch in range(epochs):
             game.make_action(actions[best_action_index], frame_repeat)
         r = game.get_total_reward()
         test_scores.append(r)
+        tracking = doom_fixed_to_double(game.get_game_variable(GameVariable.USER1))
+        tracking_scores.append(tracking)
     test_scores = np.array(test_scores)
     print("Results: mean: %.1f±%.1f," % (
         test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max())
+    tracking_scores = np.array(tracking_scores)
+    print("Tracking: mean: %.1f±%.1f," % (tracking_scores.mean(), tracking_scores.std()), \
+          "min: %.1f," % tracking_scores.min(), "max: %.1f," % tracking_scores.max())
 
     # Save network params after specified number of epochs; otherwise store temporarily after each epoch
     if epoch + 1 == epochs:
