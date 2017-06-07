@@ -9,7 +9,7 @@ class Agent:
         self.actions = []
         self.action_indices = self.game.get_available_buttons()
 
-    def _create_network(self):
+    # def _create_network(self):
         
 
     def track_position(self):
