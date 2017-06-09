@@ -1,0 +1,2607 @@
+Initializing doom...
+Doom initialized.
+[(None, 1, 66, 88), (None, 32, 15, 21), (None, 64, 7, 10), (None, 64, 5, 8), (None, 512), (None, 16)]
+Compiling the network ...
+Network compiled.
+Starting the training!
+
+Epoch 1
+-------
+Training...
+149 training episodes played.
+Results: mean: -1583.9±519.4, min: -2000.0, max: 0.0,
+Tracking: mean: 214.0±244.1, min: 0.0, max: 1212.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 429.7±0.0, min: 429.7, max: 429.7,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 5.04 minutes
+
+Epoch 2
+-------
+Training...
+149 training episodes played.
+Results: mean: -1557.0±535.7, min: -2000.0, max: 0.0,
+Tracking: mean: 182.9±214.2, min: 0.0, max: 1049.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 9.77 minutes
+
+Epoch 3
+-------
+Training...
+149 training episodes played.
+Results: mean: -1630.9±509.6, min: -2000.0, max: 0.0,
+Tracking: mean: 207.8±227.6, min: -8.8, max: 1190.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 14.57 minutes
+
+Epoch 4
+-------
+Training...
+149 training episodes played.
+Results: mean: -1630.9±509.6, min: -2000.0, max: 0.0,
+Tracking: mean: 262.7±255.8, min: -173.0, max: 1200.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 19.34 minutes
+
+Epoch 5
+-------
+Training...
+149 training episodes played.
+Results: mean: -1570.5±508.4, min: -2000.0, max: 0.0,
+Tracking: mean: 240.6±274.6, min: 0.0, max: 1067.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 429.7±0.0, min: 429.7, max: 429.7,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 24.03 minutes
+
+Epoch 6
+-------
+Training...
+149 training episodes played.
+Results: mean: -1597.3±517.1, min: -2000.0, max: 0.0,
+Tracking: mean: 266.4±294.8, min: -89.9, max: 1208.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 28.85 minutes
+
+Epoch 7
+-------
+Training...
+149 training episodes played.
+Results: mean: -1590.6±543.6, min: -2000.0, max: 0.0,
+Tracking: mean: 223.1±256.4, min: -0.0, max: 1348.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 33.81 minutes
+
+Epoch 8
+-------
+Training...
+149 training episodes played.
+Results: mean: -1523.5±538.3, min: -2000.0, max: 0.0,
+Tracking: mean: 214.8±238.7, min: -0.1, max: 1184.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 38.61 minutes
+
+Epoch 9
+-------
+Training...
+149 training episodes played.
+Results: mean: -1577.2±520.5, min: -2000.0, max: 0.0,
+Tracking: mean: 229.5±246.4, min: 0.0, max: 1295.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 43.43 minutes
+
+Epoch 10
+-------
+Training...
+149 training episodes played.
+Results: mean: -1510.1±551.0, min: -2000.0, max: 0.0,
+Tracking: mean: 220.4±230.3, min: 0.0, max: 974.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch10.dump
+Total elapsed time: 48.33 minutes
+
+Epoch 11
+-------
+Training...
+149 training episodes played.
+Results: mean: -1550.3±548.8, min: -2000.0, max: 0.0,
+Tracking: mean: 221.1±248.8, min: 0.0, max: 1129.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 53.18 minutes
+
+Epoch 12
+-------
+Training...
+149 training episodes played.
+Results: mean: -1550.3±536.4, min: -2000.0, max: 0.0,
+Tracking: mean: 261.2±296.3, min: 0.0, max: 1552.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 429.7±0.0, min: 429.7, max: 429.7,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 57.91 minutes
+
+Epoch 13
+-------
+Training...
+149 training episodes played.
+Results: mean: -1630.9±522.6, min: -2000.0, max: 0.0,
+Tracking: mean: 207.4±246.0, min: 0.0, max: 1028.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 62.64 minutes
+
+Epoch 14
+-------
+Training...
+149 training episodes played.
+Results: mean: -1590.6±531.1, min: -2000.0, max: 0.0,
+Tracking: mean: 240.4±286.5, min: -296.2, max: 1328.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 67.35 minutes
+
+Epoch 15
+-------
+Training...
+149 training episodes played.
+Results: mean: -1624.2±524.3, min: -2000.0, max: 0.0,
+Tracking: mean: 219.2±271.2, min: -268.9, max: 1541.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 72.17 minutes
+
+Epoch 16
+-------
+Training...
+149 training episodes played.
+Results: mean: -1630.9±509.6, min: -2000.0, max: 0.0,
+Tracking: mean: 252.5±298.5, min: -404.1, max: 1161.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 76.77 minutes
+
+Epoch 17
+-------
+Training...
+149 training episodes played.
+Results: mean: -1590.6±543.6, min: -2000.0, max: 0.0,
+Tracking: mean: 263.6±279.1, min: 0.0, max: 1105.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 81.56 minutes
+
+Epoch 18
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±537.9, min: -2000.0, max: 0.0,
+Tracking: mean: 228.5±257.2, min: 0.0, max: 1011.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 86.31 minutes
+
+Epoch 19
+-------
+Training...
+149 training episodes played.
+Results: mean: -1604.0±541.2, min: -2000.0, max: 0.0,
+Tracking: mean: 216.8±253.6, min: -0.4, max: 997.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 90.96 minutes
+
+Epoch 20
+-------
+Training...
+149 training episodes played.
+Results: mean: -1624.2±498.0, min: -2000.0, max: 0.0,
+Tracking: mean: 245.0±252.5, min: -0.0, max: 948.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 429.7±0.0, min: 429.7, max: 429.7,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch20.dump
+Total elapsed time: 95.58 minutes
+
+Epoch 21
+-------
+Training...
+149 training episodes played.
+Results: mean: -1550.3±523.7, min: -2000.0, max: 0.0,
+Tracking: mean: 274.6±296.3, min: 0.0, max: 1124.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 100.20 minutes
+
+Epoch 22
+-------
+Training...
+149 training episodes played.
+Results: mean: -1630.9±522.6, min: -2000.0, max: 0.0,
+Tracking: mean: 213.6±279.2, min: -1013.9, max: 1247.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 104.85 minutes
+
+Epoch 23
+-------
+Training...
+149 training episodes played.
+Results: mean: -1597.3±517.1, min: -2000.0, max: 0.0,
+Tracking: mean: 226.6±263.1, min: -0.4, max: 1145.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 109.70 minutes
+
+Epoch 24
+-------
+Training...
+149 training episodes played.
+Results: mean: -1577.2±557.8, min: -2000.0, max: 0.0,
+Tracking: mean: 243.3±242.1, min: -37.5, max: 1046.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 114.48 minutes
+
+Epoch 25
+-------
+Training...
+149 training episodes played.
+Results: mean: -1604.0±515.8, min: -2000.0, max: 0.0,
+Tracking: mean: 195.2±239.6, min: 0.0, max: 1130.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 119.16 minutes
+
+Epoch 26
+-------
+Training...
+149 training episodes played.
+Results: mean: -1657.7±515.2, min: -2000.0, max: 0.0,
+Tracking: mean: 250.2±269.5, min: 0.0, max: 1527.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 124.00 minutes
+
+Epoch 27
+-------
+Training...
+149 training episodes played.
+Results: mean: -1610.7±552.1, min: -2000.0, max: 0.0,
+Tracking: mean: 241.4±272.8, min: -1.9, max: 1094.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 128.74 minutes
+
+Epoch 28
+-------
+Training...
+149 training episodes played.
+Results: mean: -1604.0±541.2, min: -2000.0, max: 0.0,
+Tracking: mean: 196.6±236.2, min: 0.0, max: 1140.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 133.64 minutes
+
+Epoch 29
+-------
+Training...
+149 training episodes played.
+Results: mean: -1536.9±585.3, min: -2000.0, max: 0.0,
+Tracking: mean: 262.2±280.9, min: 0.0, max: 1244.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 138.56 minutes
+
+Epoch 30
+-------
+Training...
+149 training episodes played.
+Results: mean: -1597.3±517.1, min: -2000.0, max: 0.0,
+Tracking: mean: 211.6±253.9, min: 0.0, max: 987.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch30.dump
+Total elapsed time: 143.62 minutes
+
+Epoch 31
+-------
+Training...
+149 training episodes played.
+Results: mean: -1610.7±527.3, min: -2000.0, max: 0.0,
+Tracking: mean: 264.8±287.3, min: 0.0, max: 1184.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 148.50 minutes
+
+Epoch 32
+-------
+Training...
+149 training episodes played.
+Results: mean: -1476.5±574.4, min: -2000.0, max: 0.0,
+Tracking: mean: 295.6±319.8, min: -730.3, max: 1384.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 153.48 minutes
+
+Epoch 33
+-------
+Training...
+149 training episodes played.
+Results: mean: -1577.2±507.4, min: -2000.0, max: 0.0,
+Tracking: mean: 232.5±261.7, min: -2.4, max: 1012.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 158.46 minutes
+
+Epoch 34
+-------
+Training...
+149 training episodes played.
+Results: mean: -1557.0±523.1, min: -2000.0, max: 0.0,
+Tracking: mean: 217.6±241.2, min: 0.0, max: 1059.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 163.33 minutes
+
+Epoch 35
+-------
+Training...
+149 training episodes played.
+Results: mean: -1523.5±586.0, min: -2000.0, max: 0.0,
+Tracking: mean: 271.4±318.5, min: -1792.9, max: 1175.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 168.30 minutes
+
+Epoch 36
+-------
+Training...
+149 training episodes played.
+Results: mean: -1550.3±523.7, min: -2000.0, max: 0.0,
+Tracking: mean: 290.5±292.7, min: -13.2, max: 1411.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 173.16 minutes
+
+Epoch 37
+-------
+Training...
+149 training episodes played.
+Results: mean: -1590.6±491.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 264.4±299.0, min: 0.0, max: 1326.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 178.18 minutes
+
+Epoch 38
+-------
+Training...
+149 training episodes played.
+Results: mean: -1496.6±538.8, min: -2000.0, max: 0.0,
+Tracking: mean: 283.6±301.5, min: -1.6, max: 1285.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 183.03 minutes
+
+Epoch 39
+-------
+Training...
+149 training episodes played.
+Results: mean: -1597.3±554.7, min: -2000.0, max: 0.0,
+Tracking: mean: 211.5±280.1, min: 0.0, max: 1401.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 187.93 minutes
+
+Epoch 40
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±550.3, min: -2000.0, max: 0.0,
+Tracking: mean: 254.0±297.3, min: -0.0, max: 1492.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch40.dump
+Total elapsed time: 192.85 minutes
+
+Epoch 41
+-------
+Training...
+149 training episodes played.
+Results: mean: -1563.8±535.0, min: -2000.0, max: 0.0,
+Tracking: mean: 268.7±299.2, min: -1.7, max: 1471.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 197.73 minutes
+
+Epoch 42
+-------
+Training...
+149 training episodes played.
+Results: mean: -1711.4±453.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 212.2±275.7, min: -0.0, max: 1229.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 202.63 minutes
+
+Epoch 43
+-------
+Training...
+149 training episodes played.
+Results: mean: -1765.1±423.9, min: -2000.0, max: -1000.0,
+Tracking: mean: 168.7±276.3, min: -1018.4, max: 1195.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 429.7±0.0, min: 429.7, max: 429.7,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 207.59 minutes
+
+Epoch 44
+-------
+Training...
+149 training episodes played.
+Results: mean: -1671.1±510.9, min: -2000.0, max: 0.0,
+Tracking: mean: 233.1±273.5, min: -725.1, max: 1134.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 212.67 minutes
+
+Epoch 45
+-------
+Training...
+149 training episodes played.
+Results: mean: -1597.3±517.1, min: -2000.0, max: 0.0,
+Tracking: mean: 201.4±234.7, min: 0.0, max: 1080.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 217.93 minutes
+
+Epoch 46
+-------
+Training...
+149 training episodes played.
+Results: mean: -1597.3±503.9, min: -2000.0, max: 0.0,
+Tracking: mean: 230.5±274.1, min: 0.0, max: 1312.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 222.83 minutes
+
+Epoch 47
+-------
+Training...
+149 training episodes played.
+Results: mean: -1476.5±597.4, min: -2000.0, max: 0.0,
+Tracking: mean: 312.8±311.5, min: -1.4, max: 1460.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 227.71 minutes
+
+Epoch 48
+-------
+Training...
+149 training episodes played.
+Results: mean: -1543.6±549.4, min: -2000.0, max: 0.0,
+Tracking: mean: 280.9±328.7, min: -1103.5, max: 1510.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 232.71 minutes
+
+Epoch 49
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±574.9, min: -2000.0, max: 0.0,
+Tracking: mean: 299.4±319.4, min: -0.0, max: 1367.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 237.62 minutes
+
+Epoch 50
+-------
+Training...
+149 training episodes played.
+Results: mean: -1523.5±550.6, min: -2000.0, max: 0.0,
+Tracking: mean: 287.3±276.8, min: 0.0, max: 1124.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch50.dump
+Total elapsed time: 242.58 minutes
+
+Epoch 51
+-------
+Training...
+149 training episodes played.
+Results: mean: -1563.8±522.3, min: -2000.0, max: 0.0,
+Tracking: mean: 305.5±336.6, min: 0.0, max: 1530.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 247.70 minutes
+
+Epoch 52
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±562.3, min: -2000.0, max: 0.0,
+Tracking: mean: 296.2±316.0, min: -4.1, max: 1284.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 253.75 minutes
+
+Epoch 53
+-------
+Training...
+149 training episodes played.
+Results: mean: -1489.9±538.7, min: -2000.0, max: 0.0,
+Tracking: mean: 308.1±327.1, min: 0.0, max: 1601.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 259.05 minutes
+
+Epoch 54
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±586.5, min: -2000.0, max: 0.0,
+Tracking: mean: 340.2±358.8, min: 0.0, max: 1323.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 264.78 minutes
+
+Epoch 55
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±562.3, min: -2000.0, max: 0.0,
+Tracking: mean: 314.1±308.3, min: 0.0, max: 1078.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 270.83 minutes
+
+Epoch 56
+-------
+Training...
+149 training episodes played.
+Results: mean: -1483.2±562.9, min: -2000.0, max: 0.0,
+Tracking: mean: 333.8±331.7, min: 0.0, max: 1384.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 275.66 minutes
+
+Epoch 57
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±548.1, min: -2000.0, max: 0.0,
+Tracking: mean: 298.6±350.2, min: -3.1, max: 1501.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 280.40 minutes
+
+Epoch 58
+-------
+Training...
+149 training episodes played.
+Results: mean: -1436.2±559.5, min: -2000.0, max: 0.0,
+Tracking: mean: 308.3±332.1, min: -736.7, max: 1291.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 285.13 minutes
+
+Epoch 59
+-------
+Training...
+149 training episodes played.
+Results: mean: -1483.2±574.7, min: -2000.0, max: 0.0,
+Tracking: mean: 314.8±331.0, min: -1.8, max: 1454.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 289.91 minutes
+
+Epoch 60
+-------
+Training...
+149 training episodes played.
+Results: mean: -1496.6±574.9, min: -2000.0, max: 0.0,
+Tracking: mean: 320.4±361.6, min: 0.0, max: 1481.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch60.dump
+Total elapsed time: 294.65 minutes
+
+Epoch 61
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±535.7, min: -2000.0, max: 0.0,
+Tracking: mean: 358.5±336.3, min: 0.0, max: 1351.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 299.24 minutes
+
+Epoch 62
+-------
+Training...
+149 training episodes played.
+Results: mean: -1516.8±513.0, min: -2000.0, max: 0.0,
+Tracking: mean: 378.6±407.8, min: -615.9, max: 1624.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 303.84 minutes
+
+Epoch 63
+-------
+Training...
+149 training episodes played.
+Results: mean: -1449.7±572.7, min: -2000.0, max: 0.0,
+Tracking: mean: 362.3±348.5, min: 0.0, max: 1507.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 308.43 minutes
+
+Epoch 64
+-------
+Training...
+149 training episodes played.
+Results: mean: -1362.4±604.4, min: -2000.0, max: 0.0,
+Tracking: mean: 401.5±374.8, min: 0.0, max: 1506.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 312.98 minutes
+
+Epoch 65
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±595.1, min: -2000.0, max: 0.0,
+Tracking: mean: 377.6±375.8, min: 0.0, max: 1534.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 317.54 minutes
+
+Epoch 66
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±608.2, min: -2000.0, max: 0.0,
+Tracking: mean: 364.9±365.9, min: 0.0, max: 1429.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 322.16 minutes
+
+Epoch 67
+-------
+Training...
+149 training episodes played.
+Results: mean: -1496.6±563.1, min: -2000.0, max: 0.0,
+Tracking: mean: 312.0±341.3, min: 0.0, max: 1435.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 326.78 minutes
+
+Epoch 68
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±537.0, min: -2000.0, max: 0.0,
+Tracking: mean: 418.4±396.7, min: 0.0, max: 1483.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 331.38 minutes
+
+Epoch 69
+-------
+Training...
+149 training episodes played.
+Results: mean: -1463.1±585.3, min: -2000.0, max: 0.0,
+Tracking: mean: 339.8±346.6, min: 0.0, max: 1451.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 336.02 minutes
+
+Epoch 70
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±585.7, min: -2000.0, max: 0.0,
+Tracking: mean: 392.3±399.6, min: -628.0, max: 1529.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch70.dump
+Total elapsed time: 340.69 minutes
+
+Epoch 71
+-------
+Training...
+149 training episodes played.
+Results: mean: -1382.6±586.2, min: -2000.0, max: 0.0,
+Tracking: mean: 376.4±382.1, min: -1.5, max: 1564.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 345.35 minutes
+
+Epoch 72
+-------
+Training...
+149 training episodes played.
+Results: mean: -1483.2±550.8, min: -2000.0, max: 0.0,
+Tracking: mean: 389.3±410.2, min: 0.0, max: 1584.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 349.93 minutes
+
+Epoch 73
+-------
+Training...
+149 training episodes played.
+Results: mean: -1389.3±598.8, min: -2000.0, max: 0.0,
+Tracking: mean: 372.3±383.4, min: 0.0, max: 1657.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 354.71 minutes
+
+Epoch 74
+-------
+Training...
+149 training episodes played.
+Results: mean: -1463.1±561.9, min: -2000.0, max: 0.0,
+Tracking: mean: 465.8±433.4, min: 0.0, max: 1660.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 359.42 minutes
+
+Epoch 75
+-------
+Training...
+149 training episodes played.
+Results: mean: -1463.1±573.7, min: -2000.0, max: 0.0,
+Tracking: mean: 457.5±397.1, min: -3.0, max: 1492.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 364.02 minutes
+
+Epoch 76
+-------
+Training...
+149 training episodes played.
+Results: mean: -1436.2±547.4, min: -2000.0, max: 0.0,
+Tracking: mean: 427.3±409.3, min: 0.0, max: 1601.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 368.68 minutes
+
+Epoch 77
+-------
+Training...
+149 training episodes played.
+Results: mean: -1476.5±538.3, min: -2000.0, max: 0.0,
+Tracking: mean: 466.1±428.8, min: -5.4, max: 1620.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 373.35 minutes
+
+Epoch 78
+-------
+Training...
+149 training episodes played.
+Results: mean: -1449.7±572.7, min: -2000.0, max: 0.0,
+Tracking: mean: 483.6±430.2, min: 0.0, max: 1621.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 378.03 minutes
+
+Epoch 79
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±595.1, min: -2000.0, max: 0.0,
+Tracking: mean: 456.4±436.1, min: 0.0, max: 1572.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 382.69 minutes
+
+Epoch 80
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±597.1, min: -2000.0, max: 0.0,
+Tracking: mean: 464.5±456.6, min: -0.0, max: 1673.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch80.dump
+Total elapsed time: 387.36 minutes
+
+Epoch 81
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±550.3, min: -2000.0, max: 0.0,
+Tracking: mean: 435.5±449.9, min: 0.0, max: 1630.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 392.04 minutes
+
+Epoch 82
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±548.1, min: -2000.0, max: 0.0,
+Tracking: mean: 423.8±463.6, min: -1456.0, max: 1670.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 396.74 minutes
+
+Epoch 83
+-------
+Training...
+149 training episodes played.
+Results: mean: -1375.8±607.3, min: -2000.0, max: 0.0,
+Tracking: mean: 422.2±429.2, min: -295.6, max: 1562.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 401.44 minutes
+
+Epoch 84
+-------
+Training...
+149 training episodes played.
+Results: mean: -1436.2±559.5, min: -2000.0, max: 0.0,
+Tracking: mean: 459.5±465.2, min: -6.0, max: 1551.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 406.15 minutes
+
+Epoch 85
+-------
+Training...
+149 training episodes played.
+Results: mean: -1463.1±596.7, min: -2000.0, max: 0.0,
+Tracking: mean: 504.9±467.3, min: 0.0, max: 1697.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 410.85 minutes
+
+Epoch 86
+-------
+Training...
+149 training episodes played.
+Results: mean: -1557.0±560.2, min: -2000.0, max: 0.0,
+Tracking: mean: 517.9±456.2, min: 0.0, max: 1677.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 415.56 minutes
+
+Epoch 87
+-------
+Training...
+149 training episodes played.
+Results: mean: -1416.1±603.1, min: -2000.0, max: 0.0,
+Tracking: mean: 572.4±506.8, min: 0.0, max: 1650.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 420.26 minutes
+
+Epoch 88
+-------
+Training...
+149 training episodes played.
+Results: mean: -1516.8±513.0, min: -2000.0, max: 0.0,
+Tracking: mean: 425.5±456.3, min: -6.7, max: 1677.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 424.96 minutes
+
+Epoch 89
+-------
+Training...
+149 training episodes played.
+Results: mean: -1476.5±550.6, min: -2000.0, max: 0.0,
+Tracking: mean: 466.2±449.5, min: 0.0, max: 1662.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 429.67 minutes
+
+Epoch 90
+-------
+Training...
+149 training episodes played.
+Results: mean: -1416.1±556.8, min: -2000.0, max: 0.0,
+Tracking: mean: 535.6±508.8, min: 0.0, max: 1699.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch90.dump
+Total elapsed time: 434.35 minutes
+
+Epoch 91
+-------
+Training...
+149 training episodes played.
+Results: mean: -1416.1±580.4, min: -2000.0, max: 0.0,
+Tracking: mean: 504.5±478.9, min: 0.0, max: 1682.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 439.04 minutes
+
+Epoch 92
+-------
+Training...
+149 training episodes played.
+Results: mean: -1429.5±582.2, min: -2000.0, max: 0.0,
+Tracking: mean: 506.7±494.8, min: 0.0, max: 1637.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 443.78 minutes
+
+Epoch 93
+-------
+Training...
+149 training episodes played.
+Results: mean: -1463.1±561.9, min: -2000.0, max: 0.0,
+Tracking: mean: 508.1±514.3, min: 0.0, max: 1685.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 448.50 minutes
+
+Epoch 94
+-------
+Training...
+149 training episodes played.
+Results: mean: -1570.5±521.4, min: -2000.0, max: 0.0,
+Tracking: mean: 482.9±470.4, min: -85.3, max: 1686.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 453.24 minutes
+
+Epoch 95
+-------
+Training...
+149 training episodes played.
+Results: mean: -1610.7±514.4, min: -2000.0, max: 0.0,
+Tracking: mean: 485.4±525.3, min: -1372.5, max: 1706.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 457.98 minutes
+
+Epoch 96
+-------
+Training...
+149 training episodes played.
+Results: mean: -1590.6±531.1, min: -2000.0, max: 0.0,
+Tracking: mean: 503.7±550.2, min: -1479.2, max: 1670.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 462.69 minutes
+
+Epoch 97
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±550.3, min: -2000.0, max: 0.0,
+Tracking: mean: 490.6±509.0, min: 0.0, max: 1679.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 467.44 minutes
+
+Epoch 98
+-------
+Training...
+149 training episodes played.
+Results: mean: -1396.0±541.2, min: -2000.0, max: 0.0,
+Tracking: mean: 578.5±526.4, min: -14.3, max: 1627.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 472.14 minutes
+
+Epoch 99
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±550.3, min: -2000.0, max: 0.0,
+Tracking: mean: 602.7±539.9, min: -4.0, max: 1677.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 476.86 minutes
+
+Epoch 100
+-------
+Training...
+149 training episodes played.
+Results: mean: -1483.2±574.7, min: -2000.0, max: 0.0,
+Tracking: mean: 549.2±522.9, min: 0.0, max: 1699.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch100.dump
+Total elapsed time: 481.58 minutes
+
+Epoch 101
+-------
+Training...
+149 training episodes played.
+Results: mean: -1489.9±526.1, min: -2000.0, max: 0.0,
+Tracking: mean: 536.8±507.2, min: 0.0, max: 1675.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 486.31 minutes
+
+Epoch 102
+-------
+Training...
+149 training episodes played.
+Results: mean: -1677.9±495.2, min: -2000.0, max: 0.0,
+Tracking: mean: 526.1±556.9, min: -440.3, max: 1676.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 491.05 minutes
+
+Epoch 103
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±538.8, min: -2000.0, max: 0.0,
+Tracking: mean: 573.8±556.6, min: -6.2, max: 1685.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 495.80 minutes
+
+Epoch 104
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±513.2, min: -2000.0, max: 0.0,
+Tracking: mean: 587.6±554.8, min: -0.0, max: 1697.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 500.57 minutes
+
+Epoch 105
+-------
+Training...
+149 training episodes played.
+Results: mean: -1557.0±523.1, min: -2000.0, max: 0.0,
+Tracking: mean: 626.5±585.8, min: 0.0, max: 1693.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 505.35 minutes
+
+Epoch 106
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±525.3, min: -2000.0, max: 0.0,
+Tracking: mean: 610.7±577.8, min: 0.0, max: 1703.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 510.14 minutes
+
+Epoch 107
+-------
+Training...
+149 training episodes played.
+Results: mean: -1751.7±432.0, min: -2000.0, max: -1000.0,
+Tracking: mean: 401.3±508.6, min: 0.0, max: 1689.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 514.92 minutes
+
+Epoch 108
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±524.3, min: -2000.0, max: 0.0,
+Tracking: mean: 612.8±633.0, min: 0.0, max: 1697.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 519.71 minutes
+
+Epoch 109
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±538.8, min: -2000.0, max: 0.0,
+Tracking: mean: 532.4±552.9, min: -0.1, max: 1686.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 524.51 minutes
+
+Epoch 110
+-------
+Training...
+149 training episodes played.
+Results: mean: -1436.2±535.0, min: -2000.0, max: 0.0,
+Tracking: mean: 555.0±569.2, min: 0.0, max: 1706.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch110.dump
+Total elapsed time: 529.30 minutes
+
+Epoch 111
+-------
+Training...
+149 training episodes played.
+Results: mean: -1496.6±500.0, min: -2000.0, max: -1000.0,
+Tracking: mean: 634.1±618.9, min: 0.0, max: 1705.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 534.08 minutes
+
+Epoch 112
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±551.1, min: -2000.0, max: 0.0,
+Tracking: mean: 686.9±636.1, min: 0.0, max: 1707.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 538.87 minutes
+
+Epoch 113
+-------
+Training...
+149 training episodes played.
+Results: mean: -1577.2±520.5, min: -2000.0, max: 0.0,
+Tracking: mean: 528.3±632.4, min: 0.0, max: 1702.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 543.69 minutes
+
+Epoch 114
+-------
+Training...
+149 training episodes played.
+Results: mean: -1510.1±499.9, min: -2000.0, max: -1000.0,
+Tracking: mean: 604.9±624.0, min: 0.0, max: 1703.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 548.50 minutes
+
+Epoch 115
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±523.1, min: -2000.0, max: 0.0,
+Tracking: mean: 554.4±598.0, min: 0.0, max: 1713.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 553.30 minutes
+
+Epoch 116
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±499.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 645.1±629.2, min: -59.1, max: 1707.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 558.12 minutes
+
+Epoch 117
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±511.4, min: -2000.0, max: 0.0,
+Tracking: mean: 585.7±633.6, min: 0.0, max: 1735.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 562.90 minutes
+
+Epoch 118
+-------
+Training...
+149 training episodes played.
+Results: mean: -1516.8±513.0, min: -2000.0, max: 0.0,
+Tracking: mean: 538.1±631.8, min: 0.0, max: 1729.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 567.68 minutes
+
+Epoch 119
+-------
+Training...
+149 training episodes played.
+Results: mean: -1516.8±499.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 646.3±658.0, min: 0.0, max: 1728.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 572.49 minutes
+
+Epoch 120
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±512.4, min: -2000.0, max: 0.0,
+Tracking: mean: 759.1±679.6, min: 0.0, max: 1753.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch120.dump
+Total elapsed time: 577.32 minutes
+
+Epoch 121
+-------
+Training...
+149 training episodes played.
+Results: mean: -1516.8±499.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 729.2±643.2, min: -27.6, max: 1732.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 582.12 minutes
+
+Epoch 122
+-------
+Training...
+149 training episodes played.
+Results: mean: -1516.8±499.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 590.7±677.7, min: -1400.2, max: 1736.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 586.94 minutes
+
+Epoch 123
+-------
+Training...
+149 training episodes played.
+Results: mean: -1583.9±519.4, min: -2000.0, max: 0.0,
+Tracking: mean: 664.3±646.5, min: -245.8, max: 1774.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 591.78 minutes
+
+Epoch 124
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±498.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 667.4±675.1, min: 0.0, max: 1740.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 596.59 minutes
+
+Epoch 125
+-------
+Training...
+149 training episodes played.
+Results: mean: -1416.1±519.4, min: -2000.0, max: 0.0,
+Tracking: mean: 602.6±611.3, min: 0.0, max: 1724.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 601.39 minutes
+
+Epoch 126
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±498.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 627.4±632.5, min: 0.0, max: 1765.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 606.19 minutes
+
+Epoch 127
+-------
+Training...
+149 training episodes played.
+Results: mean: -1543.6±498.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 660.6±675.4, min: 0.0, max: 1738.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 0.0±0.0, min: 0.0, max: 0.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 611.00 minutes
+
+Epoch 128
+-------
+Training...
+149 training episodes played.
+Results: mean: -1570.5±508.4, min: -2000.0, max: 0.0,
+Tracking: mean: 708.5±683.2, min: 0.0, max: 1734.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 615.79 minutes
+
+Epoch 129
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±496.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 611.5±641.7, min: 0.0, max: 1720.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 620.62 minutes
+
+Epoch 130
+-------
+Training...
+149 training episodes played.
+Results: mean: -1436.2±495.9, min: -2000.0, max: -1000.0,
+Tracking: mean: 633.9±654.3, min: 0.0, max: 1729.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch130.dump
+Total elapsed time: 625.47 minutes
+
+Epoch 131
+-------
+Training...
+149 training episodes played.
+Results: mean: -1516.8±499.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 626.5±681.1, min: 0.0, max: 1733.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 630.31 minutes
+
+Epoch 132
+-------
+Training...
+149 training episodes played.
+Results: mean: -1489.9±499.9, min: -2000.0, max: -1000.0,
+Tracking: mean: 617.7±669.4, min: 0.0, max: 1765.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 635.12 minutes
+
+Epoch 133
+-------
+Training...
+149 training episodes played.
+Results: mean: -1449.7±497.5, min: -2000.0, max: -1000.0,
+Tracking: mean: 688.3±673.8, min: 0.0, max: 1747.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 639.93 minutes
+
+Epoch 134
+-------
+Training...
+149 training episodes played.
+Results: mean: -1416.1±532.2, min: -2000.0, max: 0.0,
+Tracking: mean: 535.7±610.4, min: 0.0, max: 1743.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 644.76 minutes
+
+Epoch 135
+-------
+Training...
+149 training episodes played.
+Results: mean: -1429.5±534.1, min: -2000.0, max: 0.0,
+Tracking: mean: 706.0±644.3, min: 0.0, max: 1743.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 649.59 minutes
+
+Epoch 136
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±496.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 688.0±681.6, min: 0.0, max: 1746.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 654.42 minutes
+
+Epoch 137
+-------
+Training...
+149 training episodes played.
+Results: mean: -1489.9±499.9, min: -2000.0, max: -1000.0,
+Tracking: mean: 717.3±654.5, min: 0.0, max: 1713.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 659.23 minutes
+
+Epoch 138
+-------
+Training...
+149 training episodes played.
+Results: mean: -1422.8±494.0, min: -2000.0, max: -1000.0,
+Tracking: mean: 660.6±653.6, min: 0.0, max: 1738.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 664.06 minutes
+
+Epoch 139
+-------
+Training...
+149 training episodes played.
+Results: mean: -1402.7±490.4, min: -2000.0, max: -1000.0,
+Tracking: mean: 573.6±606.2, min: 0.0, max: 1735.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 668.86 minutes
+
+Epoch 140
+-------
+Training...
+149 training episodes played.
+Results: mean: -1496.6±500.0, min: -2000.0, max: -1000.0,
+Tracking: mean: 685.9±663.2, min: 0.0, max: 1742.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch140.dump
+Total elapsed time: 673.67 minutes
+
+Epoch 141
+-------
+Training...
+149 training episodes played.
+Results: mean: -1536.9±498.6, min: -2000.0, max: -1000.0,
+Tracking: mean: 762.8±668.1, min: 0.0, max: 1723.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 678.50 minutes
+
+Epoch 142
+-------
+Training...
+149 training episodes played.
+Results: mean: -1550.3±497.5, min: -2000.0, max: -1000.0,
+Tracking: mean: 811.2±663.9, min: 0.0, max: 1788.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 683.29 minutes
+
+Epoch 143
+-------
+Training...
+149 training episodes played.
+Results: mean: -1402.7±517.1, min: -2000.0, max: 0.0,
+Tracking: mean: 606.2±585.0, min: 0.0, max: 1728.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 688.15 minutes
+
+Epoch 144
+-------
+Training...
+149 training episodes played.
+Results: mean: -1396.0±502.6, min: -2000.0, max: 0.0,
+Tracking: mean: 628.4±614.8, min: 0.0, max: 1719.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 692.95 minutes
+
+Epoch 145
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±510.1, min: -2000.0, max: 0.0,
+Tracking: mean: 643.3±639.4, min: 0.0, max: 1732.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 697.75 minutes
+
+Epoch 146
+-------
+Training...
+149 training episodes played.
+Results: mean: -1483.2±499.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 647.1±632.0, min: 0.0, max: 1725.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 702.58 minutes
+
+Epoch 147
+-------
+Training...
+149 training episodes played.
+Results: mean: -1570.5±495.0, min: -2000.0, max: -1000.0,
+Tracking: mean: 834.0±642.1, min: 0.0, max: 1765.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 707.40 minutes
+
+Epoch 148
+-------
+Training...
+149 training episodes played.
+Results: mean: -1416.1±506.3, min: -2000.0, max: 0.0,
+Tracking: mean: 652.3±634.5, min: 0.0, max: 1727.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 712.22 minutes
+
+Epoch 149
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±510.1, min: -2000.0, max: 0.0,
+Tracking: mean: 630.5±644.3, min: 0.0, max: 1718.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 717.10 minutes
+
+Epoch 150
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±498.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 665.8±626.9, min: 0.0, max: 1729.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch150.dump
+Total elapsed time: 721.94 minutes
+
+Epoch 151
+-------
+Training...
+149 training episodes played.
+Results: mean: -1476.5±512.7, min: -2000.0, max: 0.0,
+Tracking: mean: 683.7±659.2, min: 0.0, max: 1769.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 726.76 minutes
+
+Epoch 152
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±499.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 771.0±679.4, min: 0.0, max: 1770.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 731.56 minutes
+
+Epoch 153
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±525.3, min: -2000.0, max: 0.0,
+Tracking: mean: 671.6±641.4, min: 0.0, max: 1716.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 736.36 minutes
+
+Epoch 154
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±500.0, min: -2000.0, max: -1000.0,
+Tracking: mean: 664.0±655.7, min: 0.0, max: 1758.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 741.17 minutes
+
+Epoch 155
+-------
+Training...
+149 training episodes played.
+Results: mean: -1375.8±484.3, min: -2000.0, max: -1000.0,
+Tracking: mean: 601.3±602.0, min: 0.0, max: 1715.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 745.95 minutes
+
+Epoch 156
+-------
+Training...
+149 training episodes played.
+Results: mean: -1416.1±506.3, min: -2000.0, max: 0.0,
+Tracking: mean: 630.9±623.0, min: 0.0, max: 1744.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 750.77 minutes
+
+Epoch 157
+-------
+Training...
+149 training episodes played.
+Results: mean: -1375.8±524.3, min: -2000.0, max: 0.0,
+Tracking: mean: 601.6±621.8, min: -0.0, max: 1749.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 755.60 minutes
+
+Epoch 158
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±524.3, min: -2000.0, max: 0.0,
+Tracking: mean: 709.3±606.1, min: 0.0, max: 1721.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 760.44 minutes
+
+Epoch 159
+-------
+Training...
+149 training episodes played.
+Results: mean: -1476.5±512.7, min: -2000.0, max: 0.0,
+Tracking: mean: 719.4±669.5, min: 0.0, max: 1745.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 765.28 minutes
+
+Epoch 160
+-------
+Training...
+149 training episodes played.
+Results: mean: -1483.2±499.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 762.7±639.1, min: 0.0, max: 1763.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch160.dump
+Total elapsed time: 770.08 minutes
+
+Epoch 161
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±513.2, min: -2000.0, max: 0.0,
+Tracking: mean: 688.5±656.5, min: 0.0, max: 1718.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 774.93 minutes
+
+Epoch 162
+-------
+Training...
+149 training episodes played.
+Results: mean: -1489.9±513.1, min: -2000.0, max: 0.0,
+Tracking: mean: 692.4±661.3, min: 0.0, max: 1793.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 779.74 minutes
+
+Epoch 163
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±512.4, min: -2000.0, max: 0.0,
+Tracking: mean: 706.9±655.3, min: 0.0, max: 1732.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 784.55 minutes
+
+Epoch 164
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±498.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 661.8±646.0, min: 0.0, max: 1727.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 789.39 minutes
+
+Epoch 165
+-------
+Training...
+149 training episodes played.
+Results: mean: -1483.2±499.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 686.8±654.4, min: 0.0, max: 1728.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 794.19 minutes
+
+Epoch 166
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±513.2, min: -2000.0, max: 0.0,
+Tracking: mean: 697.7±649.5, min: 0.0, max: 1729.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 799.00 minutes
+
+Epoch 167
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±499.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 695.7±680.7, min: 0.0, max: 1731.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 803.82 minutes
+
+Epoch 168
+-------
+Training...
+149 training episodes played.
+Results: mean: -1503.4±500.0, min: -2000.0, max: -1000.0,
+Tracking: mean: 707.8±646.0, min: 0.0, max: 1748.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 808.66 minutes
+
+Epoch 169
+-------
+Training...
+149 training episodes played.
+Results: mean: -1476.5±499.4, min: -2000.0, max: -1000.0,
+Tracking: mean: 670.5±659.4, min: 0.0, max: 1727.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 813.48 minutes
+
+Epoch 170
+-------
+Training...
+149 training episodes played.
+Results: mean: -1483.2±499.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 696.5±647.8, min: 0.0, max: 1775.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch170.dump
+Total elapsed time: 818.33 minutes
+
+Epoch 171
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±499.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 748.6±623.7, min: 0.0, max: 1736.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 823.17 minutes
+
+Epoch 172
+-------
+Training...
+149 training episodes played.
+Results: mean: -1536.9±524.9, min: -2000.0, max: 0.0,
+Tracking: mean: 761.0±653.3, min: 0.0, max: 1750.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 828.00 minutes
+
+Epoch 173
+-------
+Training...
+149 training episodes played.
+Results: mean: -1510.1±499.9, min: -2000.0, max: -1000.0,
+Tracking: mean: 704.0±653.8, min: 0.0, max: 1740.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 832.81 minutes
+
+Epoch 174
+-------
+Training...
+149 training episodes played.
+Results: mean: -1489.9±526.1, min: -2000.0, max: 0.0,
+Tracking: mean: 732.9±681.0, min: 0.0, max: 1768.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 837.66 minutes
+
+Epoch 175
+-------
+Training...
+149 training episodes played.
+Results: mean: -1463.1±498.6, min: -2000.0, max: -1000.0,
+Tracking: mean: 654.2±597.8, min: 0.0, max: 1714.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 842.48 minutes
+
+Epoch 176
+-------
+Training...
+149 training episodes played.
+Results: mean: -1489.9±526.1, min: -2000.0, max: 0.0,
+Tracking: mean: 637.1±627.8, min: 0.0, max: 1724.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 847.31 minutes
+
+Epoch 177
+-------
+Training...
+149 training episodes played.
+Results: mean: -1469.8±525.3, min: -2000.0, max: 0.0,
+Tracking: mean: 645.0±636.5, min: 0.0, max: 1735.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 852.12 minutes
+
+Epoch 178
+-------
+Training...
+149 training episodes played.
+Results: mean: -1436.2±495.9, min: -2000.0, max: -1000.0,
+Tracking: mean: 607.8±625.2, min: 0.0, max: 1788.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 856.93 minutes
+
+Epoch 179
+-------
+Training...
+149 training episodes played.
+Results: mean: -1449.7±510.8, min: -2000.0, max: 0.0,
+Tracking: mean: 688.5±650.6, min: 0.0, max: 1744.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 861.72 minutes
+
+Epoch 180
+-------
+Training...
+149 training episodes played.
+Results: mean: -1489.9±526.1, min: -2000.0, max: 0.0,
+Tracking: mean: 618.9±628.5, min: 0.0, max: 1734.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch180.dump
+Total elapsed time: 866.53 minutes
+
+Epoch 181
+-------
+Training...
+149 training episodes played.
+Results: mean: -1483.2±513.0, min: -2000.0, max: 0.0,
+Tracking: mean: 672.2±670.8, min: 0.0, max: 1726.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 871.33 minutes
+
+Epoch 182
+-------
+Training...
+149 training episodes played.
+Results: mean: -1422.8±494.0, min: -2000.0, max: -1000.0,
+Tracking: mean: 645.4±609.3, min: 0.0, max: 1806.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 876.16 minutes
+
+Epoch 183
+-------
+Training...
+149 training episodes played.
+Results: mean: -1443.0±496.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 595.1±607.4, min: 0.0, max: 1746.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 881.01 minutes
+
+Epoch 184
+-------
+Training...
+149 training episodes played.
+Results: mean: -1570.5±508.4, min: -2000.0, max: 0.0,
+Tracking: mean: 811.6±637.5, min: 0.0, max: 1717.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 885.83 minutes
+
+Epoch 185
+-------
+Training...
+149 training episodes played.
+Results: mean: -1416.1±506.3, min: -2000.0, max: 0.0,
+Tracking: mean: 652.0±647.5, min: 0.0, max: 1725.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 890.66 minutes
+
+Epoch 186
+-------
+Training...
+149 training episodes played.
+Results: mean: -1510.1±526.1, min: -2000.0, max: 0.0,
+Tracking: mean: 705.0±629.7, min: 0.0, max: 1734.2,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 895.46 minutes
+
+Epoch 187
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±498.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 628.0±613.4, min: 0.0, max: 1747.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 900.24 minutes
+
+Epoch 188
+-------
+Training...
+149 training episodes played.
+Results: mean: -1543.6±498.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 782.8±680.2, min: 0.0, max: 1767.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 905.07 minutes
+
+Epoch 189
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±512.4, min: -2000.0, max: 0.0,
+Tracking: mean: 734.0±654.0, min: 0.0, max: 1770.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 909.86 minutes
+
+Epoch 190
+-------
+Training...
+149 training episodes played.
+Results: mean: -1456.4±498.1, min: -2000.0, max: -1000.0,
+Tracking: mean: 654.3±650.0, min: 0.0, max: 1758.8,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_epoch190.dump
+Total elapsed time: 914.66 minutes
+
+Epoch 191
+-------
+Training...
+149 training episodes played.
+Results: mean: -1429.5±534.1, min: -2000.0, max: 0.0,
+Tracking: mean: 718.2±642.3, min: 0.0, max: 1747.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 919.49 minutes
+
+Epoch 192
+-------
+Training...
+149 training episodes played.
+Results: mean: -1476.5±499.4, min: -2000.0, max: -1000.0,
+Tracking: mean: 683.8±633.9, min: 0.0, max: 1749.3,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 924.30 minutes
+
+Epoch 193
+-------
+Training...
+149 training episodes played.
+Results: mean: -1557.0±496.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 678.6±644.9, min: 0.0, max: 1743.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 929.11 minutes
+
+Epoch 194
+-------
+Training...
+149 training episodes played.
+Results: mean: -1463.1±511.9, min: -2000.0, max: 0.0,
+Tracking: mean: 719.5±643.7, min: 0.0, max: 1717.1,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 933.92 minutes
+
+Epoch 195
+-------
+Training...
+149 training episodes played.
+Results: mean: -1422.8±533.2, min: -2000.0, max: 0.0,
+Tracking: mean: 738.1±653.1, min: 0.0, max: 1728.9,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 938.72 minutes
+
+Epoch 196
+-------
+Training...
+149 training episodes played.
+Results: mean: -1496.6±500.0, min: -2000.0, max: -1000.0,
+Tracking: mean: 738.8±686.9, min: 0.0, max: 1788.7,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 943.52 minutes
+
+Epoch 197
+-------
+Training...
+149 training episodes played.
+Results: mean: -1416.1±506.3, min: -2000.0, max: 0.0,
+Tracking: mean: 658.5±628.7, min: -66.2, max: 1723.0,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 948.36 minutes
+
+Epoch 198
+-------
+Training...
+149 training episodes played.
+Results: mean: -1449.7±510.8, min: -2000.0, max: 0.0,
+Tracking: mean: 632.2±636.3, min: 0.0, max: 1779.5,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 953.17 minutes
+
+Epoch 199
+-------
+Training...
+149 training episodes played.
+Results: mean: -1557.0±496.7, min: -2000.0, max: -1000.0,
+Tracking: mean: 765.9±663.0, min: 0.0, max: 1736.6,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Stashing network weights in: ../experiments/radial_maze_2/trial_1/weights.dump
+Total elapsed time: 957.98 minutes
+
+Epoch 200
+-------
+Training...
+149 training episodes played.
+Results: mean: -1530.2±512.4, min: -2000.0, max: 0.0,
+Tracking: mean: 846.9±697.7, min: 0.0, max: 1739.4,
+
+Testing...
+Results: mean: -2000.0±0.0, min: -2000.0 max: -2000.0
+Tracking: mean: 1874.0±0.0, min: 1874.0, max: 1874.0,
+Saving network weights in: ../experiments/radial_maze_2/trial_1/weights_final.dump
+Total elapsed time: 962.80 minutes
+======================================
