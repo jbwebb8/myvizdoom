@@ -15,6 +15,11 @@ python/*.ini
 tmp
 temp
 
+# Results (large files)
+*.dump
+*.mov
+*.ogv
+
 # Miscellaneous
 *.cfg
 *.dump

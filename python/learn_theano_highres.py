@@ -92,7 +92,7 @@ frame_repeat = 4
 resolution = (60, 108)
 episodes_to_watch = 10
 
-
+@profile
 # Converts and downsamples the input image
 def preprocess(img):
     with warnings.catch_warnings():
@@ -116,7 +116,7 @@ class ReplayMemory:
         self.capacity = capacity
         self.size = 0
         self.pos = 0
-
+    @profile
     def add_transition(self, s1, action, s2, isterminal, reward):
         self.s1[self.pos] = s1
         self.a[self.pos] = action
@@ -127,7 +127,7 @@ class ReplayMemory:
 
         self.pos = (self.pos + 1) % self.capacity
         self.size = min(self.size + 1, self.capacity)
-
+    @profile
     def get_sample(self, sample_size):
         i = sample(range(0, self.size), sample_size)
         return self.s1[i], self.a[i], self.s2[i], self.isterminal[i], self.r[i]
@@ -187,7 +187,7 @@ def create_network(available_actions_count):
     # Returns Theano objects for the net and functions.
     return dqn, function_learn, function_get_q_values, simple_get_best_action
 
-
+@profile
 def learn_from_memory():
     """ Learns from a single transition (making use of replay memory).
     s2 is ignored if s2_isterminal """
@@ -200,7 +200,7 @@ def learn_from_memory():
         # the value of q2 is ignored in learn if s2 is terminal
         learn(s1, q2, a, r, isterminal)
 
-
+@profile
 def perform_learning_step(epoch):
     """ Makes an action according to eps-greedy policy, observes the result
     (next state, reward) and learns from the transition"""
