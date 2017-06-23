@@ -32,6 +32,7 @@ import theano
 from theano import tensor
 from tqdm import trange
 from Agent import Agent
+from matplotlib import pyplot
 
 # Command line arguments
 parser = argparse.ArgumentParser(description='Test a trained agent.')
@@ -158,7 +159,13 @@ for test_episode in range(test_episodes):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             state = preprocess(game.get_state().screen_buffer)
+        
+        pyplot.imshow(state)
+        pyplot.gray()
+        pyplot.show()
+        sleep(1)
         best_action_index = get_best_action(state)
+
 
         # Instead of make_action(a, frame_repeat) in order to make the animation smooth
         game.set_action(actions[best_action_index])
