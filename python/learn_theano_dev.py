@@ -151,15 +151,15 @@ def create_network(available_actions_count):
     dqn = InputLayer(shape=[None, phi, resolution[0], resolution[1]], input_var=s1)
 
     # Add 2 convolutional layers with ReLu activation
-    dqn = Conv2DLayer(dqn, num_filters=8, filter_size=[8, 8],
+    dqn = Conv2DLayer(dqn, num_filters=32, filter_size=[8, 8],
                       nonlinearity=rectify, W=HeUniform("relu"),
                       b=Constant(.1), stride=[4, 4])
-    dqn = Conv2DLayer(dqn, num_filters=16, filter_size=[4, 4],
+    dqn = Conv2DLayer(dqn, num_filters=64, filter_size=[4, 4],
                       nonlinearity=rectify, W=HeUniform("relu"),
                       b=Constant(.1), stride=[2,2])
 
     # Add a single fully-connected layer.
-    dqn = DenseLayer(dqn, num_units=1152, nonlinearity=rectify, W=HeUniform("relu"),
+    dqn = DenseLayer(dqn, num_units=4608, nonlinearity=rectify, W=HeUniform("relu"),
                      b=Constant(.1))
     
     # Add the output layer (also fully-connected).
@@ -265,8 +265,13 @@ def initialize_vizdoom(config_file_path):
 game = initialize_vizdoom(config_file_path)
 
 # Action = which buttons are pressed
-n = game.get_available_buttons_size()
-actions = [list(a) for a in it.product([0, 1], repeat=n)]
+#buttons = game.get_available_buttons()
+actions = [[1, 0, 0, 0], # TURN_LEFT
+           [0, 1, 0, 0], # TURN_RIGHT
+           [0, 0, 1, 0], # MOVE_FORWARD
+           [1, 0, 1, 0], # TURN_LEFT + MOVE_FORWARD
+           [0, 1, 1, 0], # TURN_RIGHT + MOVE_FORWARD
+           [0, 0, 0, 1]] # USE
 
 # Create replay memory which will store the transitions
 memory = ReplayMemory(capacity=replay_memory_size)
@@ -282,7 +287,8 @@ for epoch in range(epochs):
     print("\nEpoch %d\n-------" % (epoch + 1))
     train_episodes_finished = 0
     train_scores = []
-    current_state = np.zeros([phi, resolution[0], resolution[1]])
+    current_state = np.zeros([phi, resolution[0], resolution[1]],
+                             dtype=np.float32)
 
     # Training
     print("Training...")
@@ -296,7 +302,11 @@ for epoch in range(epochs):
             score = game.get_total_reward()
             train_scores.append(score)
             game.new_episode()
-            current_state = np.zeros([phi, resolution[0], resolution[1]])
+            current_state = np.zeros([phi, resolution[0], resolution[1]],
+                                     dtype=np.float32)
+            for init_step in range(phi):
+                current_screen = game.get_state().screen_buffer
+                current_state[init_step, ...] = preprocess(current_screen)
             train_episodes_finished += 1
     print("%d training episodes played." % train_episodes_finished)
     train_scores = np.array(train_scores)
@@ -309,6 +319,8 @@ for epoch in range(epochs):
     test_scores = []
     for test_episode in trange(test_episodes_per_epoch):
         game.new_episode()
+        current_state = np.zeros([phi, resolution[0], resolution[1]],
+                                 dtype=np.float32)        
         for init_step in range(phi):
             current_screen = game.get_state().screen_buffer
             current_state[init_step, ...] = preprocess(current_screen)
