@@ -1,0 +1,77 @@
+Initializing doom...
+Doom initialized.
+Network shape: 
+ [(None, 4, 60, 108), (None, 32, 14, 26), (None, 64, 6, 12), (None, 4608), (None, 6)]
+Compiling the network ...
+Network compiled.
+Starting the training!
+
+Epoch 1
+-------
+Training...
+50 training episodes played.
+Results: mean: -1.8±0.5, min: -2.0, max: -0.0,
+
+Testing...
+Results: mean: -2.0±0.0, min: -2.0 max: -2.0
+Saving network weights in: ../experiments/radial_maze_2/trial_3/params/weights_epoch1.dump
+Total elapsed time: 12.83 minutes
+
+Epoch 2
+-------
+Training...
+50 training episodes played.
+Results: mean: -1.8±0.4, min: -2.0, max: -1.0,
+
+Testing...
+Results: mean: -2.0±0.0, min: -2.0 max: -2.0
+Saving network weights in: ../experiments/radial_maze_2/trial_3/params/weights_epoch2.dump
+Total elapsed time: 25.52 minutes
+
+Epoch 3
+-------
+Training...
+50 training episodes played.
+Results: mean: -1.8±0.4, min: -2.0, max: -1.0,
+
+Testing...
+Results: mean: -2.0±0.0, min: -2.0 max: -2.0
+Saving network weights in: ../experiments/radial_maze_2/trial_3/params/weights_epoch3.dump
+Total elapsed time: 38.34 minutes
+
+Epoch 4
+-------
+Training...
+50 training episodes played.
+Results: mean: -1.7±0.5, min: -2.0, max: -0.0,
+
+Testing...
+Results: mean: -2.0±0.0, min: -2.0 max: -2.0
+Saving network weights in: ../experiments/radial_maze_2/trial_3/params/weights_epoch4.dump
+Total elapsed time: 166.59 minutes
+
+Epoch 5
+-------
+Training...
+50 training episodes played.
+Results: mean: -1.8±0.5, min: -2.0, max: -0.0,
+
+Testing...
+Results: mean: -2.0±0.0, min: -2.0 max: -2.0
+Saving network weights in: ../experiments/radial_maze_2/trial_3/params/weights_epoch5.dump
+Total elapsed time: 1048.98 minutes
+
+Epoch 6
+-------
+Training...
+50 training episodes played.
+Results: mean: -1.7±0.4, min: -2.0, max: -1.0,
+
+Testing...
+Results: mean: -2.0±0.0, min: -2.0 max: -2.0
+Saving network weights in: ../experiments/radial_maze_2/trial_3/params/weights_epoch6.dump
+Total elapsed time: 2375.98 minutes
+
+Epoch 7
+-------
+Training...
