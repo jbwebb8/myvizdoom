@@ -19,6 +19,7 @@ temp
 *.dump
 *.mov
 *.ogv
+*.npy
 
 # Miscellaneous
 *.cfg
