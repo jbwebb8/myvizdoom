@@ -47,6 +47,9 @@ class Agent:
         self.score_history = []
     
     def _set_actions(self, action_set):
+        # For dictionary of buttons and their integer values, see
+        # ViZDoom/include/ViZDoomTypes.h
+
         # Default action set
         if action_set == "default":
             # Grab indices corresponding to buttons
@@ -128,6 +131,8 @@ class Agent:
         new_img = new_img.astype(np.float32)
         return new_img
 
+    # TODO: fix for phi, num_channels > 1; need to update _preprocess_image
+    #       including transposing axes from [y, x, 3] to [3, y, x]
     # Updates current state to previous phi images
     def update_state(self, new_img):
         img = self._preprocess_image(new_img)

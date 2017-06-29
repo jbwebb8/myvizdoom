@@ -3,8 +3,6 @@
 # Description: Train neural network in TensorFlow
 ###############################################################################
 
-# TODO: Implement RL algorithm in TensorFlow
-
 from __future__ import division
 from __future__ import print_function
 from vizdoom import *
