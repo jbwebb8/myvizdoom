@@ -1,10 +1,13 @@
+import numpy as np
+from random import sample
+
 class ReplayMemory:
     """
     Replay Memory
     """
-    def _init_(self, capacity, state_shape):
-        self.s1 = np.zeros([capacity, state_shape], dtype=np.float32)
-        self.s2 = np.zeros([capacity, state_shape], dtype=np.float32)
+    def __init__(self, capacity, state_shape):
+        self.s1 = np.zeros([capacity] + list(state_shape), dtype=np.float32)
+        self.s2 = np.zeros([capacity] + list(state_shape), dtype=np.float32)
         self.a = np.zeros(capacity, dtype=np.int32)
         self.r = np.zeros(capacity, dtype=np.float32)
         self.isterminal = np.zeros(capacity, dtype=np.float32)
@@ -27,3 +30,4 @@ class ReplayMemory:
     def get_sample(self, sample_size):
         i = sample(range(0, self.size), sample_size)
         return self.s1[i], self.a[i], self.s2[i], self.isterminal[i], self.r[i]
+        

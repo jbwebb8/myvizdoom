@@ -1,7 +1,7 @@
 # Python
 *.pyd
 *.pyc
-python/*.ini
+python*/*.ini
 
 # Java
 *.jar
