@@ -16,12 +16,14 @@ import tensorflow as tf
 from tqdm import trange
 
 # Command line arguments
-parser = argparse.ArgumentParser(description='train an agent')
+parser = argparse.ArgumentParser(description="Train an agent.")
 parser.add_argument("agent_file_path",
                     help="json file containing agent net and learning args")
 parser.add_argument("config_file_path", help="config file for scenario")
 parser.add_argument("results_directory",
                     help="directory where results will be saved")
+parser.add_argument("-a", "--action-set", default="default",
+                    help="name of action set available to agent")
 parser.add_argument("-e", "--epochs", type=int, default=100,
                     help="number of epochs to train")
 parser.add_argument("-s", "--learning-steps", type=int, default=2000,
@@ -30,8 +32,12 @@ parser.add_argument("-t", "--test-episodes", type=int, default=100,
                     help="test episodes per epoch")
 parser.add_argument("-f", "--save-freq", type=int, default=0,
                     help="save params every x epochs")
-#parser.add_argument("-w", "--watch-episodes", action="store_true", default=False,
-#                    help="watch episodes after training")
+parser.add_argument("-n", "--name", default=None,
+                    help="experiment name (for saving files)")
+parser.add_argument("-v", "--verbose", type=bool, default=False,
+                    help="print extra info about network (helpful for \
+                    debugging)")
+
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
@@ -47,18 +53,19 @@ try:
 except OSError as exception:
     if exception.errno != errno.EEXIST:
         raise
+action_set = args.action_set
 epochs = args.epochs
 learning_steps_per_epoch = args.learning_steps
 test_episodes_per_epoch = args.test_episodes
 save_freq = args.save_freq
 if save_freq == 0: save_freq = epochs
-#watch_episodes = args.watch_episodes
+verbose = args.verbose
+exp_name = args.name
+if exp_name is not None:
+    exp_name += "_"
 
 # Other parameters
-#phi = 4                 # stacked input frames
 #frame_repeat = 12       # frames to repeat action before choosing again 
-#resolution = (30, 45)   # screen resolution of input to network
-#episodes_to_watch = 10
 
 def initialize_vizdoom(config_file):
     print("Initializing doom...")
@@ -70,7 +77,8 @@ def initialize_vizdoom(config_file):
 
 game = initialize_vizdoom(config_file_path)
 sess = tf.Session()
-agent = Agent(game=game, agent_file=agent_file_path, session=sess)
+agent = Agent(game=game, agent_file=agent_file_path, action_set=action_set,
+              session=sess)
 
 print("Starting the training!")
 
@@ -107,26 +115,25 @@ for epoch in range(epochs):
         agent.update_score_history()
     test_scores = agent.get_score_history()
     print("Results: mean: %.1f±%.1f," % (
-        test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max())
+        test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), 
+        "max: %.1f" % test_scores.max())
     
     # TODO: implement Saver object
-    # Save network params after specified number of epochs; otherwise store temporarily after each epoch
-    """
-    params = agent.get_network_params()
-    if epoch + 1 == epochs:
-        results_file_path = results_directory + "weights_final.dump"
+    # Save network params after specified number of epochs; 
+    # otherwise store temporarily after each epoch
+    
+    if epoch + 1 == epochs or (epoch + 1) % save_freq == 0:
+        results_file_path = results_directory + exp_name + "model"
         print("Saving network weights in:", results_file_path)
-        pickle.dump(get_all_param_values(net), open(results_file_path, "wb"))
-    elif (epoch + 1) % save_freq == 0:
-        results_file_path = results_directory + "weights_epoch" + str(epoch+1) + ".dump"
-        print("Saving network weights in:", results_file_path)
-        pickle.dump(get_all_param_values(net), open(results_file_path, "wb"))
+        agent.save_model(results_file_path, global_step=epoch+1, 
+                         save_meta=(epoch == 0))
     else:
-        results_file_path = results_directory + "weights.dump"
+        results_file_path = results_directory + exp_name + "model"
         print("Stashing network weights in:", results_file_path)
-        pickle.dump(get_all_param_values(net), open(results_file_path, "wb"))
+        agent.save_model(results_file_path, global_step=None,
+                         save_meta=(epoch == 0))
 
     print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))
-    """
+
 game.close()
 print("======================================")

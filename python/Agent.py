@@ -70,6 +70,37 @@ class Agent:
             actions[4, [move_forward, turn_right]] = 1
             actions[5, [move_forward, turn_left]]  = 1
         
+        elif action_set == "basic_four":
+            # Grab indices corresponding to buttons
+            move_forward = np.where(self.action_indices == 13)
+            turn_right   = np.where(self.action_indices == 14)
+            turn_left    = np.where(self.action_indices == 15)
+            use          = np.where(self.action_indices ==  1)
+            if (np.size(move_forward) + np.size(turn_right) 
+                + np.size(turn_left) + np.size(use)) != 4:
+                raise Exception("Default buttons not found in game instance. \
+                                 Please check config file.")
+            # Set actions array with particular button combinations
+            actions = np.zeros([4,4], dtype=np.int8)
+            actions[0, move_forward]               = 1
+            actions[1, turn_right]                 = 1
+            actions[2, turn_left]                  = 1
+            actions[3, use]                        = 1
+
+        elif action_set == "basic_three":
+            move_forward = np.where(self.action_indices == 13)
+            turn_right   = np.where(self.action_indices == 14)
+            turn_left    = np.where(self.action_indices == 15)
+            if (np.size(move_forward) + np.size(turn_right) 
+                + np.size(turn_left) + np.size(use)) != 4:
+                raise Exception("Default buttons not found in game instance. \
+                                 Please check config file.")
+            # Set actions array with particular button combinations
+            actions = np.zeros([3,3], dtype=np.int8)
+            actions[0, move_forward]               = 1
+            actions[1, turn_right]                 = 1
+            actions[2, turn_left]                  = 1
+
         # Raise error if name not defined
         else:
             raise NameError("Name " + str(action_set) + " not found.")
@@ -127,24 +158,39 @@ class Agent:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             new_img = skimage.transform.resize(img, self.network.input_res)
-        new_img = new_img[np.newaxis,:,:]
+        
+        # If channels = 1, image shape is [y, x]. Reshape to [channels, y, x]
+        if new_img.ndim == 2:
+            new_img = new_img[np.newaxis, ...]
+        
+        # If channels > 1, reshape image to [channels, y, x] if not already.
+        elif new_img == 3 and new_img.shape[0] != self.channels:
+            new_img = np.transpose(new_img, [0, 3, 1, 2])
         new_img = new_img.astype(np.float32)
         return new_img
 
     # TODO: fix for phi, num_channels > 1; need to update _preprocess_image
-    #       including transposing axes from [y, x, 3] to [3, y, x]
+    # including transposing axes from [y, x, 3] to [3, y, x]
     # Updates current state to previous phi images
-    def update_state(self, new_img):
-        img = self._preprocess_image(new_img)
-        self.state = np.delete(self.state, 0, axis=0)
-        self.state = np.append(self.state, img, axis=0)
+    def update_state(self, new_img, replace=True):
+        new_state = self._preprocess_image(new_img)
+        if replace:
+            self.state = np.delete(self.state, np.s_[0:self.channels], axis=0)
+            self.state = np.append(self.state, new_state, axis=0)
+        else:
+            i = 0
+            while np.nonzero(self.state[i]) == 0:
+                i += 1
+            self.state[i:i+self.channels] = new_state
 
     def initialize_new_episode(self):
         self.game.new_episode()
         self.reset_state()
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
-            self.update_state(current_screen)
+            self.update_state(current_screen, replace=False)
+        print(self.state.shape)
+        print(self.network.input_shape)
 
     def perform_learning_step(self, epoch, epoch_tot):
         def get_exploration_rate(epoch, epoch_tot):
@@ -246,6 +292,7 @@ class Agent:
         score = self.game.get_total_reward()
         self.score_history.append(score)
     
-    def get_network_params(self):
+    def save_model(self, params_file_path, global_step=None, save_meta=True):
         # TODO: create function that returns params for saving
-        pass
+        self.network.save_model(params_file_path, global_step=global_step,
+                                save_meta=save_meta)
