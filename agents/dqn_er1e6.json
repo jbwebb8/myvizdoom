@@ -1,4 +1,5 @@
 {
+    "agent_name": "dqn_er1e6",
     "network_args": {
         "name": "dqn_basic",
         "type": "dqn",

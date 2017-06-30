@@ -1,7 +1,7 @@
 {
-    "agent_name": "dqn_basic",
+    "agent_name": "dqn_lc_simple_rgb4",
     "network_args": {
-        "name": "dqn_basic",
+        "name": "dqn_lc_simple",
         "type": "dqn",
         "alpha": 0.00025,
         "gamma": 0.99,
