@@ -21,7 +21,8 @@ class Network:
                      variable secondary stream.
     """
     def __init__(self, name, phi, num_channels, output_shape, learning_rate, 
-                 session, meta_file_path=None, params_file_path=None):
+                 session, meta_file_path=None, params_file_path=None, 
+                 custom_fn=None):
         self.name = name
         self.input_depth = phi * num_channels
         self.output_shape = output_shape
@@ -30,8 +31,10 @@ class Network:
 
         if meta_file_path is not None:
             self.saver = tf.train.import_meta_graph(meta_file_path)
-            self.saver.restore(params_file_path)
+            self.saver.restore(self.sess, params_file_path)
+            self.input_shape = tf.get_shape(tf.get_collection("s1_"))[1::]
 
+            # TODO: replace function definitions with get_operation_by_name
             def _function_learn(self, s1, target_q):
                 loss = tf.get_collection("loss")
                 train_step = tf.get_collection("train_step")
@@ -48,10 +51,14 @@ class Network:
                     state = state.reshape([1] + list(state.shape))
                 best_a = tf.get_collection("best_a")
                 return self.sess.run(best_a, feed_dict={s1_: state})
-            
+
+            def _function_custom(state):
+                return self.sess.run(custom_fn, feed_dict={s1_: state}) 
+
             self._learn = _function_learn
             self._get_q_values = _function_get_q_values
             self._get_best_action = _function_get_best_action
+            self._get_custom_output = _function_custom
 
             # TODO: set self.input_shape to input shape of loaded model
             # (required by Agent class) 
@@ -190,7 +197,7 @@ class Network:
     
     def get_best_action(self, state):
         assert self.sess != None, "TensorFlow session not assigned."
-        return self._get_best_action(state)
+        return self._get_best_action(state)[0]
     
     def save_model(self, params_file_path, global_step=None, save_meta=True):
         self.saver.save(self.sess, params_file_path, global_step=global_step,
@@ -199,3 +206,7 @@ class Network:
     def load_model(self, params_file_path):
         # TODO: create tf Saver object for saving and restoring params
         self.saver.restore(self.sess, params_file_path)
+    
+    def get_custom_output(self, state):
+        assert self.sess != None, "TensorFlow session not assigned."
+        return self._get_custom_output(state) 

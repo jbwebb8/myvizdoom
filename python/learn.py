@@ -6,13 +6,12 @@
 from __future__ import division
 from __future__ import print_function
 from vizdoom import *
-import argparse
-import os, errno, warnings
 from Agent import Agent
-import itertools as it
-from time import time, sleep
 import numpy as np
 import tensorflow as tf
+import argparse
+import os, errno
+from time import time
 from tqdm import trange
 
 # Command line arguments
@@ -37,7 +36,6 @@ parser.add_argument("-n", "--name", default=None,
 parser.add_argument("-v", "--verbose", type=bool, default=False,
                     help="print extra info about network (helpful for \
                     debugging)")
-
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
@@ -82,12 +80,13 @@ agent = Agent(game=game, agent_file=agent_file_path, action_set=action_set,
 
 print("Starting the training!")
 
-# Train and test agent for specified number of epochs
+# Initialize variables
 time_start = time()
 init = tf.global_variables_initializer()
 sess.run(init)
+
+# Train and test agent for specified number of epochs
 for epoch in range(epochs):
-    # Initialize variables
     print("\nEpoch %d\n-------" % (epoch + 1))
     train_episodes_finished = 0
 

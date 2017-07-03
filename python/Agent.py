@@ -13,16 +13,19 @@ class Agent:
     Creates an Agent object that oversees network, memory, and learning functions.
     """
     def __init__(self, game, action_set=None, frame_repeat=4,
-                 session=None, agent_file=None, **kwargs):
+                 session=None, agent_file=None, meta_file=None,
+                 params_file=None, custom_net_fn=None, **kwargs):
         self.game = game
         self.position_history = []
         self.action_history = []
         self.action_indices = np.asarray(self.game.get_available_buttons())
+        # FIXME: should action_set still be specified when meta_file given?
         if action_set is not None:
             self._set_actions(action_set)
         else:
             self._set_actions("default")
         self.output_size = len(self.actions)
+        # FIXME: how not to hard code frame_repeat?
         self.frame_repeat = frame_repeat
         self.sess = session
         if agent_file is not None:
@@ -41,7 +44,8 @@ class Agent:
             self.epsilon_decay_rate = kwargs.pop("epsilon_decay_rate", 0.6)
             self.batch_size = kwargs.pop("batch_size", 64)
             self.rm_capacity = kwargs.pop("rm_capacity", 10000)
-        self.network = self._create_network()
+        self.network = self._create_network(meta_file, params_file, 
+                                            custom_net_fn)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
         self.memory = self._create_replay_memory()
         self.score_history = []
@@ -92,7 +96,7 @@ class Agent:
             turn_right   = np.where(self.action_indices == 14)
             turn_left    = np.where(self.action_indices == 15)
             if (np.size(move_forward) + np.size(turn_right) 
-                + np.size(turn_left) + np.size(use)) != 4:
+                + np.size(turn_left)) != 3:
                 raise Exception("Default buttons not found in game instance. \
                                  Please check config file.")
             # Set actions array with particular button combinations
@@ -131,13 +135,16 @@ class Agent:
         self.batch_size = agent["learning_args"]["batch_size"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
 
-    def _create_network(self):
+    def _create_network(self, meta_file, params_file, custom_net_fn):
         return Network(name=self.net_name,
                        phi=self.phi, 
                        num_channels=self.channels, 
                        output_shape=self.output_size,
                        learning_rate=self.alpha,
-                       session=self.sess)
+                       session=self.sess,
+                       meta_file_path=meta_file,
+                       params_file_path=params_file,
+                       custom_fn=custom_net_fn)
     
     def _create_replay_memory(self):
         #TODO: make state_shape from network accessible so can input here
@@ -164,8 +171,8 @@ class Agent:
             new_img = new_img[np.newaxis, ...]
         
         # If channels > 1, reshape image to [channels, y, x] if not already.
-        elif new_img == 3 and new_img.shape[0] != self.channels:
-            new_img = np.transpose(new_img, [0, 3, 1, 2])
+        elif new_img.ndim == 3 and new_img.shape[0] != self.channels:
+            new_img = np.transpose(new_img, [2, 0, 1])
         new_img = new_img.astype(np.float32)
         return new_img
 
@@ -189,8 +196,6 @@ class Agent:
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
             self.update_state(current_screen, replace=False)
-        print(self.state.shape)
-        print(self.network.input_shape)
 
     def perform_learning_step(self, epoch, epoch_tot):
         def get_exploration_rate(epoch, epoch_tot):
@@ -206,8 +211,8 @@ class Agent:
             else:
                 return self.epsilon_end
         
-        current_screen = self.game.get_state().screen_buffer
-        s1 = self.update_state(current_screen)
+        # NOTE: is copying array most efficient implementation?
+        s1 = np.copy(self.state)
 
         # With probability epsilon make a random action.
         epsilon = get_exploration_rate(epoch, epoch_tot)
@@ -217,21 +222,22 @@ class Agent:
             # Choose the best action according to the network.
             a = self.network.get_best_action(s1)
         
-        # Receive reward from environment
+        # Receive reward from environment.
         reward = self.game.make_action(self.actions[a], self.frame_repeat)
         
-        # Get new state if not terminal
+        # Get new state if not terminal.
         isterminal = self.game.is_episode_finished()
         if not isterminal:
             current_screen = self.game.get_state().screen_buffer
-            s2 = self.update_state(current_screen)
+            self.update_state(current_screen)
+            s2 = np.copy(self.state)
         else:
             s2 = None
 
         # Remember the transition that was just experienced.
         self.memory.add_transition(s1, a, s2, isterminal, reward)
 
-        # Learn from minibatch of replay memory samples
+        # Learn from minibatch of replay memory samples.
         self.learn_from_memory()
     
     def learn_from_memory(self):
@@ -253,14 +259,18 @@ class Agent:
         a_best = self.network.get_best_action(state)
         return self.actions[a_best]
     
-    def make_best_action(self, state=None):
+    def make_best_action(self, state=None, train_mode=True):
         if state is None: 
             state = self.state
         a_best = self.network.get_best_action(state)
-        self.game.make_action(self.actions[int(a_best)])
-        #self.game.set_action(self.actions[a_best])
-        #for _ in range(frame_repeat):
-        #    self.game.advance_action()
+        # Easier to use built-in feature
+        if train_mode:
+            self.game.make_action(self.actions[a_best])
+        # Better for smooth animation if viewing
+        else:
+            self.game.set_action(self.actions[a_best])
+            for _ in range(frame_repeat):
+                self.game.advance_action()
 
     def track_position(self):
         pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
@@ -296,3 +306,8 @@ class Agent:
         # TODO: create function that returns params for saving
         self.network.save_model(params_file_path, global_step=global_step,
                                 save_meta=save_meta)
+    
+    def get_custom_output(self, state=None):
+        if state is None: 
+            state = self.state
+        return self.network.get_custom_output(state)
