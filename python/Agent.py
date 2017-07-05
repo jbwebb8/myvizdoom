@@ -14,7 +14,7 @@ class Agent:
     """
     def __init__(self, game, action_set=None, frame_repeat=4,
                  session=None, agent_file=None, meta_file=None,
-                 params_file=None, custom_net_fn=None, **kwargs):
+                 params_file=None, **kwargs):
         self.game = game
         self.position_history = []
         self.action_history = []
@@ -44,8 +44,7 @@ class Agent:
             self.epsilon_decay_rate = kwargs.pop("epsilon_decay_rate", 0.6)
             self.batch_size = kwargs.pop("batch_size", 64)
             self.rm_capacity = kwargs.pop("rm_capacity", 10000)
-        self.network = self._create_network(meta_file, params_file, 
-                                            custom_net_fn)
+        self.network = self._create_network(meta_file, params_file)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
         self.memory = self._create_replay_memory()
         self.score_history = []
@@ -135,7 +134,7 @@ class Agent:
         self.batch_size = agent["learning_args"]["batch_size"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
 
-    def _create_network(self, meta_file, params_file, custom_net_fn):
+    def _create_network(self, meta_file, params_file):
         return Network(name=self.net_name,
                        phi=self.phi, 
                        num_channels=self.channels, 
@@ -143,11 +142,9 @@ class Agent:
                        learning_rate=self.alpha,
                        session=self.sess,
                        meta_file_path=meta_file,
-                       params_file_path=params_file,
-                       custom_fn=custom_net_fn)
+                       params_file_path=params_file)
     
     def _create_replay_memory(self):
-        #TODO: make state_shape from network accessible so can input here
         return ReplayMemory(capacity=self.rm_capacity, 
                             state_shape=self.state.shape)
 
@@ -157,7 +154,9 @@ class Agent:
     def reset_state(self):
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
 
-    def reset_score_history(self):
+    def reset_history(self):
+        self.position_history = []
+        self.action_history = []
         self.score_history = []
 
     # Converts and downsamples the input image
@@ -282,11 +281,11 @@ class Agent:
     def track_action(self):
         last_action = self.game.get_last_action()
         timestamp = self.game.get_episode_time()
-        self.action_history.append([timestamp, last_action])
+        self.action_history.append([timestamp] + last_action)
     
     def get_positions(self):
         return np.asarray(self.position_history)
-    
+
     def get_actions(self):
         #action_array = np.empty([len(self.actions), 
         #                        1 + self.game.get_available_buttons_size()],
@@ -307,7 +306,7 @@ class Agent:
         self.network.save_model(params_file_path, global_step=global_step,
                                 save_meta=save_meta)
     
-    def get_custom_output(self, state=None):
+    def get_layer_output(self, layer_output_name, state=None):
         if state is None: 
             state = self.state
-        return self.network.get_custom_output(state)
+        return self.network.get_layer_output(state, layer_output_name)
