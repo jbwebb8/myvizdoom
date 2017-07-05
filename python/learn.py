@@ -7,6 +7,7 @@ from __future__ import division
 from __future__ import print_function
 from vizdoom import *
 from Agent import Agent
+from Toolbox import Toolbox
 import numpy as np
 import tensorflow as tf
 import argparse
@@ -27,10 +28,16 @@ parser.add_argument("-e", "--epochs", type=int, default=100,
                     help="number of epochs to train")
 parser.add_argument("-s", "--learning-steps", type=int, default=2000,
                     help="learning steps per epoch")
-parser.add_argument("-t", "--test-episodes", type=int, default=100,
+parser.add_argument("-t", "--test-episodes", type=int, default=1,
                     help="test episodes per epoch")
 parser.add_argument("-f", "--save-freq", type=int, default=0,
                     help="save params every x epochs")
+parser.add_argument("-l", "--layer-names", default=[], metavar="", nargs='*',
+                    help="layer output names to probe")
+parser.add_argument("-m", "--max-samples", type=int, default=0, metavar="",
+                    help="# of samples associated with max node activation")
+parser.add_argument("--track", action="store_true", default=False,
+                    help="track agent position and action")
 parser.add_argument("-n", "--name", default=None,
                     help="experiment name (for saving files)")
 parser.add_argument("-v", "--verbose", type=bool, default=False,
@@ -57,6 +64,9 @@ learning_steps_per_epoch = args.learning_steps
 test_episodes_per_epoch = args.test_episodes
 save_freq = args.save_freq
 if save_freq == 0: save_freq = epochs
+layer_names = args.layer_names
+max_samples = args.max_samples
+trackable = args.track
 verbose = args.verbose
 exp_name = args.name
 if exp_name is not None:
@@ -78,12 +88,21 @@ sess = tf.Session()
 agent = Agent(game=game, agent_file=agent_file_path, action_set=action_set,
               session=sess)
 
-print("Starting the training!")
-
 # Initialize variables
 time_start = time()
 init = tf.global_variables_initializer()
 sess.run(init)
+
+if trackable:
+    np.savetxt(results_directory + "action_indices.txt", agent.action_indices)
+
+layer_sizes = agent.get_layer_output(layer_names)
+toolbox = []
+for i in range(len(layer_names)):
+    print(layer_sizes[i].size)
+    toolbox.append(Toolbox(layer_sizes[i].size, agent.state.shape, max_samples))
+
+print("Starting the training!")
 
 # Train and test agent for specified number of epochs
 for epoch in range(epochs):
@@ -106,26 +125,48 @@ for epoch in range(epochs):
     
     # Testing
     print("\nTesting...")
-    agent.reset_score_history()
+    agent.reset_history()
     for test_episode in trange(test_episodes_per_epoch):
         agent.initialize_new_episode()
         while not game.is_episode_finished():
             agent.make_best_action()
+            if trackable:
+                agent.track_action()
+                agent.track_position()
+            if len(layer_names) > 0:
+                output = agent.get_layer_output(layer_names)
+                for i in range(len(layer_names)):
+                    toolbox[i].update_max_data(agent.state, 
+                                               agent.position_history[-1],
+                                               output[i])
         agent.update_score_history()
     test_scores = agent.get_score_history()
     print("Results: mean: %.1f±%.1f," % (
         test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), 
         "max: %.1f" % test_scores.max())
-    
-    # TODO: implement Saver object
+    np.savetxt(results_directory + "test_scores_epoch" + str(epoch+1) + ".txt", 
+               test_scores)
+
     # Save network params after specified number of epochs; 
     # otherwise store temporarily after each epoch
-    
     if epoch + 1 == epochs or (epoch + 1) % save_freq == 0:
         results_file_path = results_directory + exp_name + "model"
         print("Saving network weights in:", results_file_path)
         agent.save_model(results_file_path, global_step=epoch+1, 
                          save_meta=(epoch == 0))
+        if trackable:
+            np.savetxt(results_directory + "positions_epoch" + str(epoch+1) + ".txt",
+                       agent.get_positions())
+            np.savetxt(results_directory + "actions_epoch" + str(epoch+1) + ".txt",
+                       agent.get_actions())
+        if layer_names is not None:
+            #max_values, max_states, max_positions = 
+            np.save(results_directory + "max_values_epoch" + str(epoch+1), 
+                    max_values)
+            np.save(results_directory + "max_states" + str(epoch+1),
+                    max_states)
+            np.save(results_directory + "max_positions" + str(epoch+1),
+                    max_positions)
     else:
         results_file_path = results_directory + exp_name + "model"
         print("Stashing network weights in:", results_file_path)
