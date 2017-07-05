@@ -161,6 +161,7 @@ class Agent:
 
     # Converts and downsamples the input image
     def _preprocess_image(self, img):
+        # Resize to resolution of network input
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             new_img = skimage.transform.resize(img, self.network.input_res)
@@ -172,7 +173,11 @@ class Agent:
         # If channels > 1, reshape image to [channels, y, x] if not already.
         elif new_img.ndim == 3 and new_img.shape[0] != self.channels:
             new_img = np.transpose(new_img, [2, 0, 1])
+        
+        # Normalize pixel values to [-1, 1]
+        new_img /= 255.0
         new_img = new_img.astype(np.float32)
+        
         return new_img
 
     # TODO: fix for phi, num_channels > 1; need to update _preprocess_image

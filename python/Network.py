@@ -21,8 +21,7 @@ class Network:
                      variable secondary stream.
     """
     def __init__(self, name, phi, num_channels, output_shape, learning_rate, 
-                 session, meta_file_path=None, params_file_path=None,
-                 input_scale=255.0):
+                 session, meta_file_path=None, params_file_path=None):
         self.name = name
         self.input_depth = phi * num_channels
         self.output_shape = output_shape
@@ -46,19 +45,19 @@ class Network:
             
             def _function_learn(self, s1, target_q):
                 l, _ = sess.run([self.loss, self.train_step], 
-                                feed_dict={self.s1_: s1 / input_scale, 
+                                feed_dict={self.s1_: s1, 
                                            self.target_q_: target_q})
                 return l
 
             def _function_get_q_values(state):
                 return self.sess.run(self.q, 
-                                     feed_dict={self.s1_: state / input_scale})
+                                     feed_dict={self.s1_: state})
 
             def _function_get_best_action(state):
                 if state.ndim < 4:
                     state = state.reshape([1] + list(state.shape))
                 return self.sess.run(self.best_a, 
-                                     feed_dict={self.s1_: state / input_scale})
+                                     feed_dict={self.s1_: state})
 
             self._learn = _function_learn
             self._get_q_values = _function_get_q_values
@@ -128,19 +127,19 @@ class Network:
 
         def _function_learn(s1, target_q):
             l, _ = self.sess.run([self.loss, self.train_step], 
-                                 feed_dict={self.s1_: s1 input_scale, 
+                                 feed_dict={self.s1_: s1, 
                                             self.target_q_: target_q})
             return l
 
         def _function_get_q_values(state):
             return self.sess.run(self.q, 
-                                 feed_dict={self.s1_: state / input_scale})
+                                 feed_dict={self.s1_: state})
 
         def _function_get_best_action(state):
             if state.ndim < 4:
                 state = state.reshape([1] + list(state.shape))
             return self.sess.run(self.best_a, 
-                                 feed_dict={self.s1_: state / input_scale})
+                                 feed_dict={self.s1_: state})
 
         return _function_learn, _function_get_q_values, _function_get_best_action
     
@@ -187,19 +186,19 @@ class Network:
 
         def _function_learn(s1, target_q):
             l, _ = self.sess.run([self.loss, self.train_step], 
-                                 feed_dict={self.s1_: s1 / input_scale, 
+                                 feed_dict={self.s1_: s1, 
                                             self.target_q_: target_q})
             return l
 
         def _function_get_q_values(state):
             return self.sess.run(self.q, 
-                                 feed_dict={self.s1_: state / input_scale})
+                                 feed_dict={self.s1_: state})
 
         def _function_get_best_action(state):
             if state.ndim < 4:
                 state = state.reshape([1] + list(state.shape))
             return self.sess.run(self.best_a, 
-                                 feed_dict={self.s1_: state / input_scale})
+                                 feed_dict={self.s1_: state})
 
         return _function_learn, _function_get_q_values, _function_get_best_action
 
