@@ -21,8 +21,8 @@ class Network:
                      variable secondary stream.
     """
     def __init__(self, name, phi, num_channels, output_shape, learning_rate, 
-                 session, meta_file_path=None, params_file_path=None, 
-                 custom_fn=None):
+                 session, meta_file_path=None, params_file_path=None,
+                 input_scale=255.0):
         self.name = name
         self.input_depth = phi * num_channels
         self.output_shape = output_shape
@@ -32,36 +32,37 @@ class Network:
         if meta_file_path is not None:
             self.saver = tf.train.import_meta_graph(meta_file_path)
             self.saver.restore(self.sess, params_file_path)
-            self.input_shape = tf.get_shape(tf.get_collection("s1_"))[1::]
-
-            # TODO: replace function definitions with get_operation_by_name
+            self.graph = tf.get_default_graph()
+            # TODO: allow flexibility in choosing names of ops
+            self.s1_ = self.graph.get_tensor_by_name("state:0")
+            self.input_shape = self.s1_.shape[1::].as_list()
+            self.input_res = self.s1_.shape[2::].as_list()
+            self.a_ = self.graph.get_tensor_by_name("action:0")
+            self.target_q_ = self.graph.get_tensor_by_name("target_q:0")
+            self.q = self.graph.get_tensor_by_name("Q/BiasAdd:0")
+            self.best_a = self.graph.get_tensor_by_name("best_a:0")
+            self.loss = self.graph.get_tensor_by_name("loss/value:0")
+            self.train_step = self.graph.get_operation_by_name("train_step")
+            
             def _function_learn(self, s1, target_q):
-                loss = tf.get_collection("loss")
-                train_step = tf.get_collection("train_step")
-                l, _ = sess.run([loss, train_step], 
-                                feed_dict={s1_: s1, target_q_: target_q})
+                l, _ = sess.run([self.loss, self.train_step], 
+                                feed_dict={self.s1_: s1 / input_scale, 
+                                           self.target_q_: target_q})
                 return l
 
             def _function_get_q_values(state):
-                q = tf.get_collection("q")
-                return self.sess.run(q, feed_dict={s1_: state})
+                return self.sess.run(self.q, 
+                                     feed_dict={self.s1_: state / input_scale})
 
             def _function_get_best_action(state):
                 if state.ndim < 4:
                     state = state.reshape([1] + list(state.shape))
-                best_a = tf.get_collection("best_a")
-                return self.sess.run(best_a, feed_dict={s1_: state})
-
-            def _function_custom(state):
-                return self.sess.run(custom_fn, feed_dict={s1_: state}) 
+                return self.sess.run(self.best_a, 
+                                     feed_dict={self.s1_: state / input_scale})
 
             self._learn = _function_learn
             self._get_q_values = _function_get_q_values
             self._get_best_action = _function_get_best_action
-            self._get_custom_output = _function_custom
-
-            # TODO: set self.input_shape to input shape of loaded model
-            # (required by Agent class) 
 
         elif params_file_path is not None:
             raise SyntaxError("Please include MetaGraph in which to load \
@@ -70,7 +71,8 @@ class Network:
             self._learn, self._get_q_values, self._get_best_action \
                 = self._create_network()
             self.input_shape = [self.input_depth] + self.input_res
-            self.saver = tf.train.Saver()
+            self.saver = tf.train.Saver()        
+            self.graph = tf.get_default_graph()
    
     # TODO: Think how to modularize network creation. Different name for 
     # every network or broad names that allow user to specify details (like 
@@ -87,51 +89,58 @@ class Network:
         self.input_res = [30, 45]
 
         # Create the input variables
-        s1_ = tf.placeholder(tf.float32, [None] + [self.input_depth] + self.input_res, name="State")
-        a_ = tf.placeholder(tf.int32, [None], name="Action")
-        target_q_ = tf.placeholder(tf.float32, [None, self.output_shape], name="TargetQ")
+        self.s1_ = tf.placeholder(tf.float32, [None] + [self.input_depth] + self.input_res, name="state")
+        self.a_ = tf.placeholder(tf.int32, [None], name="action")
+        self.target_q_ = tf.placeholder(tf.float32, [None, self.output_shape], name="target_q")
         
         # Add 2 convolutional layers with ReLu activation
-        conv1 = tf.contrib.layers.convolution2d(s1_, num_outputs=8, kernel_size=[6, 6], stride=[3, 3],
+        conv1 = tf.contrib.layers.convolution2d(self.s1_, num_outputs=8, kernel_size=[6, 6], stride=[3, 3],
                                                 activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-                                                biases_initializer=tf.constant_initializer(0.1))
+                                                biases_initializer=tf.constant_initializer(0.1),
+                                                scope="CONV_1")
         conv2 = tf.contrib.layers.convolution2d(conv1, num_outputs=8, kernel_size=[3, 3], stride=[2, 2],
                                                 activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-                                                biases_initializer=tf.constant_initializer(0.1))
+                                                biases_initializer=tf.constant_initializer(0.1),
+                                                scope="CONV_2")
         
         # Add FC layer
         conv2_flat = tf.contrib.layers.flatten(conv2)
         fc1 = tf.contrib.layers.fully_connected(conv2_flat, num_outputs=128, activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                                biases_initializer=tf.constant_initializer(0.1))
+                                                biases_initializer=tf.constant_initializer(0.1),
+                                                scope="FC_1")
         
         # Add output layer (containing Q(s,a))
-        q = tf.contrib.layers.fully_connected(fc1, num_outputs=self.output_shape, activation_fn=None,
-                                              weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                              biases_initializer=tf.constant_initializer(0.1))
+        self.q = tf.contrib.layers.fully_connected(fc1, num_outputs=self.output_shape, activation_fn=None,
+                                                   weights_initializer=tf.contrib.layers.xavier_initializer(),
+                                                   biases_initializer=tf.constant_initializer(0.1),
+                                                   scope="Q")
        
         # Define best action, loss, and optimization
-        best_a = tf.argmax(q, 1)
-        loss = tf.losses.mean_squared_error(q, target_q_)
+        self.best_a = tf.argmax(self.q, 1, name="best_a")
+        self.loss = tf.losses.mean_squared_error(self.q, self.target_q_, scope="loss")
         optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
 
         # Update the parameters according to the computed gradient using RMSProp.
-        train_step = optimizer.minimize(loss)
+        self.train_step = optimizer.minimize(self.loss, name="train_step")
 
         def _function_learn(s1, target_q):
-            l, _ = self.sess.run([loss, train_step], 
-                                 feed_dict={s1_: s1, target_q_: target_q})
+            l, _ = self.sess.run([self.loss, self.train_step], 
+                                 feed_dict={self.s1_: s1 input_scale, 
+                                            self.target_q_: target_q})
             return l
 
         def _function_get_q_values(state):
-            return self.sess.run(q, feed_dict={s1_: state})
+            return self.sess.run(self.q, 
+                                 feed_dict={self.s1_: state / input_scale})
 
         def _function_get_best_action(state):
             if state.ndim < 4:
                 state = state.reshape([1] + list(state.shape))
-            return self.sess.run(best_a, feed_dict={s1_: state})
+            return self.sess.run(self.best_a, 
+                                 feed_dict={self.s1_: state / input_scale})
 
         return _function_learn, _function_get_q_values, _function_get_best_action
     
@@ -139,51 +148,58 @@ class Network:
         self.input_res = [60, 108]
 
         # Create the input variables
-        s1_ = tf.placeholder(tf.float32, [None] + [self.input_depth] + self.input_res, name="State")
-        a_ = tf.placeholder(tf.int32, [None], name="Action")
-        target_q_ = tf.placeholder(tf.float32, [None, self.output_shape], name="TargetQ")
+        self.s1_ = tf.placeholder(tf.float32, [None] + [self.input_depth] + self.input_res, name="state")
+        self.a_ = tf.placeholder(tf.int32, [None], name="action")
+        self.target_q_ = tf.placeholder(tf.float32, [None, self.output_shape], name="target_q")
         
         # Add 2 convolutional layers with ReLu activation
-        conv1 = tf.contrib.layers.convolution2d(s1_, num_outputs=32, kernel_size=[8, 8], stride=[3, 3],
+        conv1 = tf.contrib.layers.convolution2d(self.s1_, num_outputs=32, kernel_size=[8, 8], stride=[3, 3],
                                                 activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-                                                biases_initializer=tf.constant_initializer(0.1))
+                                                biases_initializer=tf.constant_initializer(0.1),
+                                                scope="CONV_1")
         conv2 = tf.contrib.layers.convolution2d(conv1, num_outputs=64, kernel_size=[4, 4], stride=[2, 2],
                                                 activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-                                                biases_initializer=tf.constant_initializer(0.1))
+                                                biases_initializer=tf.constant_initializer(0.1),
+                                                scope="CONV_2")
         
         # Add FC layer
         conv2_flat = tf.contrib.layers.flatten(conv2)
         fc1 = tf.contrib.layers.fully_connected(conv2_flat, num_outputs=4608, activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                                biases_initializer=tf.constant_initializer(0.1))
+                                                biases_initializer=tf.constant_initializer(0.1),
+                                                scope="FC_1")
         
         # Add output layer (containing Q(s,a))
-        q = tf.contrib.layers.fully_connected(fc1, num_outputs=self.output_shape, activation_fn=None,
-                                              weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                              biases_initializer=tf.constant_initializer(0.1))
+        self.q = tf.contrib.layers.fully_connected(fc1, num_outputs=self.output_shape, activation_fn=None,
+                                                   weights_initializer=tf.contrib.layers.xavier_initializer(),
+                                                   biases_initializer=tf.constant_initializer(0.1),
+                                                   scope="Q")
        
         # Define best action, loss, and optimization
-        best_a = tf.argmax(q, 1)
-        loss = tf.losses.mean_squared_error(q, target_q_)
+        self.best_a = tf.argmax(self.q, 1, name="best_a")
+        self.loss = tf.losses.mean_squared_error(self.q, self.target_q_, scope="loss")
         optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
 
         # Update the parameters according to the computed gradient using RMSProp.
-        train_step = optimizer.minimize(loss)
+        self.train_step = optimizer.minimize(self.loss, name="train_step")
 
         def _function_learn(s1, target_q):
-            l, _ = self.sess.run([loss, train_step], 
-                                 feed_dict={s1_: s1, target_q_: target_q})
+            l, _ = self.sess.run([self.loss, self.train_step], 
+                                 feed_dict={self.s1_: s1 / input_scale, 
+                                            self.target_q_: target_q})
             return l
 
         def _function_get_q_values(state):
-            return self.sess.run(q, feed_dict={s1_: state})
+            return self.sess.run(self.q, 
+                                 feed_dict={self.s1_: state / input_scale})
 
         def _function_get_best_action(state):
             if state.ndim < 4:
                 state = state.reshape([1] + list(state.shape))
-            return self.sess.run(best_a, feed_dict={s1_: state})
+            return self.sess.run(self.best_a, 
+                                 feed_dict={self.s1_: state / input_scale})
 
         return _function_learn, _function_get_q_values, _function_get_best_action
 
@@ -203,10 +219,14 @@ class Network:
         self.saver.save(self.sess, params_file_path, global_step=global_step,
                                    write_meta_graph=save_meta)
     
-    def load_model(self, params_file_path):
-        # TODO: create tf Saver object for saving and restoring params
+    def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)
     
-    def get_custom_output(self, state):
-        assert self.sess != None, "TensorFlow session not assigned."
-        return self._get_custom_output(state) 
+    def get_layer_output(self, state, layer_output_names):
+        # TODO: implement custom output function
+        layers = []
+        for layer_name in layer_output_names:
+            layers.append(self.graph.get_tensor_by_name(layer_name))
+        if state.ndim < 4:
+            state = state.reshape([1] + list(state.shape))
+        return self.sess.run(layers, feed_dict={self.s1_: state})
