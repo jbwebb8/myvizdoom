@@ -222,10 +222,17 @@ class Network:
         self.saver.restore(self.sess, params_file_path)
     
     def get_layer_output(self, state, layer_output_names):
-        # TODO: implement custom output function
         layers = []
         for layer_name in layer_output_names:
             layers.append(self.graph.get_tensor_by_name(layer_name))
         if state.ndim < 4:
             state = state.reshape([1] + list(state.shape))
         return self.sess.run(layers, feed_dict={self.s1_: state})
+    
+    def get_layer_shape(self, layer_output_names):
+        layer_shapes = []
+        for layer_name in layer_output_names:
+            t_shape = self.graph.get_tensor_by_name(layer_name).get_shape()
+            l_shape = tuple(t_shape[i].value for i in range(len(t_shape)))
+            layer_shapes.append(l_shape)
+        return layer_shapes
