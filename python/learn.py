@@ -129,8 +129,9 @@ for epoch in range(epochs):
     for test_episode in trange(test_episodes_per_epoch):
         agent.initialize_new_episode()
         while not game.is_episode_finished():
-            print("Game tick " + str(game.get_episode_time) + " of max "
-                  + str(game.get_episode_timeout), end='\r')
+            print("Game tick %d of max %d" % game.get_episode_time 
+                                             game.get_episode_timeout, 
+                                             end='\r')
             agent.make_best_action()
             agent.track_action()
             agent.track_position()
