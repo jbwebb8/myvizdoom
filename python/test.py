@@ -87,7 +87,6 @@ if trackable:
 layer_sizes = agent.get_layer_output(layer_names)
 toolbox = []
 for i in range(len(layer_names)):
-    print(layer_sizes[i].size)
     toolbox.append(Toolbox(layer_sizes[i].size, agent.state.shape, max_samples))
 
 print("Let's watch!")
@@ -95,7 +94,7 @@ print("Let's watch!")
 for test_episode in range(test_episodes):
     agent.initialize_new_episode()
     while not game.is_episode_finished():
-        agent.make_best_action()
+        agent.make_best_action(train_mode=False)
         if trackable:
             agent.track_action()
             agent.track_position()
