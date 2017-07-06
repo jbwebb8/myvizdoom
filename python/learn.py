@@ -34,7 +34,7 @@ parser.add_argument("-f", "--save-freq", type=int, default=0,
                     help="save params every x epochs")
 parser.add_argument("-l", "--layer-names", default=[], metavar="", nargs='*',
                     help="layer output names to probe")
-parser.add_argument("-m", "--max-samples", type=int, default=0, metavar="",
+parser.add_argument("-m", "--max-samples", type=int, default=1, metavar="",
                     help="# of samples associated with max node activation")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
@@ -94,11 +94,12 @@ sess.run(init)
 if trackable:
     np.savetxt(results_directory + "action_indices.txt", agent.action_indices)
 
-layer_sizes = agent.get_layer_output(layer_names)
-toolbox = []
-for i in range(len(layer_names)):
-    print(layer_sizes[i].size)
-    toolbox.append(Toolbox(layer_sizes[i].size, agent.state.shape, max_samples))
+layer_shapes = agent.get_layer_shape(layer_names)
+layer_sizes = [len(layer_shapes) for i in range(len(layer_shapes))]
+print(layer_sizes)
+toolbox = Toolbox(layer_sizes=layer_sizes, 
+                  state_shape=agent.state.shape,
+                  num_samples=max_samples)
 
 print("Starting the training!")
 test_scores_mean = []
@@ -128,16 +129,16 @@ for epoch in range(epochs):
     for test_episode in trange(test_episodes_per_epoch):
         agent.initialize_new_episode()
         while not game.is_episode_finished():
+            print("Game tick " + str(game.get_episode_time) + " of max "
+                  + str(game.get_episode_timeout), end='\r')
             agent.make_best_action()
-            if trackable:
-                agent.track_action()
-                agent.track_position()
+            agent.track_action()
+            agent.track_position()
             if len(layer_names) > 0:
                 output = agent.get_layer_output(layer_names)
-                for i in range(len(layer_names)):
-                    toolbox[i].update_max_data(agent.state, 
-                                               agent.position_history[-1],
-                                               output[i])
+                toolbox.update_max_data(state=agent.state, 
+                                        position=agent.position_history[-1],
+                                        layer_values=output)
         agent.update_score_history()
     test_scores = agent.get_score_history()
     test_scores_mean.append(agent.get_score_history().mean())
@@ -157,14 +158,15 @@ for epoch in range(epochs):
                        agent.get_positions())
             np.savetxt(results_directory + "actions_epoch" + str(epoch+1) + ".txt",
                        agent.get_actions())
-        if layer_names is not None:
-            #max_values, max_states, max_positions = 
-            np.save(results_directory + "max_values_" + str(epoch+1), 
-                    max_values)
-            np.save(results_directory + "max_states_" + str(epoch+1),
-                    max_states)
-            np.save(results_directory + "max_positions_" + str(epoch+1),
-                    max_positions)
+        if len(layer_names) > 0:
+            max_values, max_states, max_positions = toolbox.get_max_data()
+            for i in range(len(layer_names)):                    
+                np.save(results_directory + "max_values_" + str(epoch+1), 
+                        max_values[i])
+                np.save(results_directory + "max_states_" + str(epoch+1),
+                        max_states[i])
+                np.save(results_directory + "max_positions_" + str(epoch+1),
+                        max_positions[i])
     else:
         results_file_path = results_directory + exp_name + "_model"
         print("Stashing network weights in:", results_file_path)

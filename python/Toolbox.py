@@ -6,17 +6,22 @@ class Toolbox:
     during training and testing agents.
 
     Args:
-    - layer_size: length of (flattened) layer
-    
+    - layer_sizes: Lengths of (flattened) layers.
+    - state_shape: Shape of input state.
+    - num_samples: Store top k samples that best activated nodes.
     """
-    def __init__(self, layer_size, state_shape, num_samples):
-        self.max_values = np.zeros([layer_size, num_samples])
-        self.max_states = np.zeros([layer_size, num_samples] 
-                                   + list(state_shape))
-        self.max_positions = np.zeros([layer_size, num_samples, 4])
-        self.layer_size = layer_size
 
-    def update_max_data(self, state, position, layer_values):
+    def __init__(self, layer_sizes, state_shape, num_samples):
+        self.layer_sizes = layer_sizes
+        self.num_layers = len(layer_sizes)
+        self.max_values, self.max_states, self.max_positions = [], [], []
+        for i in range(self.num_layers):
+            self.max_values.append(np.zeros([layer_sizes[i], num_samples]))
+            self.max_states.append(np.zeros([layer_sizes[i], num_samples] 
+                                            + list(state_shape)))
+            self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4]))          
+
+    def _update_max_data(self, state, position, layer_values):
         if layer_values.ndim > 1:
             layer_values = layer_values.flatten()
         max_mask = (layer_values > np.amin(self.max_values, axis=1))
@@ -33,6 +38,11 @@ class Toolbox:
                                                                        position[np.newaxis, :],
                                                                        self.max_positions[np.arange(self.layer_size), idx])
     
+    def update_max_data(self, state, position, layer_values):
+        for i in range(self.num_layers):
+            self._update_max_data(state, position, layer_values[i])
+
+
     def get_max_data(self):
         return self.max_values, self.max_states, self.max_positions
 
