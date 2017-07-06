@@ -15,9 +15,11 @@ class Agent:
     def __init__(self, game, action_set=None, frame_repeat=4,
                  session=None, agent_file=None, meta_file=None,
                  params_file=None, **kwargs):
+        # Initialize game
         self.game = game
-        self.position_history = []
-        self.action_history = []
+        self.sess = session
+
+        # Initialize action space
         self.action_indices = np.asarray(self.game.get_available_buttons())
         # FIXME: should action_set still be specified when meta_file given?
         if action_set is not None:
@@ -27,7 +29,8 @@ class Agent:
         self.output_size = len(self.actions)
         # FIXME: how not to hard code frame_repeat?
         self.frame_repeat = frame_repeat
-        self.sess = session
+        
+        # Load learning and network parameters
         if agent_file is not None:
             self._load_agent_file(agent_file)
         else:
@@ -44,14 +47,33 @@ class Agent:
             self.epsilon_decay_rate = kwargs.pop("epsilon_decay_rate", 0.6)
             self.batch_size = kwargs.pop("batch_size", 64)
             self.rm_capacity = kwargs.pop("rm_capacity", 10000)
+        if self.channels != self.game.get_screen_channels():
+            raise ValueError("Number of image channels between agent and "
+                             "game instance do not match. Please check config "
+                             "and/or agent file.")
+        
+        # Create network components
         self.network = self._create_network(meta_file, params_file)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
         self.memory = self._create_replay_memory()
+        
+        # Create tracking lists
         self.score_history = []
+        self.position_history = []
+        self.action_history = []
     
     def _set_actions(self, action_set):
         # For dictionary of buttons and their integer values, see
         # ViZDoom/include/ViZDoomTypes.h
+        
+        def _check_actions(actual_num_buttons, expected_num_buttons):
+            if actual_num_buttons < expected_num_buttons:
+                raise Exception("Button(s) in action set are not available " 
+                                "in game. Please check config file.")
+            elif actual_num_buttons < self.game.get_available_buttons_size():
+                warnings.warn("Some available game buttons may be unused.")
+            else:
+                pass
 
         # Default action set
         if action_set == "default":
@@ -60,10 +82,11 @@ class Agent:
             turn_right   = np.where(self.action_indices == 14)
             turn_left    = np.where(self.action_indices == 15)
             use          = np.where(self.action_indices ==  1)
-            if (np.size(move_forward) + np.size(turn_right) 
-                + np.size(turn_left) + np.size(use)) != 4:
-                raise Exception("Default buttons not found in game instance. \
-                                 Please check config file.")
+            actual_num = (np.size(move_forward) + np.size(turn_right) 
+                          + np.size(turn_left) + np.size(use))
+            expected_num = 4
+            _check_actions(actual_num, expected_num)
+            
             # Set actions array with particular button combinations
             actions = np.zeros([6,4], dtype=np.int8)
             actions[0, move_forward]               = 1
@@ -72,17 +95,18 @@ class Agent:
             actions[3, use]                        = 1
             actions[4, [move_forward, turn_right]] = 1
             actions[5, [move_forward, turn_left]]  = 1
-        
+            
         elif action_set == "basic_four":
             # Grab indices corresponding to buttons
             move_forward = np.where(self.action_indices == 13)
             turn_right   = np.where(self.action_indices == 14)
             turn_left    = np.where(self.action_indices == 15)
             use          = np.where(self.action_indices ==  1)
-            if (np.size(move_forward) + np.size(turn_right) 
-                + np.size(turn_left) + np.size(use)) != 4:
-                raise Exception("Default buttons not found in game instance. \
-                                 Please check config file.")
+            actual_num = (np.size(move_forward) + np.size(turn_right) 
+                         + np.size(turn_left) + np.size(use))
+            expected_num = 4
+            _check_actions(actual_num, expected_num)
+
             # Set actions array with particular button combinations
             actions = np.zeros([4,4], dtype=np.int8)
             actions[0, move_forward]               = 1
@@ -94,10 +118,11 @@ class Agent:
             move_forward = np.where(self.action_indices == 13)
             turn_right   = np.where(self.action_indices == 14)
             turn_left    = np.where(self.action_indices == 15)
-            if (np.size(move_forward) + np.size(turn_right) 
-                + np.size(turn_left)) != 3:
-                raise Exception("Default buttons not found in game instance. \
-                                 Please check config file.")
+            actual_num = (np.size(move_forward) + np.size(turn_right) 
+                          + np.size(turn_left))
+            expected_num = 3
+            _check_actions(actual_num, expected_num)
+
             # Set actions array with particular button combinations
             actions = np.zeros([3,3], dtype=np.int8)
             actions[0, move_forward]               = 1
@@ -177,7 +202,7 @@ class Agent:
         # Normalize pixel values to [-1, 1]
         new_img /= 255.0
         new_img = new_img.astype(np.float32)
-        
+
         return new_img
 
     # TODO: fix for phi, num_channels > 1; need to update _preprocess_image
@@ -311,7 +336,10 @@ class Agent:
         self.network.save_model(params_file_path, global_step=global_step,
                                 save_meta=save_meta)
     
-    def get_layer_output(self, layer_output_name, state=None):
+    def get_layer_output(self, layer_output_names, state=None):
         if state is None: 
             state = self.state
-        return self.network.get_layer_output(state, layer_output_name)
+        return self.network.get_layer_output(state, layer_output_names)
+
+    def get_layer_shape(self, layer_output_names):
+        return self.network.get_layer_shape(layer_output_names)
