@@ -21,26 +21,24 @@ class Toolbox:
                                             + list(state_shape)))
             self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4]))          
 
-    def _update_max_data(self, state, position, layer_values):
-        if layer_values.ndim > 1:
-            layer_values = layer_values.flatten()
-        max_mask = (layer_values > np.amin(self.max_values, axis=1))
-        max_mask = np.reshape(max_mask, [self.layer_size, 1])
-        idx = np.argmin(self.max_values, axis=1)
-        self.max_values[np.arange(self.layer_size), idx] = np.where(max_mask.reshape([self.layer_size,]),
-                                                                    layer_values,
-                                                                    self.max_values[np.arange(self.layer_size), idx])
-        self.max_states[np.arange(self.layer_size), idx] = np.where(max_mask[:, :, np.newaxis, np.newaxis],
-                                                                    state[np.newaxis, :, :, :],
-                                                                    self.max_states[np.arange(self.layer_size), idx])
-        position = np.asarray(position)
-        self.max_positions[np.arange(self.layer_size), idx] = np.where(max_mask,
-                                                                       position[np.newaxis, :],
-                                                                       self.max_positions[np.arange(self.layer_size), idx])
-    
     def update_max_data(self, state, position, layer_values):
         for i in range(self.num_layers):
-            self._update_max_data(state, position, layer_values[i])
+            if layer_values[i].ndim > 1:
+                layer_values[i] = layer_values[i].flatten()
+            max_mask = (layer_values[i] > np.amin(self.max_values[i], axis=1))
+            max_mask = np.reshape(max_mask, [self.layer_sizes[i], 1])
+            idx = np.argmin(self.max_values[i], axis=1)
+            self.max_values[i][np.arange(self.layer_size), idx] \
+                = np.where(max_mask.reshape([self.layer_sizes[i],]),
+                                            layer_values[i],
+                                            self.max_values[i][np.arange(self.layer_sizes[i]), idx])
+            self.max_states[i][np.arange(self.layer_size), idx] = np.where(max_mask[:, :, np.newaxis, np.newaxis],
+                                                                        state[np.newaxis, :, :, :],
+                                                                        self.max_states[np.arange(self.layer_size), idx])
+            position = np.asarray(position)
+            self.max_positions[i][np.arange(self.layer_size), idx] = np.where(max_mask,
+                                                                        position[np.newaxis, :],
+                                                                        self.max_positions[np.arange(self.layer_size), idx])
 
 
     def get_max_data(self):
