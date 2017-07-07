@@ -329,6 +329,7 @@ class Agent:
 
     def update_score_history(self):
         score = self.game.get_total_reward()
+        tracking_score = self.game.get_game_variable(GameVariable.USER1)
         self.score_history.append(score)
     
     def save_model(self, params_file_path, global_step=None, save_meta=True):
