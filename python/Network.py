@@ -94,11 +94,15 @@ class Network:
         
         # Add 2 convolutional layers with ReLu activation
         conv1 = tf.contrib.layers.convolution2d(self.s1_, num_outputs=8, kernel_size=[6, 6], stride=[3, 3],
+                                                padding="VALID",
+                                                data_format="NCHW",
                                                 activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
                                                 biases_initializer=tf.constant_initializer(0.1),
                                                 scope="CONV_1")
         conv2 = tf.contrib.layers.convolution2d(conv1, num_outputs=8, kernel_size=[3, 3], stride=[2, 2],
+                                                padding="VALID",
+                                                data_format="NCHW",
                                                 activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
                                                 biases_initializer=tf.constant_initializer(0.1),
@@ -152,12 +156,16 @@ class Network:
         self.target_q_ = tf.placeholder(tf.float32, [None, self.output_shape], name="target_q")
         
         # Add 2 convolutional layers with ReLu activation
-        conv1 = tf.contrib.layers.convolution2d(self.s1_, num_outputs=32, kernel_size=[8, 8], stride=[3, 3],
+        conv1 = tf.contrib.layers.convolution2d(self.s1_, num_outputs=32, kernel_size=[8, 8], stride=[4, 4],
+                                                padding="VALID",
+                                                data_format="NCHW",
                                                 activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
                                                 biases_initializer=tf.constant_initializer(0.1),
                                                 scope="CONV_1")
         conv2 = tf.contrib.layers.convolution2d(conv1, num_outputs=64, kernel_size=[4, 4], stride=[2, 2],
+                                                padding="VALID",
+                                                data_format="NCHW",
                                                 activation_fn=tf.nn.relu,
                                                 weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
                                                 biases_initializer=tf.constant_initializer(0.1),
@@ -175,7 +183,7 @@ class Network:
                                                    weights_initializer=tf.contrib.layers.xavier_initializer(),
                                                    biases_initializer=tf.constant_initializer(0.1),
                                                    scope="Q")
-       
+        
         # Define best action, loss, and optimization
         self.best_a = tf.argmax(self.q, 1, name="best_a")
         self.loss = tf.losses.mean_squared_error(self.q, self.target_q_, scope="loss")
