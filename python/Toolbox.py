@@ -15,6 +15,8 @@ class Toolbox:
         self.layer_sizes = layer_sizes
         self.num_layers = len(layer_sizes)
         self.max_values, self.max_states, self.max_positions = [], [], []
+        # NOTE: must keep separate arrays for each layer because layer sizes
+        # differ
         for i in range(self.num_layers):
             self.max_values.append(np.zeros([layer_sizes[i], num_samples]))
             self.max_states.append(np.zeros([layer_sizes[i], num_samples] 
@@ -28,17 +30,19 @@ class Toolbox:
             max_mask = (layer_values[i] > np.amin(self.max_values[i], axis=1))
             max_mask = np.reshape(max_mask, [self.layer_sizes[i], 1])
             idx = np.argmin(self.max_values[i], axis=1)
-            self.max_values[i][np.arange(self.layer_size), idx] \
+            self.max_values[i][np.arange(self.layer_sizes[i]), idx] \
                 = np.where(max_mask.reshape([self.layer_sizes[i],]),
-                                            layer_values[i],
-                                            self.max_values[i][np.arange(self.layer_sizes[i]), idx])
-            self.max_states[i][np.arange(self.layer_size), idx] = np.where(max_mask[:, :, np.newaxis, np.newaxis],
-                                                                        state[np.newaxis, :, :, :],
-                                                                        self.max_states[np.arange(self.layer_size), idx])
+                           layer_values[i],
+                           self.max_values[i][np.arange(self.layer_sizes[i]), idx])
+            self.max_states[i][np.arange(self.layer_sizes[i]), idx] \
+                = np.where(max_mask[:, :, np.newaxis, np.newaxis],
+                           state[np.newaxis, :, :, :],
+                           self.max_states[i][np.arange(self.layer_sizes[i]), idx])
             position = np.asarray(position)
-            self.max_positions[i][np.arange(self.layer_size), idx] = np.where(max_mask,
-                                                                        position[np.newaxis, :],
-                                                                        self.max_positions[np.arange(self.layer_size), idx])
+            self.max_positions[i][np.arange(self.layer_sizes[i]), idx] \
+                = np.where(max_mask,
+                           position[np.newaxis, :],
+                           self.max_positions[i][np.arange(self.layer_sizes[i]), idx])
 
 
     def get_max_data(self):
