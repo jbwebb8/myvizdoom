@@ -224,7 +224,7 @@ class Network:
     
     def save_model(self, params_file_path, global_step=None, save_meta=True):
         self.saver.save(self.sess, params_file_path, global_step=global_step,
-                                   write_meta_graph=save_meta)
+                        write_meta_graph=save_meta)
     
     def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)
