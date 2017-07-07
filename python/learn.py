@@ -105,7 +105,7 @@ toolbox = Toolbox(layer_sizes=layer_sizes,
 
 # Train and test agent for specified number of epochs
 print("Starting the training!")
-test_scores_mean = []
+test_scores_all = []
 time_start = time()
 for epoch in range(epochs):
     print("\nEpoch %d\n-------" % (epoch + 1))
@@ -146,13 +146,15 @@ for epoch in range(epochs):
                                             position=agent.position_history[-1],
                                             layer_values=output)
         agent.update_score_history()
-    test_scores = agent.get_score_history()
-    test_scores_mean.append(agent.get_score_history().mean())
-    print("Results: mean: %.1f±%.1f," % (
-        test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), 
-        "max: %.1f" % test_scores.max())
     
-    # Save network params after specified number of epochs; 
+    # Get test results
+    test_scores = agent.get_score_history()
+    test_scores_all.append([np.mean(test_scores, axis=0), 
+                            np.std(test_scores, axis=0)])                      
+    print("Results: mean: %.1f±%.1f," % (test_scores.mean(), test_scores.std()),
+          "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max())
+    
+    # Save results after specified number of epochs; 
     # otherwise store temporarily after each epoch
     if save_epoch:
         results_file_path = results_directory + exp_name + "_model"
@@ -161,9 +163,9 @@ for epoch in range(epochs):
                          save_meta=(epoch == 0))
         if trackable:
             print("Saving tracking data in:", results_directory)
-            np.savetxt(results_directory + "positions_epoch" + str(epoch+1) + ".txt",
+            np.save(results_directory + "positions-" + str(epoch+1),
                        agent.get_positions())
-            np.savetxt(results_directory + "actions_epoch" + str(epoch+1) + ".txt",
+            np.save(results_directory + "actions-" + str(epoch+1),
                        agent.get_actions())
         if len(layer_names) > 0:
             print("Saving layer data in:", results_directory)
@@ -189,5 +191,5 @@ for epoch in range(epochs):
     print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))
 
 game.close()
-np.savetxt(results_directory + "test_scores_mean.txt", test_scores_mean)
+np.save(results_directory + "test_scores", test_scores_all)
 print("======================================")
