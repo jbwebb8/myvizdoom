@@ -11,7 +11,7 @@ class Toolbox:
     - num_samples: Store top k samples that best activated nodes.
     """
 
-    def __init__(self, layer_sizes, state_shape, num_samples):
+    def __init__(self, layer_sizes, state_shape, num_samples=4):
         self.layer_sizes = layer_sizes
         self.num_layers = len(layer_sizes)
         self.max_values, self.max_states, self.max_positions = [], [], []
