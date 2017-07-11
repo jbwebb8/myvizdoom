@@ -37,6 +37,7 @@ parser.add_argument("-m", "--max-samples", default=4, metavar="",
                     help="# of samples associated with max node activation")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
+parser.add_argument("-v", "--view-data")
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
@@ -83,11 +84,16 @@ agent = Agent(game=game, agent_file=agent_file_path, action_set=action_set,
 if trackable:
     np.savetxt(results_directory + "action_indices.txt", agent.action_indices)
 
-# TODO: incorporate tracking of max activation data
-layer_sizes = agent.get_layer_output(layer_names)
-toolbox = []
-for i in range(len(layer_names)):
-    toolbox.append(Toolbox(layer_sizes[i].size, agent.state.shape, max_samples))
+# Initialize toolbox
+layer_shapes = agent.get_layer_shape(layer_names)
+layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
+for i in range(len(layer_shapes)):
+    for j in range(len(layer_shapes[i])):
+        if layer_shapes[i][j] is not None:
+            layer_sizes[i] *= layer_shapes[i][j] 
+toolbox = Toolbox(layer_sizes=layer_sizes, 
+                  state_shape=agent.state.shape,
+                  num_samples=max_samples)
 
 print("Let's watch!")
 
@@ -98,25 +104,33 @@ for test_episode in range(test_episodes):
         if trackable:
             agent.track_action()
             agent.track_position()
-        if layer_names is not None:
+        if len(layer_names) > 0:
             output = agent.get_layer_output(layer_names)
-            for i in range(len(layer_names)):
-                toolbox[i].update_max_data(agent.state, 
-                                           agent.position_history[-1],
-                                           output[i])
+            toolbox.update_max_data(state=agent.state, 
+                                    position=agent.position_history[-1],
+                                    layer_values=output)
     agent.update_score_history()
     
     # Sleep between episodes
     sleep(1.0)
-    if trackable:
-        np.savetxt(results_directory + "positions_trial" + str(test_episode+1) + ".txt",
-                   agent.get_positions())
-        np.savetxt(results_directory + "actions_trial" + str(test_episode+1) + ".txt",
-                   agent.get_actions())
 
 scores = agent.get_score_history()
-np.savetxt(results_directory + "test_scores.txt", scores)
-if layer_names is not None:
-    np.save(results_directory + "max_values", max_values)
-    np.save(results_directory + "max_states", max_states)
-    np.save(results_directory + "max_positions", max_positions)
+np.save(results_directory + "test_scores", scores)
+if trackable:
+    print("Saving tracking data in:", results_directory)
+    np.save(results_directory + "positions-" + str(epoch+1),
+                agent.get_positions())
+    np.save(results_directory + "actions-" + str(epoch+1),
+                agent.get_actions())
+if len(layer_names) > 0:
+    print("Saving layer data in:", results_directory)
+    max_values, max_states, max_positions = toolbox.get_max_data()
+    for i in range(len(layer_names)):
+        slash = layer_names[i].find("/")
+        abbr_name = layer_names[i][0:slash]                    
+        np.save(results_directory + "max_values_%s" % abbr_name, 
+                max_values[i])
+        np.save(results_directory + "max_states_%s" % abbr_name,
+                max_states[i])
+        np.save(results_directory + "max_positions_%s" % abbr_name,
+                max_positions[i])
