@@ -171,7 +171,8 @@ class Agent:
     
     def _create_replay_memory(self):
         return ReplayMemory(capacity=self.rm_capacity, 
-                            state_shape=self.state.shape)
+                            state_shape=self.state.shape,
+                            input_overlap=(self.phi-1)*self.channels)
 
     def tf_session(self, session):
         self.sess = session
@@ -199,7 +200,7 @@ class Agent:
         elif new_img.ndim == 3 and new_img.shape[0] != self.channels:
             new_img = np.transpose(new_img, [2, 0, 1])
         
-        # Normalize pixel values to [-1, 1]
+        # Normalize pixel values to [0, 1]
         new_img /= 255.0
         new_img = new_img.astype(np.float32)
 
