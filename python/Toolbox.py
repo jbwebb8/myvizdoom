@@ -18,10 +18,13 @@ class Toolbox:
         # NOTE: must keep separate arrays for each layer because layer sizes
         # differ
         for i in range(self.num_layers):
-            self.max_values.append(np.zeros([layer_sizes[i], num_samples]))
+            self.max_values.append(np.zeros([layer_sizes[i], num_samples],
+                                            dtype=np.float64))
             self.max_states.append(np.zeros([layer_sizes[i], num_samples] 
-                                            + list(state_shape)))
-            self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4]))          
+                                            + list(state_shape), 
+                                            dtype=np.float32))
+            self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4],
+                                               dtype=np.float32))          
 
     def update_max_data(self, state, position, layer_values):
         for i in range(self.num_layers):
