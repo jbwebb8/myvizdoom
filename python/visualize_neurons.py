@@ -32,6 +32,9 @@ parser.add_argument("-a", "--action-set", default="default", metavar="",
                     help="name of action set available to agent")
 parser.add_argument("-l", "--layer-names", default="", metavar="", nargs='*',
                     help="layer output names to probe")
+parser.add_argument("-c", "--color", default="RGB", 
+                    choices=["RGB", "RBG", "GBR", "GRB", "BRG", "BGR"],
+                    metavar="", help="order of color channels (if color img)")
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
@@ -42,6 +45,7 @@ config_file_path = args.config_file_path
 test_episodes = args.test_episodes
 action_set = args.action_set
 layer_names = args.layer_names
+color_order = args.color
 
 # Creates and initializes ViZDoom environment.
 def initialize_vizdoom(config_file_path):
@@ -53,6 +57,29 @@ def initialize_vizdoom(config_file_path):
     print("Doom initialized.")
     return game
 
+def initialize_display():
+    print("Initializing display...",)
+    fig = plt.figure()
+    outer = gridspec.GridSpec(2, 1)
+    axes = []
+    dims = [agent.phi + 1, len(layer_shapes) + 1]
+    for i in range(2):
+        inner = gridspec.GridSpecFromSubplotSpec(1, dims[i], subplot_spec=outer[i])
+        ax = []
+        for j in range(dims[i]):
+            ax.append(plt.Subplot(fig, inner[j]))
+        axes.append(ax)
+    print("Done.")
+    return fig, axes
+
+def preprocess_state(state):
+    if state.shape[0] == agent.phi * agent.channels:
+        state = np.transpose(state, [1, 2, 0])
+    imgs = np.split(state, agent.phi, axis=2)
+    r = color_order.find("R")
+    g = color_order.find("G")
+    b = color_order.find("B")
+    return [np.transpose(imgs[i], [r, g, b]) for i in range(len(imgs))]
 
 # Initialize DoomGame and load netwnvork into Agent instance
 game = initialize_vizdoom(config_file_path)
@@ -74,11 +101,26 @@ for i in range(len(layer_shapes)):
 toolbox = Toolbox(layer_sizes=layer_sizes, 
                   state_shape=agent.state.shape)
 
-# Create grid for display
-fig = plt.figure()
-outer = gridspec.GridSpec(2, 1)
-subs = []
-dims = [2, len(layer_shapes) + 1]
-for i in range(2):
-    subs.append(gridspec.GridSpecFromSubplotSpec(1, dims[i], subplot_spec=outer[i]))
+# Initialize plot
+fig, axes = initialize_display()
+#print(agent.game.get_state().screen_buffer)
+for test_episode in range(test_episodes):
+    agent.initialize_new_episode()
+    while not game.is_episode_finished():
+        # Display state
+        state = agent.state
+        #print(np.max(agent.state))
+        images = preprocess_state(state)
+        for i in range(agent.phi):
+            #print(images[i])
+            
+            img = axes[0][i].imshow(images[i])
+            fig.add_subplot(axes[0][i])
+        plt.show()
+        input("Press Enter to continue...")
+        # Display position
+
+        # Display layers
+        agent.make_best_action(train_mode=False)
+
 plt.show()
