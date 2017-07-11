@@ -187,7 +187,7 @@ class Agent:
 
     # Converts and downsamples the input image
     def _preprocess_image(self, img):
-        # Resize to resolution of network input
+        # Resize to resolution of network input and normalize to [0,1]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             new_img = skimage.transform.resize(img, self.network.input_res)
@@ -200,8 +200,7 @@ class Agent:
         elif new_img.ndim == 3 and new_img.shape[0] != self.channels:
             new_img = np.transpose(new_img, [2, 0, 1])
         
-        # Normalize pixel values to [0, 1]
-        new_img /= 255.0
+        # Downsize to save memory
         new_img = new_img.astype(np.float32)
 
         return new_img
@@ -216,7 +215,7 @@ class Agent:
             self.state = np.append(self.state, new_state, axis=0)
         else:
             i = 0
-            while np.nonzero(self.state[i]) == 0:
+            while np.count_nonzero(self.state[i]) != 0:
                 i += 1
             self.state[i:i+self.channels] = new_state
 
@@ -226,6 +225,7 @@ class Agent:
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
             self.update_state(current_screen, replace=False)
+        print(self.state)
 
     def perform_learning_step(self, epoch, epoch_tot):
         def get_exploration_rate(epoch, epoch_tot):
