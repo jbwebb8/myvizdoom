@@ -26,8 +26,8 @@ parser.add_argument("params_file_path",
                     help="TF .data file containing network parameters")
 parser.add_argument("config_file_path", 
                     help="config file for scenario")
-parser.add_argument("-t", "--test-episodes", type=int, default=100, metavar="",
-                    help="episodes to be played (default=100)")
+parser.add_argument("-t", "--test-episodes", type=int, default=10, metavar="",
+                    help="episodes to be played (default=10)")
 parser.add_argument("-a", "--action-set", default="default", metavar="",
                     help="name of action set available to agent")
 parser.add_argument("-l", "--layer-names", default="", metavar="", nargs='*',
@@ -35,6 +35,8 @@ parser.add_argument("-l", "--layer-names", default="", metavar="", nargs='*',
 parser.add_argument("-c", "--color", default="RGB", 
                     choices=["RGB", "RBG", "GBR", "GRB", "BRG", "BGR"],
                     metavar="", help="order of color channels (if color img)")
+parser.add_argument("-d", "--discontinuous", default=False, metavar="",
+                    help="pause after each time step for user input")
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
@@ -46,6 +48,7 @@ test_episodes = args.test_episodes
 action_set = args.action_set
 layer_names = args.layer_names
 color_order = args.color
+discontinuous = args.discontinuous
 
 # Creates and initializes ViZDoom environment.
 def initialize_vizdoom(config_file_path):
@@ -62,13 +65,21 @@ def initialize_display():
     fig = plt.figure()
     outer = gridspec.GridSpec(2, 1)
     axes = []
-    dims = [agent.phi + 1, len(layer_shapes) + 1]
+    dims = [agent.phi + 1, len(layer_names) + 1]
     for i in range(2):
         inner = gridspec.GridSpecFromSubplotSpec(1, dims[i], subplot_spec=outer[i])
         ax = []
         for j in range(dims[i]):
-            ax.append(plt.Subplot(fig, inner[j]))
+            ax_j = plt.Subplot(fig, inner[j])
+            fig.add_subplot(ax_j)
+            ax_j.axis('off')
+            ax.append(ax_j)
         axes.append(ax)
+    
+    # Set axis limits
+    axes[0][agent.phi].set_xbound(lower=-600, upper=600)
+    axes[0][agent.phi].set_ybound(lower=-600, upper=600)
+    axes[0][agent.phi].set_aspect('equal')
     print("Done.")
     return fig, axes
 
@@ -79,7 +90,8 @@ def preprocess_state(state):
     r = color_order.find("R")
     g = color_order.find("G")
     b = color_order.find("B")
-    return [np.transpose(imgs[i], [r, g, b]) for i in range(len(imgs))]
+    imgs = [np.transpose(imgs[i], [r, g, b]) for i in range(len(imgs))]
+    return np.asarray(imgs)
 
 # Initialize DoomGame and load netwnvork into Agent instance
 game = initialize_vizdoom(config_file_path)
@@ -103,24 +115,49 @@ toolbox = Toolbox(layer_sizes=layer_sizes,
 
 # Initialize plot
 fig, axes = initialize_display()
+plt.ion()
 #print(agent.game.get_state().screen_buffer)
 for test_episode in range(test_episodes):
     agent.initialize_new_episode()
-    while not game.is_episode_finished():
+    step = 1
+    while not game.is_episode_finished(): 
+        # Update state and position
+        current_screen = game.get_state().screen_buffer
+        agent.update_state(current_screen)
+        agent.track_position()
+
         # Display state
         state = agent.state
         #print(np.max(agent.state))
         images = preprocess_state(state)
+        images = images[..., [2, 1, 0]]
         for i in range(agent.phi):
-            #print(images[i])
-            
             img = axes[0][i].imshow(images[i])
-            fig.add_subplot(axes[0][i])
-        plt.show()
-        input("Press Enter to continue...")
+         
+        
         # Display position
+        pos = agent.position_history[-1]
+        axes[0][agent.phi].plot(pos[1], pos[2], 'x', scalex=False, scaley=False)
 
         # Display layers
-        agent.make_best_action(train_mode=False)
+        #layer_output = agent.get_layer_output(layer_names)
+        #for i in range(len(layer_names)):
+        #    axes[1][i].imshow(layer_output[i])
+        #q_values = agent.get_layer_output("Q/BiasAdd:0")
+        #axes[1][len(layer_names)].imshow(q_values)
+        
+        # Refresh image
+        plt.draw()
+        plt.show(block=False)
+        plt.pause(0.001)
+        if discontinuous:
+            input("Step %d: Press Enter to continue..." % step)
+        
+        # Make action
+        idx = np.random.randint(4)
+        game.make_action(agent.actions[idx], 4)
+        #agent.make_best_action(train_mode=False)
 
+        step += 1
+    fig.clear()
 plt.show()
