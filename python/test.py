@@ -109,6 +109,8 @@ for test_episode in range(test_episodes):
             toolbox.update_max_data(state=agent.state, 
                                     position=agent.position_history[-1],
                                     layer_values=output)
+        current_screen = game.get_state().screen_buffer
+        agent.update_state(current_screen)
     agent.update_score_history()
     
     # Sleep between episodes
