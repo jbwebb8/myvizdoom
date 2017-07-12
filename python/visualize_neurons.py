@@ -35,7 +35,7 @@ parser.add_argument("-l", "--layer-names", default="", metavar="", nargs='*',
 parser.add_argument("-c", "--color", default="RGB", 
                     choices=["RGB", "RBG", "GBR", "GRB", "BRG", "BGR"],
                     metavar="", help="order of color channels (if color img)")
-parser.add_argument("-d", "--discontinuous", default=False, metavar="",
+parser.add_argument("-d", "--discontinuous", action="store_true", default=False,
                     help="pause after each time step for user input")
 args = parser.parse_args()
 
@@ -65,16 +65,43 @@ def initialize_display():
     fig = plt.figure()
     outer = gridspec.GridSpec(2, 1)
     axes = []
-    dims = [agent.phi + 1, len(layer_names) + 1]
-    for i in range(2):
-        inner = gridspec.GridSpecFromSubplotSpec(1, dims[i], subplot_spec=outer[i])
-        ax = []
-        for j in range(dims[i]):
+    
+    # Upper row
+    inner = gridspec.GridSpecFromSubplotSpec(1, agent.phi+1, 
+                                             subplot_spec=outer[0])
+    ax = []
+    for j in range(agent.phi+1):
+        ax_j = plt.Subplot(fig, inner[j])
+        fig.add_subplot(ax_j)
+        ax_j.axis('off')
+        ax.append(ax_j)
+    axes.append(ax)
+
+    # Lower row
+    inner = gridspec.GridSpecFromSubplotSpec(1, len(layer_names)+1, 
+                                             subplot_spec=outer[1])
+    ax = []
+    for j in range(len(layer_names)):
+        ax_j = [] #plt.Subplot(fig, inner[j])
+        #fig.add_subplot(ax_j)
+        #ax_j.axis('off')
+        #print(layer_shapes[j])
+        if len(layer_shapes[j]) == 4:
+            n = int(np.ceil(np.sqrt(layer_shapes[i][1])))
+            grid = gridspec.GridSpecFromSubplotSpec(n, n, 
+                                                    subplot_spec=inner[j])
+            n_square = int(n*n)
+            for k in range(n_square):
+                a_k = plt.Subplot(fig, grid[k])
+                fig.add_subplot(a_k)
+                a_k.axis('off')
+                ax_j.append(a_k)
+        else:
             ax_j = plt.Subplot(fig, inner[j])
             fig.add_subplot(ax_j)
             ax_j.axis('off')
-            ax.append(ax_j)
-        axes.append(ax)
+        ax.append(ax_j)
+    axes.append(ax)
     
     # Set axis limits
     axes[0][agent.phi].set_xbound(lower=-600, upper=600)
@@ -90,7 +117,7 @@ def preprocess_state(state):
     r = color_order.find("R")
     g = color_order.find("G")
     b = color_order.find("B")
-    imgs = [np.transpose(imgs[i], [r, g, b]) for i in range(len(imgs))]
+    imgs = [imgs[i][..., [r, g, b]] for i in range(len(imgs))]
     return np.asarray(imgs)
 
 # Initialize DoomGame and load netwnvork into Agent instance
@@ -130,7 +157,6 @@ for test_episode in range(test_episodes):
         state = agent.state
         #print(np.max(agent.state))
         images = preprocess_state(state)
-        images = images[..., [2, 1, 0]]
         for i in range(agent.phi):
             img = axes[0][i].imshow(images[i])
          
@@ -140,10 +166,17 @@ for test_episode in range(test_episodes):
         axes[0][agent.phi].plot(pos[1], pos[2], 'x', scalex=False, scaley=False)
 
         # Display layers
-        #layer_output = agent.get_layer_output(layer_names)
-        #for i in range(len(layer_names)):
-        #    axes[1][i].imshow(layer_output[i])
-        #q_values = agent.get_layer_output("Q/BiasAdd:0")
+        layer_output = agent.get_layer_output(layer_names)
+        for i in range(len(layer_names)):
+            if layer_output[i].ndim == 4:
+                for j in range(32):
+                    #print(layer_output[i].shape)
+                    #print(np.max(layer_output[i]))
+                    axes[1][i][j].imshow(np.squeeze(layer_output[i][:, j]), cmap="gray")
+            else:
+                #print(layer_output[i].shape)
+                axes[1][i].imshow(layer_output[i])
+        #q_values = agent.get_layer_output("Q:0")
         #axes[1][len(layer_names)].imshow(q_values)
         
         # Refresh image
