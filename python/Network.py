@@ -72,6 +72,32 @@ class Network:
             self.input_shape = [self.input_depth] + self.input_res
             self.saver = tf.train.Saver()        
             self.graph = tf.get_default_graph()
+       
+        # TODO: reconfigure graphs to convert to and/or have another copy
+        # with NHWC format to run on CPUs. Perhaps something like:
+        # def _create_some_network(self):
+        #    graph_gpu = self.Graph()
+        #    graph_cpu = self.Graph()
+        #    with graph_gpu.as_default():
+        #        # Build network with NCHW
+        #    with graph_cpu.as_default():
+        #        # Build network with NHWC
+
+        #if not tf.test.is_gpu_available():
+        #    self.graph_cpu = tf.Graph()
+        #    for v in zip(self.graph.get_all_collection_keys()):
+        #        print(v)
+        #    for n in tf.get_default_graph().as_graph_def().node:
+        #        if "data_format" in n.attr.keys():
+        #            print(n.name, n.attr["data_format"])
+        #    for tvar in tf.global_variables():
+        #        print(tvar)
+        #        if tvar.name == "CONV_1/weights:0": conv1_w = tvar
+        #    print(conv1_w)
+        #    print(tf.transpose(conv1_w, [0,1]))
+        #    t = self.graph.get_operation_by_name("CONV_1")
+        #    print(t)
+            
    
     # TODO: Think how to modularize network creation. Different name for 
     # every network or broad names that allow user to specify details (like 
