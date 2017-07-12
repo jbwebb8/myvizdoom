@@ -225,7 +225,6 @@ class Agent:
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
             self.update_state(current_screen, replace=False)
-        print(self.state)
 
     def perform_learning_step(self, epoch, epoch_tot):
         def get_exploration_rate(epoch, epoch_tot):
@@ -243,7 +242,7 @@ class Agent:
         
         # NOTE: is copying array most efficient implementation?
         s1 = np.copy(self.state)
-
+        
         # With probability epsilon make a random action.
         epsilon = get_exploration_rate(epoch, epoch_tot)
         if random() <= epsilon:
@@ -276,7 +275,7 @@ class Agent:
             # All variables have shape [batch_size, ...]
             s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
             q2 = np.max(self.network.get_q_values(s2), axis=1)
-            # Update target Q for selected action
+            # Update target Q for selected action:
             # if not terminal: target_Q(s,a) = r + gamma * max(Q(s',_))
             # if terminal:     target_Q(s,a) = r
             target_q = self.network.get_q_values(s1)
