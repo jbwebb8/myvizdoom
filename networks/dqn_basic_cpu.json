@@ -89,7 +89,7 @@
             "input": "FC_1",
             "kwargs": {
                 "scope": "Q",
-                "num_outputs": 5
+                "num_outputs": 1
             }
         }
     ],
