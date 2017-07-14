@@ -13,8 +13,8 @@ class Agent:
     Creates an Agent object that oversees network, memory, and learning functions.
     """
     def __init__(self, game, action_set=None, frame_repeat=4,
-                 session=None, agent_file=None, meta_file=None,
-                 params_file=None, **kwargs):
+                 session=None, agent_file=None, network_file=None, 
+                 meta_file=None, params_file=None, **kwargs):
         # Initialize game
         self.game = game
         self.sess = session
@@ -53,9 +53,18 @@ class Agent:
                              "and/or agent file.")
         
         # Create network components
-        self.network = self._create_network(meta_file, params_file)
+        self.network = Network(name=self.net_name,
+                               phi=self.phi, 
+                               num_channels=self.channels, 
+                               output_shape=self.output_size,
+                               learning_rate=self.alpha,
+                               session=self.sess,
+                               network_file=network_file,
+                               params_file=params_file)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
-        self.memory = self._create_replay_memory()
+        self.memory = ReplayMemory(capacity=self.rm_capacity, 
+                                   state_shape=self.state.shape,
+                                   input_overlap=(self.phi-1)*self.channels)
         
         # Create tracking lists
         self.score_history = []
@@ -158,21 +167,6 @@ class Agent:
         self.epsilon_decay_rate = agent["learning_args"]["epsilon_decay_rate"]
         self.batch_size = agent["learning_args"]["batch_size"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
-
-    def _create_network(self, meta_file, params_file):
-        return Network(name=self.net_name,
-                       phi=self.phi, 
-                       num_channels=self.channels, 
-                       output_shape=self.output_size,
-                       learning_rate=self.alpha,
-                       session=self.sess,
-                       meta_file_path=meta_file,
-                       params_file_path=params_file)
-    
-    def _create_replay_memory(self):
-        return ReplayMemory(capacity=self.rm_capacity, 
-                            state_shape=self.state.shape,
-                            input_overlap=(self.phi-1)*self.channels)
 
     def tf_session(self, session):
         self.sess = session
@@ -317,11 +311,6 @@ class Agent:
         return np.asarray(self.position_history)
 
     def get_actions(self):
-        #action_array = np.empty([len(self.actions), 
-        #                        1 + self.game.get_available_buttons_size()],
-        #                        dtype=float)
-        #for i in range(len(self.actions)):
-        #    action_array[i, :] = np.hstack(self.actions[i])
         return np.asarray(self.action_history)
     
     def get_score_history(self):
