@@ -2,7 +2,7 @@
     "global_features": {
         "input_layer": "state",
         "output_layer": "Q",
-        "loss": "loss",
+        "loss": "mean_squared_error",
         "optimizer": "rmsprop"        
     },
     
@@ -11,28 +11,10 @@
             "name": "state",
             "data_type": "float32",
             "kwargs": {
-                "shape": ["None", 1, 30, 45],
+                "shape": ["None", 30, 45, 1],
                 "name": "state"
             } 
-        },
-
-        {
-            "name": "action",
-            "data_type": "int32",
-            "kwargs": {
-                "shape": ["None"],
-                "name": "action"
-            }   
-        },
-
-        {
-            "name": "target_q",
-            "data_type": "float32",
-            "kwargs": {
-                "shape": ["None", "None"],
-                "name": "target_q"
-            }
-        } 
+        }
     ],
 
     "layers": [
@@ -45,7 +27,6 @@
                 "num_outputs": 8, 
                 "kernel_size": [6, 6],
                 "stride": [3, 3],
-                "data_format": "NCHW",
                 "padding": "VALID"
             }
         },
@@ -59,7 +40,6 @@
                 "num_outputs": 8, 
                 "kernel_size": [6, 6],
                 "stride": [3, 3],
-                "data_format": "NCHW",
                 "padding": "VALID"
             }
         },
@@ -89,33 +69,11 @@
             "input": "FC_1",
             "kwargs": {
                 "scope": "Q",
-                "num_outputs": 5
+                "num_outputs": 1
             }
         }
     ],
 
     "ops": [
-        {
-            "name": "best_action",
-            "type": "argmax",
-            "input": "Q",
-            "kwargs": {
-                "axis": 1,
-                "name": "best_action"
-            }
-        },
-
-        {
-            "name": "loss",
-            "type": "mean_squared_error",
-            "input": [
-                "Q",
-                "target_q"
-            ],
-            "kwargs": {
-                "scope": "loss"
-            }
-            
-        }
     ]
 }
