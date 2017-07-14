@@ -11,7 +11,7 @@
             "name": "state",
             "data_type": "float32",
             "kwargs": {
-                "shape": [30, 45],
+                "shape": [84, 84],
                 "name": "state"
             } 
         }
@@ -24,9 +24,9 @@
             "input": "state",
             "kwargs": {
                 "scope": "CONV_1",
-                "num_outputs": 8, 
-                "kernel_size": [6, 6],
-                "stride": [3, 3],
+                "num_outputs": 32, 
+                "kernel_size": [8, 8],
+                "stride": [4, 4],
                 "padding": "VALID"
             }
         },
@@ -37,9 +37,9 @@
             "input": "CONV_1",
             "kwargs": {
                 "scope": "CONV_2",
-                "num_outputs": 8, 
-                "kernel_size": [6, 6],
-                "stride": [3, 3],
+                "num_outputs": 64, 
+                "kernel_size": [4, 4],
+                "stride": [2, 2],
                 "padding": "VALID"
             }
         },
