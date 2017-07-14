@@ -116,14 +116,14 @@ for test_episode in range(test_episodes):
     # Sleep between episodes
     sleep(1.0)
 
-scores = agent.get_score_history()
+scores = np.asarray(agent.score_history())
 np.save(results_directory + "test_scores", scores)
 if trackable:
     print("Saving tracking data in:", results_directory)
     np.save(results_directory + "positions-" + str(epoch+1),
-                agent.get_positions())
+                np.asarray(agent.position_history()))
     np.save(results_directory + "actions-" + str(epoch+1),
-                agent.get_actions())
+                np.asarray(agent.position_history()))
 if len(layer_names) > 0:
     print("Saving layer data in:", results_directory)
     max_values, max_states, max_positions = toolbox.get_max_data()

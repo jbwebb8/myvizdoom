@@ -6,26 +6,42 @@ import skimage.color, skimage.transform
 from random import randint, random
 import json
 import warnings
-
+import os, errno
 
 class Agent:
     """
     Creates an Agent object that oversees network, memory, and learning functions.
     """
-    def __init__(self, game, action_set=None, frame_repeat=4,
-                 session=None, agent_file=None, network_file=None, 
-                 meta_file=None, params_file=None, **kwargs):
+
+    NET_JSON_DIR = "../networks/"
+
+    def __init__(self, game, session, output_directory, agent_file=None, 
+                 train_mode=True, action_set="default", frame_repeat=4, 
+                 **kwargs):
         # Initialize game
         self.game = game
         self.sess = session
+        self.global_step = 0
+
+        # Set up results directories
+        if not output_directory.endswith("/"): 
+            output_directory += "/"
+        self.agent_dir = output_directory + "agent_data/"
+        try:
+            os.makedirs(self.agent_dir)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+        self.net_dir = output_directory + "net_data/"
+        try:
+            os.makedirs(self.net_dir)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
 
         # Initialize action space
         self.action_indices = np.asarray(self.game.get_available_buttons())
-        # FIXME: should action_set still be specified when meta_file given?
-        if action_set is not None:
-            self._set_actions(action_set)
-        else:
-            self._set_actions("default")
+        self.actions = self._set_actions(action_set)
         self.output_size = len(self.actions)
         # FIXME: how not to hard code frame_repeat?
         self.frame_repeat = frame_repeat
@@ -35,7 +51,7 @@ class Agent:
             self._load_agent_file(agent_file)
         else:
             self.agent_name = kwargs.pop("agent_name", "default")
-            self.net_name = kwargs.pop("net_name", "dqn_basic")
+            self.net_file = kwargs.pop("net_name", "dqn_basic")
             self.net_type = kwargs.pop("net_type", "dqn")
             self.alpha = kwargs.pop("alpha", 0.00025)
             self.gamma = kwargs.pop("gamma", 0.99)
@@ -53,14 +69,17 @@ class Agent:
                              "and/or agent file.")
         
         # Create network components
-        self.network = Network(name=self.net_name,
-                               phi=self.phi, 
+        if not self.net_file.startswith(self.NET_JSON_DIR):
+            self.net_file = self.NET_JSON_DIR + self.net_file
+        if not self.net_file.endswith(".json"):
+            self.net_file += ".json"
+        self.network = Network(phi=self.phi, 
                                num_channels=self.channels, 
                                output_shape=self.output_size,
                                learning_rate=self.alpha,
                                session=self.sess,
-                               network_file=network_file,
-                               params_file=params_file)
+                               network_file=self.net_file,
+                               output_directory=self.net_dir)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
         self.memory = ReplayMemory(capacity=self.rm_capacity, 
                                    state_shape=self.state.shape,
@@ -143,19 +162,20 @@ class Agent:
             raise NameError("Name " + str(action_set) + " not found.")
         
         # Convert to list (required by DoomGame commands); kinda messy
-        self.actions = [] 
+        action_list = [] 
         for i in range(actions.shape[0]):
-            self.actions.append(list(actions[i,:]))
+            action_list.append(list(actions[i,:]))
             for j in range(actions.shape[1]):
-                self.actions[-1][j] = np.asscalar(self.actions[-1][j])
-        
+                action_list[-1][j] = np.asscalar(action_list[-1][j])
+        return action_list
+
     def _load_agent_file(self, agent_file):
         # Grab arguments from agent file
         if not agent_file.lower().endswith(".json"): 
             raise Exception("No agent JSON file.")
         agent = json.loads(open(agent_file).read())
         self.agent_name = agent["agent_name"]
-        self.net_name = agent["network_args"]["name"]
+        self.net_file = agent["network_args"]["name"]
         self.net_type = agent["network_args"]["type"]
         self.alpha = agent["network_args"]["alpha"]
         self.gamma = agent["network_args"]["gamma"]
@@ -167,9 +187,6 @@ class Agent:
         self.epsilon_decay_rate = agent["learning_args"]["epsilon_decay_rate"]
         self.batch_size = agent["learning_args"]["batch_size"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
-
-    def tf_session(self, session):
-        self.sess = session
     
     def reset_state(self):
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
@@ -243,7 +260,7 @@ class Agent:
             a = randint(0, self.output_size - 1)
         else:
             # Choose the best action according to the network.
-            a = self.network.get_best_action(s1)
+            a = self.network.get_best_action(s1).item()
         
         # Receive reward from environment.
         reward = self.game.make_action(self.actions[a], self.frame_repeat)
@@ -262,6 +279,12 @@ class Agent:
 
         # Learn from minibatch of replay memory samples.
         self.learn_from_memory()
+
+        # Track neuron activity every 10000 learning steps
+        if self.global_step % 10000 == 0:
+            self.network.track_activations(s1, self.global_step)
+
+        self.global_step += 1
     
     def learn_from_memory(self):
         # Learn from minibatch if enough memories
@@ -285,7 +308,7 @@ class Agent:
     def make_best_action(self, state=None, train_mode=True):
         if state is None: 
             state = self.state
-        a_best = self.network.get_best_action(state)
+        a_best = self.network.get_best_action(state).item()
         # Easier to use built-in feature
         if train_mode:
             self.game.make_action(self.actions[a_best])
@@ -306,26 +329,18 @@ class Agent:
         last_action = self.game.get_last_action()
         timestamp = self.game.get_episode_time()
         self.action_history.append([timestamp] + last_action)
-    
-    def get_positions(self):
-        return np.asarray(self.position_history)
-
-    def get_actions(self):
-        return np.asarray(self.action_history)
-    
-    def get_score_history(self):
-        return np.asarray(self.score_history)
 
     def update_score_history(self):
         score = self.game.get_total_reward()
         tracking_score = self.game.get_game_variable(GameVariable.USER1)
         self.score_history.append(score)
     
-    def save_model(self, params_file_path, global_step=None, save_meta=True):
-        # TODO: create function that returns params for saving
-        self.network.save_model(params_file_path, global_step=global_step,
-                                save_meta=save_meta)
+    def save_positions(self, filename):
+        np.save(self.agent_dir + filename, self.position_history)
     
+    def save_actions(self, filename):
+        np.save(self.agent_dir + filename, self.action_history)
+
     def get_layer_output(self, layer_output_names, state=None):
         if state is None: 
             state = self.state
@@ -333,3 +348,8 @@ class Agent:
 
     def get_layer_shape(self, layer_output_names):
         return self.network.get_layer_shape(layer_output_names)
+
+    def save_model(self, model_name, global_step=None, save_meta=True):
+        self.network.save_model(model_name,
+                                global_step=global_step,
+                                save_meta=save_meta)

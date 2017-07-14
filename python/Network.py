@@ -29,64 +29,99 @@ class Network:
     - loss
     - train_step
     - best_action
+
+    Output directory branched into log directory for FileWriter and params
+    directory for Saver.
     """
-    def __init__(self, phi, num_channels, output_shape, learning_rate, 
-                 session, name=None, network_file=None, meta_file_path=None, 
-                 params_file_path=None, output_dir=None):
+    def __init__(self, phi, num_channels, output_shape, output_directory,
+                 train_mode=True, learning_rate=None, session=None, 
+                 network_file=None):
         
         self.input_depth = phi * num_channels
         self.output_shape = output_shape
         self.learning_rate = learning_rate
         self.sess = session
+        self.train_mode = train_mode
 
-        if network_file is not None:
-            if not network_file.lower().endswith(".json"): 
-                raise SyntaxError("File format not supported for network settings. " \
-                                  "Please use JSON file.")
-            if name is None:
-                self.name = network_file[0:-5]
-            else:
-                self.name = name
-            self.graph_dict = self.load_json(network_file)
-            self.state = self.graph_dict["state"]
-            self.input_shape = state.get_shape()
-            self.q = self.graph_dict["Q"]
-            self.target_q = self.graph_dict["target_q"]
-            self.loss = self.graph_dict["loss"]
-            self.train_step = self.graph_dict["train_step"]
-            self.best_a = self.graph_dict["best_action"]
+        if not network_file.lower().endswith(".json"): 
+            raise SyntaxError("File format not supported for network settings. " \
+                                "Please use JSON file.")
+        self.name = network_file[0:-5]
+        self.graph_dict, self.data_format = self.load_json(network_file)
+        self.state = self.graph_dict["state"][0]
+        self.input_shape = self.state.get_shape().as_list()[1:]
+        if self.data_format == "NCHW":
+            self.input_res = self.input_shape[1:]
         else:
-            self.name = name
-            self.learn, self.get_q_values, self.get_best_action \
-                = self._create_network()
-            self.input_shape = [self.input_depth] + self.input_res
-        
-        self.out_dir = output_dir
-        if not out_dir.endswith("/"): 
-            out_dir += "/"
+            self.input_res = self.input_shape[:-1]
+        self.q = self.graph_dict["Q"][0]
+        self.target_q = self.graph_dict["target_q"][0]
+        self.loss = self.graph_dict["loss"][0]
+        self.train_step = self.graph_dict["train_step"][0]
+        self.best_a = self.graph_dict["best_action"][0]
+
+        self.out_dir = output_directory
+        if not self.out_dir.endswith("/"): 
+            self.out_dir += "/"
+        self.log_dir = self.out_dir + "log/"
         try:
-            os.makedirs(out_dir)
+            os.makedirs(self.log_dir)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+        self.params_dir = self.out_dir + "params/"
+        try:
+            os.makedirs(self.params_dir)
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
         self.saver = tf.train.Saver()        
         self.graph = tf.get_default_graph()
-        self.writer = tf.summary.FileWriter(out_dir + "log/", self.graph)
-
-    # TODO: Think how to modularize network creation. Different name for 
-    # every network or broad names that allow user to specify details (like 
-    # number of features, layers, etc.)
-
+        
+        # TODO: where to put this? Need more flexibility to add/remove
+        
+        with tf.name_scope("summaries"):
+            var_sum = []
+            with tf.name_scope("trainable_variables"):
+                for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
+                    with tf.name_scope(var.name[:-2]):
+                        mean = tf.reduce_mean(var)
+                        var_sum.append(tf.summary.scalar("mean", mean))
+                        with tf.name_scope("stddev"):
+                            stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+                        var_sum.append(tf.summary.scalar("stddev", stddev))
+                        var_sum.append(tf.summary.scalar("max", tf.reduce_max(var)))
+                        var_sum.append(tf.summary.scalar("min", tf.reduce_min(var)))
+                        var_sum.append(tf.summary.histogram("histogram", var))
+            
+            neur_sum = []
+            with tf.name_scope("neurons"):
+                for name in self.graph_dict:
+                    if self.graph_dict[name][1] == "l":
+                        layer = self.graph_dict[name][0]
+                        with tf.name_scope(name):
+                            #num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
+                            #dim = tf.floor(tf.sqrt(num_elements))
+                            #layer_2D = tf.reshape(layer, [dim, -1], name="2D")
+                            layer_flat = tf.reshape(layer, [-1], name="flat")
+                            act = tf.cast(tf.greater(layer_flat, tf.zeros_like(layer_flat)), 
+                                          tf.int16)
+                            neur_sum.append(tf.summary.histogram("activations", act))
+            
+        self.var_sum = tf.summary.merge(var_sum)
+        self.neur_sum = tf.summary.merge(neur_sum)
+        self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
+        
     def load_json(self, network_file):
         # Returns TensorFlow object with specified name in network file
         def _get_object(names):
             if type(names) == list:
                 obs = []
                 for name in names:
-                    obs.append(graph_dict[name])
+                    obs.append(graph_dict[name][0])
                 return obs
             else:
-                return graph_dict[names]
+                return graph_dict[names][0]
         
         def get_data_format():
             if "data_format" in net["global_features"]: 
@@ -103,29 +138,38 @@ class Network:
                         auto = False
                         break
                 if auto:
-                    if tf.is_gpu_avaiable(): data_format = "NCHW"
+                    if tf.test.is_gpu_available(): data_format = "NCHW"
                     else:                    data_format = "NHWC"
+            return data_format
 
         def add_input_layer(ph):
             ph["name"] = "state"
             t = ph["kwargs"]["shape"] # for aesthetics
+            
+            # User specifies [H, W]
             if len(t) == 2:
-                if data_format = "NHWC":
+                if data_format == "NHWC":
                     ph["kwargs"]["shape"] = [None, t[0], t[1], self.input_depth]
-                elif data_format = "NCHW":
+                elif data_format == "NCHW":
                     ph["kwargs"]["shape"] = [None, self.input_depth, t[0], t[1]]
-            if len(t) == 2:
-                if data_format = "NHWC":
+            
+            # User specifies [H, W, C] or [C, H, W]
+            elif len(t) == 3:
+                if data_format == "NHWC":
                     ph["kwargs"]["shape"] = [None, t[0], t[1], self.input_depth]
-                elif data_format = "NCHW":
+                elif data_format == "NCHW":
                     ph["kwargs"]["shape"] = [None, self.input_depth, t[0], t[1]]
-            if len(ph["kwargs"]["shape"])
-                if data_format = "NHWC":
+            
+            # User specifies [None, H, W, C] or [None, C, H, W]
+            elif len(t) == 4:
+                if data_format == "NHWC":
                     ph["kwargs"]["shape"][3] = self.input_depth
-                elif data_format = "NCHW":
+                elif data_format == "NCHW":
                     ph["kwargs"]["shape"][1] = self.input_depth
+            
             else:
-                raise ValueError("Unknown data format: " + data_format)
+                raise ValueError("Unknown input format of size " + str(len(t)))
+            
             return add_placeholder(ph)
         
         def add_output_layer(layer):
@@ -146,7 +190,7 @@ class Network:
             layer_type = layer["type"].lower()
             input_layer = _get_object(layer["input"])
             if layer_type == "conv2d":
-                layers["kwargs"]["data_format"] = data_format
+                layer["kwargs"]["data_format"] = data_format
                 return tf.contrib.layers.convolution2d(input_layer, 
                                                        **layer["kwargs"])
             elif layer_type == "flatten":
@@ -184,7 +228,7 @@ class Network:
                 raise ValueError("Op \"" + op["type"] + "\" not yet defined.")
 
         # Adds loss function to graph
-        def add_loss_fn(loss_type, q_, target_q_)
+        def add_loss_fn(loss_type, q_, target_q_):
             if loss_type.lower() == "mean_squared_error":
                 return tf.losses.mean_squared_error(q_, target_q_, scope="loss")
 
@@ -218,212 +262,114 @@ class Network:
         data_format = get_data_format()             
 
         # Add placeholders
-        graph_dict["target_q"] = tf.placeholder(tf.float32, 
-                                                shape=[None, self.output_shape],
-                                                name="target_q")
+        graph_dict["target_q"] = [tf.placeholder(tf.float32, 
+                                                 shape=[None, self.output_shape],
+                                                 name="target_q"), "p"]
         for ph in net["placeholders"]:
-            if network["global_features"]["input_layer"] == ph["name"]:
+            if net["global_features"]["input_layer"] == ph["name"]:
                 node = add_input_layer(ph) 
             else:
                 node = add_placeholder(ph)
-            graph_dict[ph["name"]] = node
+            graph_dict[ph["name"]] = [node, "p"]
         
         
         # Add layers
         for layer in net["layers"]:
-            if network["global_features"]["output_layer"] == layer["name"]:
+            if net["global_features"]["output_layer"] == layer["name"]:
                 l = add_output_layer(layer)
             else:
                 l = add_layer(layer)
-            graph_dict[layer["name"]] = l
+            graph_dict[layer["name"]] = [l, "l"]
 
         # Add ops
-        graph_dict["best_action"] = tf.argmax(graph_dict["Q"], axis=1)
+        best_action = tf.argmax(graph_dict["Q"][0], axis=1)
+        graph_dict["best_action"] = [best_action, "o"]
         for op in net["ops"]:
             node = add_op(op)
-            graph_dict[op["name"]] = node
+            graph_dict[op["name"]] = [node, "o"]
         
         
         # Add loss function
-        graph_dict["loss"] = add_loss(loss_type=net["global_features"]["loss"],
-                                      q_=graph_dict["Q"],
-                                      target_q_=graph_dict["target_q"])
+        if "loss" in net["global_features"]:
+            loss_fn = add_loss_fn(loss_type=net["global_features"]["loss"],
+                                  q_=graph_dict["Q"][0],
+                                  target_q_=graph_dict["target_q"][0])
+            graph_dict["loss"] = [loss_fn, "o"]
+        else:
+            if self.train_mode: 
+                raise ValueError("loss fn not found in network file.")
 
         # Add optimizer
-        optimizer, train_step = add_optimizer(opt_type=net["global_features"]["optimizer"],
-                                              loss=graph_dict["loss"])
-        graph_dict["optimizer"] = optimizer
-        graph_dict["train_step"] = train_step
-
-        return graph_dict
-
-    def _create_network(self):
-        if self.name.lower() == "dqn_basic":
-            return self._create_dqn_basic()
-        elif self.name.lower() == "dqn_lc_simple":
-            return self._create_dqn_LC_simple()
+        if "optimizer" in net["global_features"]:
+            opt, ts = add_optimizer(opt_type=net["global_features"]["optimizer"],
+                                    loss=graph_dict["loss"][0])
+            graph_dict["optimizer"] = [opt, "s"]
+            graph_dict["train_step"] = [ts, "s"]
         else:
-            raise NameError("No network exists for " + self.name + ".")
-        
-    def _create_dqn_basic(self):
-        self.input_res = [30, 45]
+            if self.train_mode:
+                raise ValueError("optimizer not found in network file.") 
 
-        # Create the input variables
-        self.s1_ = tf.placeholder(tf.float32, [None] + [self.input_depth] + self.input_res, name="state")
-        self.a_ = tf.placeholder(tf.int32, [None], name="action")
-        self.target_q_ = tf.placeholder(tf.float32, [None, self.output_shape], name="target_q")
-        
-        # Add 2 convolutional layers with ReLu activation
-        conv1 = tf.contrib.layers.convolution2d(self.s1_, num_outputs=8, kernel_size=[6, 6], stride=[3, 3],
-                                                padding="VALID",
-                                                data_format="NCHW",
-                                                activation_fn=tf.nn.relu,
-                                                weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-                                                biases_initializer=tf.constant_initializer(0.1),
-                                                scope="CONV_1")
-        conv2 = tf.contrib.layers.convolution2d(conv1, num_outputs=8, kernel_size=[3, 3], stride=[2, 2],
-                                                padding="VALID",
-                                                data_format="NCHW",
-                                                activation_fn=tf.nn.relu,
-                                                weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-                                                biases_initializer=tf.constant_initializer(0.1),
-                                                scope="CONV_2")
-        
-        # Add FC layer
-        conv2_flat = tf.contrib.layers.flatten(conv2)
-        fc1 = tf.contrib.layers.fully_connected(conv2_flat, num_outputs=128, activation_fn=tf.nn.relu,
-                                                weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                                biases_initializer=tf.constant_initializer(0.1),
-                                                scope="FC_1")
-        
-        # Add output layer (containing Q(s,a))
-        self.q = tf.contrib.layers.fully_connected(fc1, num_outputs=self.output_shape, activation_fn=None,
-                                                   weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                                   biases_initializer=tf.constant_initializer(0.1),
-                                                   scope="Q")
-       
-        # Define best action, loss, and optimization
-        self.best_a = tf.argmax(self.q, 1, name="best_a")
-        self.loss = tf.losses.mean_squared_error(self.q, self.target_q_, scope="loss")
-        optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
-
-        # Update the parameters according to the computed gradient using RMSProp.
-        self.train_step = optimizer.minimize(self.loss, name="train_step")
-
-        def _function_learn(s1, target_q):
-            l, _ = self.sess.run([self.loss, self.train_step], 
-                                 feed_dict={self.s1_: s1, 
-                                            self.target_q_: target_q})
-            return l
-
-        def _function_get_q_values(state):
-            return self.sess.run(self.q, 
-                                 feed_dict={self.s1_: state})
-
-        def _function_get_best_action(state):
-            if state.ndim < 4:
-                state = state.reshape([1] + list(state.shape))
-            return self.sess.run(self.best_a, 
-                                 feed_dict={self.s1_: state})
-
-        return _function_learn, _function_get_q_values, _function_get_best_action
-    
-    def _create_dqn_LC_simple(self):
-        self.input_res = [60, 108]
-
-        # Create the input variables
-        self.s1_ = tf.placeholder(tf.float32, [None] + [self.input_depth] + self.input_res, name="state")
-        self.a_ = tf.placeholder(tf.int32, [None], name="action")
-        self.target_q_ = tf.placeholder(tf.float32, [None, self.output_shape], name="target_q")
-        
-        # Add 2 convolutional layers with ReLu activation
-        conv1 = tf.contrib.layers.convolution2d(self.s1_, num_outputs=32, kernel_size=[8, 8], stride=[4, 4],
-                                                padding="VALID",
-                                                data_format="NCHW",
-                                                activation_fn=tf.nn.relu,
-                                                weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-                                                biases_initializer=tf.constant_initializer(0.1),
-                                                scope="CONV_1")
-        conv2 = tf.contrib.layers.convolution2d(conv1, num_outputs=64, kernel_size=[4, 4], stride=[2, 2],
-                                                padding="VALID",
-                                                data_format="NCHW",
-                                                activation_fn=tf.nn.relu,
-                                                weights_initializer=tf.contrib.layers.xavier_initializer_conv2d(),
-                                                biases_initializer=tf.constant_initializer(0.1),
-                                                scope="CONV_2")
-        
-        # Add FC layer
-        conv2_flat = tf.contrib.layers.flatten(conv2)
-        fc1 = tf.contrib.layers.fully_connected(conv2_flat, num_outputs=4608, activation_fn=tf.nn.relu,
-                                                weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                                biases_initializer=tf.constant_initializer(0.1),
-                                                scope="FC_1")
-        
-        # Add output layer (containing Q(s,a))
-        self.q = tf.contrib.layers.fully_connected(fc1, num_outputs=self.output_shape, activation_fn=None,
-                                                   weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                                   biases_initializer=tf.constant_initializer(0.1),
-                                                   scope="Q")
-        
-        # Define best action, loss, and optimization
-        self.best_a = tf.argmax(self.q, 1, name="best_a")
-        self.loss = tf.losses.mean_squared_error(self.q, self.target_q_, scope="loss")
-        optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
-
-        # Update the parameters according to the computed gradient using RMSProp.
-        self.train_step = optimizer.minimize(self.loss, name="train_step")
-
-        def _function_learn(s1, target_q):
-            l, _ = self.sess.run([self.loss, self.train_step], 
-                                 feed_dict={self.s1_: s1, 
-                                            self.target_q_: target_q})
-            return l
-
-        def _function_get_q_values(state):
-            return self.sess.run(self.q, 
-                                 feed_dict={self.s1_: state})
-
-        def _function_get_best_action(state):
-            if state.ndim < 4:
-                state = state.reshape([1] + list(state.shape))
-            return self.sess.run(self.best_a, 
-                                 feed_dict={self.s1_: state})
-
-        return _function_learn, _function_get_q_values, _function_get_best_action
+        return graph_dict, data_format
 
     def learn(self, s1_, target_q_):
-        feed_dict={self.state: s1, self.target_q=target_q_}
+        if s1_.ndim < 4:
+            s1_ = s1_.reshape([1] + list(s1_.shape))
+        feed_dict={self.state: s1_, self.target_q: target_q_}
         loss_, train_step_ = self.sess.run([self.loss, self.train_step],
                                            feed_dict=feed_dict)
         return loss_, train_step_
     
     def get_q_values(self, s1_):
+        if s1_.ndim < 4:
+            s1_ = s1_.reshape([1] + list(s1_.shape))
         feed_dict={self.state: s1_}
         return self.sess.run(self.q, feed_dict=feed_dict)
     
     def get_best_action(self, s1_):
+        if s1_.ndim < 4:
+            s1_ = s1_.reshape([1] + list(s1_.shape))
         feed_dict={self.state: s1_}
         return self.sess.run(self.best_a, feed_dict=feed_dict)
-    
-    def save_model(self, params_file_path, global_step=None, save_meta=True):
-        self.saver.save(self.sess, params_file_path, global_step=global_step,
+
+    def track_activations(self, s1_, global_step=None):
+        if s1_.ndim < 4:
+            s1_ = s1_.reshape([1] + list(s1_.shape))
+        feed_dict={self.state: s1_}
+        acts = self.sess.run(self.neur_sum, feed_dict=feed_dict)
+        self.writer.add_summary(acts, global_step)
+
+    def save_model(self, model_name, global_step=None, save_meta=True,
+                   save_summaries=True):
+        self.saver.save(self.sess, self.params_dir + model_name, 
+                        global_step=global_step,
                         write_meta_graph=save_meta)
-    
+        if save_summaries:
+            summaries = self.sess.run(self.var_sum)
+            self.writer.add_summary(summaries, global_step)
+        self.writer.flush()
+
     def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)
     
+    def _get_layer(self, layer_name):
+        in_json = False
+        for l in self.graph_dict:
+            if l == layer_name:
+                return graph_dict[l][0]
+        return self.graph.get_tensor_by_name(layer_name)
+
     def get_layer_output(self, state, layer_output_names):
         layers = []
         for layer_name in layer_output_names:
-            layers.append(self.graph.get_tensor_by_name(layer_name))
+            layers.append(self._get_layer(layer_name))
         if state.ndim < 4:
             state = state.reshape([1] + list(state.shape))
-        return self.sess.run(layers, feed_dict={self.s1_: state})
+        return self.sess.run(layers, feed_dict={self.state: state})
     
     def get_layer_shape(self, layer_output_names):
         layer_shapes = []
         for layer_name in layer_output_names:
-            t_shape = self.graph.get_tensor_by_name(layer_name).get_shape()
+            t_shape = self._get_layer(layer_name).get_shape()
             l_shape = tuple(t_shape[i].value for i in range(len(t_shape)))
             layer_shapes.append(l_shape)
         return layer_shapes

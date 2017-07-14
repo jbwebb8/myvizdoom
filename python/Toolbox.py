@@ -51,6 +51,26 @@ class Toolbox:
     def get_max_data(self):
         return self.max_values, self.max_states, self.max_positions
 
+    def save_max_data(self, output_directory, layer_names=None):
+        if layer_names is None:
+            layer_names = ""
+            for s in range(self.num_layers):
+                layer_names += str(s)
+        for i in range(len(layer_names)):
+            layer_name = layer_names[i]
+            slash = layer_names[i].find("/")
+            if slash > -1:
+                layer_name = layer_names[i][0:slash]                    
+            np.save(results_directory + "max_values_%s-%d"
+                    % (layer_name, epoch+1), 
+                    max_values[i])
+            np.save(results_directory + "max_states_%s-%d"
+                    % (layer_name, epoch+1),
+                    max_states[i])
+            np.save(results_directory + "max_positions_%s-%d"
+                    % (layer_name, epoch+1),
+                    max_positions[i])
+
     def visualize_features():
         # TODO: implement visualize_features_theano.py from old_python
         pass
