@@ -198,19 +198,41 @@ class Agent:
 
     # Converts and downsamples the input image
     def _preprocess_image(self, img):
+        # If channels = 1, image shape is [y, x]. Reshape to [channels, y, x]
+        if img.ndim == 2:
+            new_img = img[..., np.newaxis]
+        
+        # If channels > 1, reshape image to [y, x, channels] if not already.
+        # (Required by skimage.transform)
+        elif img.ndim == 3:
+            if img.shape[0] == self.channels:
+                new_img = np.transpose(img, [1, 2, 0])
+            else:
+                new_img = img
+        
+        # Crop image to be proportional to input resolution
+        img_h = new_img.shape[0]
+        img_w = new_img.shape[1]
+        input_h = self.network.input_res[0]
+        input_w = self.network.input_res[1]
+        ratio = (img_w / img_h) / (input_w / input_h)
+        if ratio > 1.0:
+            # Crop image width
+            crop_w = int((img_w - img_h * (input_w / input_h)) / 2)
+            new_img = new_img[:, crop_w:img_w-crop_w, :]
+        elif ratio < 1.0:
+            # Crop image height
+            crop_h = int((img_h - img_w * (input_h / input_w)) / 2)
+            new_img = new_img[crop_h:img_h-crop_h, :, :]
+        
         # Resize to resolution of network input and normalize to [0,1]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            new_img = skimage.transform.resize(img, self.network.input_res)
+            new_img = skimage.transform.resize(new_img, [input_h, input_w])
         
-        # If channels = 1, image shape is [y, x]. Reshape to [channels, y, x]
-        if new_img.ndim == 2:
-            new_img = new_img[np.newaxis, ...]
-        
-        # If channels > 1, reshape image to [channels, y, x] if not already.
-        elif new_img.ndim == 3 and new_img.shape[0] != self.channels:
-            new_img = np.transpose(new_img, [2, 0, 1])
-        
+        # Reshape to [channels, y, x]
+        new_img = np.transpose(new_img, [2, 0, 1])
+
         # Downsize to save memory
         new_img = new_img.astype(np.float32)
 
@@ -280,10 +302,6 @@ class Agent:
         # Learn from minibatch of replay memory samples.
         self.learn_from_memory()
 
-        # Track neuron activity every 10000 learning steps
-        if self.global_step % 10000 == 0:
-            self.network.track_activations(s1, self.global_step)
-
         self.global_step += 1
     
     def learn_from_memory(self):
@@ -349,7 +367,14 @@ class Agent:
     def get_layer_shape(self, layer_output_names):
         return self.network.get_layer_shape(layer_output_names)
 
-    def save_model(self, model_name, global_step=None, save_meta=True):
+    def save_model(self, model_name, global_step=None, save_meta=True,
+                   save_summaries=True):
+        test_batch=None
+        if self.batch_size < self.memory.size:
+            # All variables have shape [batch_size, ...]
+            test_batch, _, _, _, _ = self.memory.get_sample(self.batch_size)
         self.network.save_model(model_name,
                                 global_step=global_step,
-                                save_meta=save_meta)
+                                save_meta=save_meta,
+                                save_summaries=save_summaries,
+                                test_batch=test_batch)
