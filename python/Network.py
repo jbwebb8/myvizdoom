@@ -36,13 +36,14 @@ class Network:
     def __init__(self, phi, num_channels, output_shape, output_directory,
                  train_mode=True, learning_rate=None, session=None, 
                  network_file=None):
-        
+        # Set basic network parameters and objects
         self.input_depth = phi * num_channels
         self.output_shape = output_shape
         self.learning_rate = learning_rate
         self.sess = session
         self.train_mode = train_mode
 
+        # Load JSON file
         if not network_file.lower().endswith(".json"): 
             raise SyntaxError("File format not supported for network settings. " \
                                 "Please use JSON file.")
@@ -60,6 +61,7 @@ class Network:
         self.train_step = self.graph_dict["train_step"][0]
         self.best_a = self.graph_dict["best_action"][0]
 
+        # Set output directories
         self.out_dir = output_directory
         if not self.out_dir.endswith("/"): 
             self.out_dir += "/"
@@ -75,12 +77,11 @@ class Network:
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
-        self.saver = tf.train.Saver()        
-        self.graph = tf.get_default_graph()
-        
+                
         # TODO: where to put this? Need more flexibility to add/remove
-        
+        # Create summaries for TensorBoard visualization
         with tf.name_scope("summaries"):
+            # Create summaries for trainable variables (weights and biases)
             var_sum = []
             with tf.name_scope("trainable_variables"):
                 for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
@@ -94,20 +95,22 @@ class Network:
                         var_sum.append(tf.summary.scalar("min", tf.reduce_min(var)))
                         var_sum.append(tf.summary.histogram("histogram", var))
             
+            # Create summaries for neurons (% activated, values)
             neur_sum = []
             with tf.name_scope("neurons"):
                 for name in self.graph_dict:
                     if self.graph_dict[name][1] == "l":
                         layer = self.graph_dict[name][0]
                         with tf.name_scope(name):
-                            #num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
-                            #dim = tf.floor(tf.sqrt(num_elements))
-                            #layer_2D = tf.reshape(layer, [dim, -1], name="2D")
-                            layer_flat = tf.reshape(layer, [-1], name="flat")
-                            act = tf.cast(tf.greater(layer_flat, tf.zeros_like(layer_flat)), 
-                                          tf.int16)
-                            neur_sum.append(tf.summary.histogram("activations", act))
-            
+                            num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
+                            num_act = tf.cast(tf.count_nonzero(layer), tf.float64)
+                            frac_act = tf.div(num_act, num_elements)
+                            neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
+                            neur_sum.append(tf.summary.histogram("values", layer))
+        
+        # Create objects for saving
+        self.saver = tf.train.Saver()        
+        self.graph = tf.get_default_graph()
         self.var_sum = tf.summary.merge(var_sum)
         self.neur_sum = tf.summary.merge(neur_sum)
         self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
@@ -123,6 +126,7 @@ class Network:
             else:
                 return graph_dict[names][0]
         
+        # Determines data format based on file and hardware specs
         def get_data_format():
             if "data_format" in net["global_features"]: 
                 if net["global_features"]["data_format"] == "auto":
@@ -139,9 +143,10 @@ class Network:
                         break
                 if auto:
                     if tf.test.is_gpu_available(): data_format = "NCHW"
-                    else:                    data_format = "NHWC"
+                    else:                          data_format = "NHWC"
             return data_format
 
+        # Adds input layer to graph
         def add_input_layer(ph):
             ph["name"] = "state"
             t = ph["kwargs"]["shape"] # for aesthetics
@@ -172,6 +177,7 @@ class Network:
             
             return add_placeholder(ph)
         
+        # Adds output layer to graph
         def add_output_layer(layer):
             layer["name"] = "Q"
             layer["kwargs"]["num_outputs"] = self.output_shape
@@ -189,6 +195,44 @@ class Network:
         def add_layer(layer):
             layer_type = layer["type"].lower()
             input_layer = _get_object(layer["input"])
+
+            # Assign custom kwargs
+            if "activation_fn" in layer["kwargs"]:
+                if layer["kwargs"]["activation_fn"] == "relu":
+                    layer["kwargs"]["activation_fn"] = tf.nn.relu
+                elif layer["kwargs"]["activation_fn"] == "None":
+                    layer["kwargs"]["activation_fn"] = None
+                else:
+                    raise ValueError("Activation fn \""
+                                     + layer["kwargs"]["activation_fn"] 
+                                     + "\" not yet defined.")            
+            if "weights_initializer" in layer["kwargs"]:
+                if layer["kwargs"]["weights_initializer"] == "xavier":
+                    layer["kwargs"]["weights_initializer"] = tf.contrib.layers.xavier_initializer()
+                elif layer["kwargs"]["weights_initializer"][0] == "random_normal":
+                    mean = float(layer["kwargs"]["weights_initializer"][1])
+                    stddev = float(layer["kwargs"]["weights_initializer"][2])
+                    layer["kwargs"]["weights_initializer"] = tf.random_normal_initializer(mean, stddev)
+                else:
+                    raise ValueError("Weights initializer \""
+                                     + layer["kwargs"]["weights_initializer"] 
+                                     + "\" not yet defined.")
+            if "biases_initializer" in layer["kwargs"]:
+                if layer["kwargs"]["biases_initializer"][0] == "constant":
+                    c = float(layer["kwargs"]["biases_initializer"][1])
+                    layer["kwargs"]["biases_initializer"] = tf.constant_initializer(c)
+                else:
+                    raise ValueError("Biases initializer \""
+                                     + layer["kwargs"]["biases_initializer"] 
+                                     + "\" not yet defined.")
+            
+            #######################################################
+            # Add new kwargs support here.
+            # if "custom_args" in layer["kwargs"]:
+            #     ...
+            #######################################################
+
+            # Assign custom layer builds    
             if layer_type == "conv2d":
                 layer["kwargs"]["data_format"] = data_format
                 return tf.contrib.layers.convolution2d(input_layer, 
@@ -272,7 +316,6 @@ class Network:
                 node = add_placeholder(ph)
             graph_dict[ph["name"]] = [node, "p"]
         
-        
         # Add layers
         for layer in net["layers"]:
             if net["global_features"]["output_layer"] == layer["name"]:
@@ -331,22 +374,20 @@ class Network:
         feed_dict={self.state: s1_}
         return self.sess.run(self.best_a, feed_dict=feed_dict)
 
-    def track_activations(self, s1_, global_step=None):
-        if s1_.ndim < 4:
-            s1_ = s1_.reshape([1] + list(s1_.shape))
-        feed_dict={self.state: s1_}
-        acts = self.sess.run(self.neur_sum, feed_dict=feed_dict)
-        self.writer.add_summary(acts, global_step)
-
     def save_model(self, model_name, global_step=None, save_meta=True,
-                   save_summaries=True):
+                   save_summaries=True, test_batch=None):
         self.saver.save(self.sess, self.params_dir + model_name, 
                         global_step=global_step,
                         write_meta_graph=save_meta)
         if save_summaries:
             summaries = self.sess.run(self.var_sum)
             self.writer.add_summary(summaries, global_step)
-        self.writer.flush()
+            if test_batch is not None:
+                feed_dict={self.state: test_batch}
+                frac_activ = self.sess.run(self.neur_sum,
+                                           feed_dict=feed_dict)
+                self.writer.add_summary(frac_activ, global_step)
+
 
     def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)
