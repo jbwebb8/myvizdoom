@@ -107,12 +107,22 @@ class Network:
                             frac_act = tf.div(num_act, num_elements)
                             neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
                             neur_sum.append(tf.summary.histogram("values", layer))
+            
+            grad_sum = []
+            with tf.name_scope("gradients"):
+                opt = self.graph_dict["optimizer"][0]
+                loss = self.graph_dict["loss"][0]
+                gvs = opt.compute_gradients(loss)
+                for g, v in gvs:
+                    with tf.name_scope(v.name[:-2]):
+                        grad_sum.append(tf.summary.histogram("grads", g))
         
         # Create objects for saving
         self.saver = tf.train.Saver()        
         self.graph = tf.get_default_graph()
         self.var_sum = tf.summary.merge(var_sum)
         self.neur_sum = tf.summary.merge(neur_sum)
+        self.grad_sum = tf.summary.merge(grad_sum)
         self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
         
     def load_json(self, network_file):
@@ -288,8 +298,12 @@ class Network:
         # Adds optimizer to graph
         def add_optimizer(opt_type, loss):
             if opt_type.lower() == "rmsprop":
-                optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
-                return optimizer, optimizer.minimize(loss)
+                optimizer = tf.train.RMSPropOptimizer(self.learning_rate, 
+                                                      epsilon=3e-10)
+                gvs = optimizer.compute_gradients(loss) # list of [grad(var), var]
+                capped_gvs = [(tf.clip_by_value(g, -1.0, 1.0), v) for g, v in gvs]
+                train_step = optimizer.apply_gradients(capped_gvs, name="train_step")
+                return optimizer, train_step
             
             ###########################################################
             # Add new optimizer support here.
@@ -383,10 +397,13 @@ class Network:
             summaries = self.sess.run(self.var_sum)
             self.writer.add_summary(summaries, global_step)
             if test_batch is not None:
-                feed_dict={self.state: test_batch}
+                feed_dict={self.state: test_batch[0], self.target_q: test_batch[1]}
                 frac_activ = self.sess.run(self.neur_sum,
                                            feed_dict=feed_dict)
                 self.writer.add_summary(frac_activ, global_step)
+                grads = self.sess.run(self.grad_sum,
+                                      feed_dict=feed_dict)
+                self.writer.add_summary(grads, global_step)
 
 
     def load_params(self, params_file_path):
@@ -396,7 +413,7 @@ class Network:
         in_json = False
         for l in self.graph_dict:
             if l == layer_name:
-                return graph_dict[l][0]
+                return self.graph_dict[l][0]
         return self.graph.get_tensor_by_name(layer_name)
 
     def get_layer_output(self, state, layer_output_names):

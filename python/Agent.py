@@ -187,6 +187,7 @@ class Agent:
         self.epsilon_decay_rate = agent["learning_args"]["epsilon_decay_rate"]
         self.batch_size = agent["learning_args"]["batch_size"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
+        self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
     
     def reset_state(self):
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
@@ -306,7 +307,7 @@ class Agent:
     
     def learn_from_memory(self):
         # Learn from minibatch if enough memories
-        if self.batch_size < self.memory.size:
+        if self.rm_start_size < self.memory.size:
             # All variables have shape [batch_size, ...]
             s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
             q2 = np.max(self.network.get_q_values(s2), axis=1)
@@ -372,7 +373,14 @@ class Agent:
         test_batch=None
         if self.batch_size < self.memory.size:
             # All variables have shape [batch_size, ...]
-            test_batch, _, _, _, _ = self.memory.get_sample(self.batch_size)
+            s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
+            q2 = np.max(self.network.get_q_values(s2), axis=1)
+            # Update target Q for selected action:
+            # if not terminal: target_Q(s,a) = r + gamma * max(Q(s',_))
+            # if terminal:     target_Q(s,a) = r
+            target_q = self.network.get_q_values(s1)
+            target_q[np.arange(target_q.shape[0]), a] = r + self.gamma * (1 - isterminal) * q2
+            test_batch = [s1, target_q]
         self.network.save_model(model_name,
                                 global_step=global_step,
                                 save_meta=save_meta,
