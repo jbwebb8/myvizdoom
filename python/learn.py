@@ -83,14 +83,10 @@ def initialize_vizdoom(config_file):
 
 # Initialize agent and TensorFlow graph
 game = initialize_vizdoom(config_file_path)
-sess = tf.Session()
 agent = Agent(game=game, 
-              session=sess,
               agent_file=agent_file_path,
               action_set=action_set,
               output_directory=results_directory)
-init = tf.global_variables_initializer()
-sess.run(init)
 
 if trackable:
     np.savetxt(results_directory + "action_indices.txt", agent.action_indices)
