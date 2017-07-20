@@ -16,6 +16,7 @@ tmp
 temp
 
 # Results (large files)
+experiments/
 *.dump
 *.mov
 *.ogv
