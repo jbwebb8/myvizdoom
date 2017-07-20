@@ -34,96 +34,106 @@ class Network:
     directory for Saver.
     """
     def __init__(self, phi, num_channels, output_shape, output_directory,
-                 train_mode=True, learning_rate=None, session=None, 
-                 network_file=None):
+                 session, train_mode=True, learning_rate=None, 
+                 network_file=None, scope=""):
         # Set basic network parameters and objects
         self.input_depth = phi * num_channels
         self.output_shape = output_shape
         self.learning_rate = learning_rate
         self.sess = session
         self.train_mode = train_mode
+        self.scope = scope
 
-        # Load JSON file
-        if not network_file.lower().endswith(".json"): 
-            raise SyntaxError("File format not supported for network settings. " \
-                                "Please use JSON file.")
-        self.name = network_file[0:-5]
-        self.graph_dict, self.data_format = self.load_json(network_file)
-        self.state = self.graph_dict["state"][0]
-        self.input_shape = self.state.get_shape().as_list()[1:]
-        if self.data_format == "NCHW":
-            self.input_res = self.input_shape[1:]
-        else:
-            self.input_res = self.input_shape[:-1]
-        self.q = self.graph_dict["Q"][0]
-        self.target_q = self.graph_dict["target_q"][0]
-        self.loss = self.graph_dict["loss"][0]
-        self.train_step = self.graph_dict["train_step"][0]
-        self.best_a = self.graph_dict["best_action"][0]
+        with tf.variable_scope(self.scope):
+            # Load JSON file
+            if not network_file.lower().endswith(".json"): 
+                raise SyntaxError("File format not supported for network settings. " \
+                                    "Please use JSON file.")
+            self.name = network_file[0:-5]
+            self.graph_dict, self.data_format = self.load_json(network_file)
+            self.state = self.graph_dict["state"][0]
+            self.input_shape = self.state.get_shape().as_list()[1:]
+            if self.data_format == "NCHW":
+                self.input_res = self.input_shape[1:]
+            else:
+                self.input_res = self.input_shape[:-1]
+            self.q = self.graph_dict["Q"][0]
+            self.target_q = self.graph_dict["target_q"][0]
+            self.loss = self.graph_dict["loss"][0]
+            self.train_step = self.graph_dict["train_step"][0]
+            self.best_a = self.graph_dict["best_action"][0]
 
-        # Set output directories
-        self.out_dir = output_directory
-        if not self.out_dir.endswith("/"): 
-            self.out_dir += "/"
-        self.log_dir = self.out_dir + "log/"
-        try:
-            os.makedirs(self.log_dir)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
-        self.params_dir = self.out_dir + "params/"
-        try:
-            os.makedirs(self.params_dir)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
+            # Set output directories
+            self.out_dir = output_directory
+            if not self.out_dir.endswith("/"): 
+                self.out_dir += "/"
+            self.log_dir = self.out_dir + "log/"
+            try:
+                os.makedirs(self.log_dir)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+            self.params_dir = self.out_dir + "params/"
+            try:
+                os.makedirs(self.params_dir)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+                    
+            # TODO: where to put this? Need more flexibility to add/remove
+            # Create summaries for TensorBoard visualization
+            with tf.name_scope("summaries"):
+                # Create summaries for trainable variables (weights and biases)
+                var_sum = []
+                with tf.name_scope("trainable_variables"):
+                    for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                                 scope=self.scope):
+                        with tf.name_scope(var.name[:-2]):
+                            mean = tf.reduce_mean(var)
+                            var_sum.append(tf.summary.scalar("mean", mean))
+                            with tf.name_scope("stddev"):
+                                stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+                            var_sum.append(tf.summary.scalar("stddev", stddev))
+                            var_sum.append(tf.summary.scalar("max", tf.reduce_max(var)))
+                            var_sum.append(tf.summary.scalar("min", tf.reduce_min(var)))
+                            var_sum.append(tf.summary.histogram("histogram", var))
                 
-        # TODO: where to put this? Need more flexibility to add/remove
-        # Create summaries for TensorBoard visualization
-        with tf.name_scope("summaries"):
-            # Create summaries for trainable variables (weights and biases)
-            var_sum = []
-            with tf.name_scope("trainable_variables"):
-                for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
-                    with tf.name_scope(var.name[:-2]):
-                        mean = tf.reduce_mean(var)
-                        var_sum.append(tf.summary.scalar("mean", mean))
-                        with tf.name_scope("stddev"):
-                            stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-                        var_sum.append(tf.summary.scalar("stddev", stddev))
-                        var_sum.append(tf.summary.scalar("max", tf.reduce_max(var)))
-                        var_sum.append(tf.summary.scalar("min", tf.reduce_min(var)))
-                        var_sum.append(tf.summary.histogram("histogram", var))
+                # Create summaries for neurons (% activated, values)
+                neur_sum = []
+                with tf.name_scope("neurons"):
+                    for name in self.graph_dict:
+                        if self.graph_dict[name][1] == "l":
+                            layer = self.graph_dict[name][0]
+                            with tf.name_scope(name):
+                                num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
+                                num_act = tf.cast(tf.count_nonzero(layer), tf.float64)
+                                frac_act = tf.div(num_act, num_elements)
+                                neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
+                                neur_sum.append(tf.summary.histogram("values", layer))
+                
+                grad_sum = []
+                with tf.name_scope("gradients"):
+                    var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
+                                                 scope=self.scope)
+                    opt = self.graph_dict["optimizer"][0]
+                    loss = self.graph_dict["loss"][0]
+                    gvs = opt.compute_gradients(loss, var_list=var_list)
+                    for g, v in gvs:
+                        with tf.name_scope(v.name[:-2]):
+                            grad_sum.append(tf.summary.histogram("grads", g))
+                    loss_grad = tf.gradients(self.graph_dict["loss"][0], self.graph_dict["Q"][0])
+                    grad_sum.append(tf.summary.histogram("loss_grad", loss_grad))
             
-            # Create summaries for neurons (% activated, values)
-            neur_sum = []
-            with tf.name_scope("neurons"):
-                for name in self.graph_dict:
-                    if self.graph_dict[name][1] == "l":
-                        layer = self.graph_dict[name][0]
-                        with tf.name_scope(name):
-                            num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
-                            num_act = tf.cast(tf.count_nonzero(layer), tf.float64)
-                            frac_act = tf.div(num_act, num_elements)
-                            neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
-                            neur_sum.append(tf.summary.histogram("values", layer))
-            
-            grad_sum = []
-            with tf.name_scope("gradients"):
-                opt = self.graph_dict["optimizer"][0]
-                loss = self.graph_dict["loss"][0]
-                gvs = opt.compute_gradients(loss)
-                for g, v in gvs:
-                    with tf.name_scope(v.name[:-2]):
-                        grad_sum.append(tf.summary.histogram("grads", g))
-        
-        # Create objects for saving
-        self.saver = tf.train.Saver()        
-        self.graph = tf.get_default_graph()
-        self.var_sum = tf.summary.merge(var_sum)
-        self.neur_sum = tf.summary.merge(neur_sum)
-        self.grad_sum = tf.summary.merge(grad_sum)
-        self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
+            # Create objects for saving
+            self.saver = tf.train.Saver(max_to_keep=None)        
+            self.graph = tf.get_default_graph()
+            self.var_sum = tf.summary.merge(var_sum)
+            self.neur_sum = tf.summary.merge(neur_sum)
+            self.grad_sum = tf.summary.merge(grad_sum)
+            self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
+
+        # Initialize variables
+        self.sess.run(tf.global_variables_initializer())
         
     def load_json(self, network_file):
         # Returns TensorFlow object with specified name in network file
@@ -282,9 +292,21 @@ class Network:
                 raise ValueError("Op \"" + op["type"] + "\" not yet defined.")
 
         # Adds loss function to graph
-        def add_loss_fn(loss_type, q_, target_q_):
+        def add_loss_fn(loss_type, q_, target_q_, params=None):
             if loss_type.lower() == "mean_squared_error":
-                return tf.losses.mean_squared_error(q_, target_q_, scope="loss")
+                with tf.name_scope("loss"):
+                    mse = tf.reduce_sum(tf.square(tf.subtract(target_q_, q_)))
+                    tf.add_to_collection(tf.GraphKeys.LOSSES, mse)
+                    return mse
+            if loss_type.lower() == "huber":
+                with tf.name_scope("loss"):
+                    delta = params[0]
+                    error = tf.subtract(target_q_, q_)
+                    huber_loss = tf.where(tf.abs(error) < delta, 
+                                          0.5*tf.square(error),
+                                          delta*(tf.abs(error) - 0.5*delta),
+                                          name="huber_loss")
+                    return huber_loss
 
             ###########################################################
             # Add new loss function support here.
@@ -297,12 +319,15 @@ class Network:
 
         # Adds optimizer to graph
         def add_optimizer(opt_type, loss):
+            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.scope)
             if opt_type.lower() == "rmsprop":
                 optimizer = tf.train.RMSPropOptimizer(self.learning_rate, 
-                                                      epsilon=3e-10)
-                gvs = optimizer.compute_gradients(loss) # list of [grad(var), var]
-                capped_gvs = [(tf.clip_by_value(g, -1.0, 1.0), v) for g, v in gvs]
-                train_step = optimizer.apply_gradients(capped_gvs, name="train_step")
+                                                      epsilon=1e-10)
+                gvs = optimizer.compute_gradients(loss, var_list=var_list) # list of [grad(var), var]
+                #with tf.name_scope("clip"):
+                #    capped_gvs = [(tf.clip_by_value(g, -1.0, 1.0), v) for g, v in gvs]
+                #train_step = optimizer.apply_gradients(capped_gvs, name="train_step")
+                train_step = optimizer.apply_gradients(gvs, name="train_step")
                 return optimizer, train_step
             
             ###########################################################
@@ -345,15 +370,23 @@ class Network:
             node = add_op(op)
             graph_dict[op["name"]] = [node, "o"]
         
-        
         # Add loss function
         if "loss" in net["global_features"]:
-            loss_fn = add_loss_fn(loss_type=net["global_features"]["loss"],
+            loss_keys = net["global_features"]["loss"]
+            if type(loss_keys) == list:
+                loss_type = net["global_features"]["loss"][0]
+                loss_params = net["global_features"]["loss"][1:]
+            else:
+                loss_type = net["global_features"]["loss"]
+                loss_params = None
+            loss_fn = add_loss_fn(loss_type=loss_type,
                                   q_=graph_dict["Q"][0],
-                                  target_q_=graph_dict["target_q"][0])
+                                  target_q_=graph_dict["target_q"][0],
+                                  params=loss_params)
+            print(loss_fn)
             graph_dict["loss"] = [loss_fn, "o"]
         else:
-            if self.train_mode: 
+            if self.train_mode and "loss" not in graph_dict: 
                 raise ValueError("loss fn not found in network file.")
 
         # Add optimizer
@@ -374,7 +407,30 @@ class Network:
         feed_dict={self.state: s1_, self.target_q: target_q_}
         loss_, train_step_ = self.sess.run([self.loss, self.train_step],
                                            feed_dict=feed_dict)
-        return loss_, train_step_
+        opt = self.graph_dict["optimizer"][0]
+        var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
+                                                 scope=self.scope)
+
+        print("Q")
+        print(self.sess.run(self.q, feed_dict=feed_dict))
+
+        print("target_Q")
+        print(target_q_)
+
+        print("loss")
+        print(loss_)
+
+        print("loss_grad")
+        loss_grad = tf.gradients(self.graph_dict["loss"][0], self.graph_dict["Q"][0])
+        print(self.sess.run(loss_grad, feed_dict=feed_dict))
+
+        print("Q_grad", [v.name for v in var_list[-1:]])
+        q_grad = opt.compute_gradients(self.loss, var_list=var_list[-1:])
+        print(self.sess.run(q_grad, feed_dict=feed_dict))
+
+        input("Press enter...")
+
+        return loss_
     
     def get_q_values(self, s1_):
         if s1_.ndim < 4:
@@ -394,17 +450,17 @@ class Network:
                         global_step=global_step,
                         write_meta_graph=save_meta)
         if save_summaries:
-            summaries = self.sess.run(self.var_sum)
-            self.writer.add_summary(summaries, global_step)
+            var_sum_ = self.sess.run(self.var_sum)
+            self.writer.add_summary(var_sum_, global_step)
             if test_batch is not None:
-                feed_dict={self.state: test_batch[0], self.target_q: test_batch[1]}
-                frac_activ = self.sess.run(self.neur_sum,
-                                           feed_dict=feed_dict)
-                self.writer.add_summary(frac_activ, global_step)
-                grads = self.sess.run(self.grad_sum,
-                                      feed_dict=feed_dict)
-                self.writer.add_summary(grads, global_step)
-
+                feed_dict={self.state: test_batch[0], 
+                           self.target_q: test_batch[1]}
+                neur_sum_ = self.sess.run(self.neur_sum,
+                                          feed_dict=feed_dict)
+                self.writer.add_summary(neur_sum_, global_step)
+                grad_sum_ = self.sess.run(self.grad_sum,
+                                          feed_dict=feed_dict)
+                self.writer.add_summary(grad_sum_, global_step)
 
     def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)

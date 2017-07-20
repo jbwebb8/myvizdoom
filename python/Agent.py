@@ -2,6 +2,7 @@ from vizdoom import *
 from Network import Network
 from ReplayMemory import ReplayMemory
 import numpy as np
+import tensorflow as tf
 import skimage.color, skimage.transform
 from random import randint, random
 import json
@@ -14,30 +15,34 @@ class Agent:
     """
 
     NET_JSON_DIR = "../networks/"
+    MAIN_SCOPE = "main_network"
+    TARGET_SCOPE = "target_network"
 
-    def __init__(self, game, session, output_directory, agent_file=None, 
+    def __init__(self, game, output_directory, agent_file=None, 
                  train_mode=True, action_set="default", frame_repeat=4, 
                  **kwargs):
         # Initialize game
         self.game = game
-        self.sess = session
+        self.sess = tf.Session()
         self.global_step = 0
+        self.train_mode = train_mode
 
         # Set up results directories
+        def make_directory(folders):
+            for f in folders:
+                try:
+                    os.makedirs(self.agent_dir)
+                except OSError as exception:
+                    if exception.errno != errno.EEXIST:
+                        raise
         if not output_directory.endswith("/"): 
             output_directory += "/"
         self.agent_dir = output_directory + "agent_data/"
-        try:
-            os.makedirs(self.agent_dir)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
         self.net_dir = output_directory + "net_data/"
-        try:
-            os.makedirs(self.net_dir)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
+        self.main_net_dir = self.net_dir + "main_net/"
+        self.target_net_dir = self.net_dir + "target_net/"
+        make_directory([self.agent_dir, self.net_dir, 
+                        self.main_net_dir, self.target_net_dir])
 
         # Initialize action space
         self.action_indices = np.asarray(self.game.get_available_buttons())
@@ -74,16 +79,30 @@ class Agent:
         if not self.net_file.endswith(".json"):
             self.net_file += ".json"
         self.network = Network(phi=self.phi, 
-                               num_channels=self.channels, 
-                               output_shape=self.output_size,
-                               learning_rate=self.alpha,
-                               session=self.sess,
-                               network_file=self.net_file,
-                               output_directory=self.net_dir)
+                              num_channels=self.channels, 
+                              output_shape=self.output_size,
+                              learning_rate=self.alpha,
+                              network_file=self.net_file,
+                              output_directory=self.main_net_dir,
+                              session=self.sess,
+                              scope=self.MAIN_SCOPE)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
-        self.memory = ReplayMemory(capacity=self.rm_capacity, 
-                                   state_shape=self.state.shape,
-                                   input_overlap=(self.phi-1)*self.channels)
+        if self.train_mode:
+            self.target_network = Network(phi=self.phi, 
+                                          num_channels=self.channels, 
+                                          output_shape=self.output_size,
+                                          learning_rate=self.alpha,
+                                          network_file=self.net_file,
+                                          output_directory=self.target_net_dir,
+                                          session=self.sess,
+                                          scope=self.TARGET_SCOPE)
+            target_init_ops = self._get_target_update_ops(0.99)
+            self.sess.run(target_init_ops) # copy main network initialized params
+            self.target_update_ops = self._get_target_update_ops(self.target_net_rate)
+            
+            self.memory = ReplayMemory(capacity=self.rm_capacity, 
+                                       state_shape=self.state.shape,
+                                       input_overlap=(self.phi-1)*self.channels)
         
         # Create tracking lists
         self.score_history = []
@@ -186,9 +205,26 @@ class Agent:
         self.epsilon_const_rate = agent["learning_args"]["epsilon_const_rate"]
         self.epsilon_decay_rate = agent["learning_args"]["epsilon_decay_rate"]
         self.batch_size = agent["learning_args"]["batch_size"]
+        self.target_net_freq = agent["learning_args"]["target_network_update_freq"]
+        self.target_net_rate = agent["learning_args"]["target_network_update_rate"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
         self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
     
+    def _get_target_update_ops(self, tau):
+        # TODO: implement function similar to medium blog that gets all
+        # variables and sets target network to weighted average of two
+        # Adapted from 
+        # https://github.com/awjuliani/DeepRL-Agents/blob/master/Double-Dueling-DQN.ipynb
+        update_ops = []
+        main_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                      scope=self.MAIN_SCOPE)
+        target_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                        scope=self.TARGET_SCOPE)
+        for mv, tv in zip(main_vars, target_vars):
+            update = tf.assign(tv, tau * mv.value() + (1 - tau) * tv.value())
+            update_ops.append(update)
+        return update_ops
+
     def reset_state(self):
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
 
@@ -197,6 +233,7 @@ class Agent:
         self.action_history = []
         self.score_history = []
 
+    # TODO: minimize tranposing axes between NCHW and NHWC formats
     # Converts and downsamples the input image
     def _preprocess_image(self, img):
         # If channels = 1, image shape is [y, x]. Reshape to [channels, y, x]
@@ -239,8 +276,6 @@ class Agent:
 
         return new_img
 
-    # TODO: fix for phi, num_channels > 1; need to update _preprocess_image
-    # including transposing axes from [y, x, 3] to [3, y, x]
     # Updates current state to previous phi images
     def update_state(self, new_img, replace=True):
         new_state = self._preprocess_image(new_img)
@@ -299,24 +334,35 @@ class Agent:
 
         # Remember the transition that was just experienced.
         self.memory.add_transition(s1, a, s2, isterminal, reward)
-
-        # Learn from minibatch of replay memory samples.
+        
+        # Learn from minibatch of replay memory samples and update
+        # target network Q' if enough memories
+        #if self.rm_start_size < self.memory.size:
         self.learn_from_memory()
 
-        self.global_step += 1
-    
+        self.global_step += 1        
+
+    def _get_learning_batch(self):
+        # All variables have shape [batch_size, ...]
+        s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
+        
+        # Update target Q for selected action using target network Q':
+        # if not terminal: target_Q'(s,a) = r + gamma * max(Q'(s',_))
+        # if terminal:     target_Q'(s,a) = r
+        q2 = np.max(self.target_network.get_q_values(s2), axis=1)
+        target_q = self.target_network.get_q_values(s1)
+        target_q[np.arange(target_q.shape[0]), a] = r + self.gamma * (1 - isterminal) * q2
+
+        return s1, target_q
+
     def learn_from_memory(self):
-        # Learn from minibatch if enough memories
-        if self.rm_start_size < self.memory.size:
-            # All variables have shape [batch_size, ...]
-            s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
-            q2 = np.max(self.network.get_q_values(s2), axis=1)
-            # Update target Q for selected action:
-            # if not terminal: target_Q(s,a) = r + gamma * max(Q(s',_))
-            # if terminal:     target_Q(s,a) = r
-            target_q = self.network.get_q_values(s1)
-            target_q[np.arange(target_q.shape[0]), a] = r + self.gamma * (1 - isterminal) * q2
-            self.network.learn(s1, target_q)
+        # Update target network Q' every k steps
+        if self.global_step % self.target_net_freq == 0:
+            self.sess.run(self.target_update_ops)
+        
+        # Learn from minibatch of replay memory experiences
+        s1, target_q = self._get_learning_batch()
+        self.network.learn(s1, target_q)
     
     def get_best_action(self, state=None):
         if state is None: 
@@ -324,17 +370,17 @@ class Agent:
         a_best = self.network.get_best_action(state)
         return self.actions[a_best]
     
-    def make_best_action(self, state=None, train_mode=True):
+    def make_best_action(self, state=None):
         if state is None: 
             state = self.state
         a_best = self.network.get_best_action(state).item()
-        # Easier to use built-in feature
-        if train_mode:
-            self.game.make_action(self.actions[a_best])
-        # Better for smooth animation if viewing
+        if self.train_mode:
+            # Easier to use built-in feature
+            self.game.make_action(self.actions[a_best], self.frame_repeat)
         else:
+            # Better for smooth animation if viewing
             self.game.set_action(self.actions[a_best])
-            for _ in range(frame_repeat):
+            for _ in range(self.frame_repeat):
                 self.game.advance_action()
 
     def track_position(self):
@@ -370,19 +416,16 @@ class Agent:
 
     def save_model(self, model_name, global_step=None, save_meta=True,
                    save_summaries=True):
-        test_batch=None
-        if self.batch_size < self.memory.size:
-            # All variables have shape [batch_size, ...]
-            s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
-            q2 = np.max(self.network.get_q_values(s2), axis=1)
-            # Update target Q for selected action:
-            # if not terminal: target_Q(s,a) = r + gamma * max(Q(s',_))
-            # if terminal:     target_Q(s,a) = r
-            target_q = self.network.get_q_values(s1)
-            target_q[np.arange(target_q.shape[0]), a] = r + self.gamma * (1 - isterminal) * q2
-            test_batch = [s1, target_q]
+        batch = None
+        if save_summaries:
+            batch = self._get_learning_batch()
         self.network.save_model(model_name,
                                 global_step=global_step,
                                 save_meta=save_meta,
                                 save_summaries=save_summaries,
-                                test_batch=test_batch)
+                                test_batch=batch)
+        self.target_network.save_model(model_name,
+                                global_step=global_step,
+                                save_meta=save_meta,
+                                save_summaries=save_summaries,
+                                test_batch=batch)
