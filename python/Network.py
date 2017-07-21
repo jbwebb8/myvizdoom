@@ -297,12 +297,12 @@ class Network:
 
         # Adds loss function to graph
         def add_loss_fn(loss_type, q_, target_q_, params=None):
-            if loss_type.lower() == "mean_squared_error":
+            if loss_type.lower() == "squared_error":
                 with tf.name_scope("loss"):
                     mse = tf.reduce_sum(tf.square(tf.subtract(target_q_, q_)))
                     tf.add_to_collection(tf.GraphKeys.LOSSES, mse)
                     return mse
-            if loss_type.lower() == "huber":
+            elif loss_type.lower() == "huber":
                 with tf.name_scope("loss"):
                     delta = params[0]
                     error = tf.subtract(target_q_, q_)
@@ -319,7 +319,7 @@ class Network:
             ###########################################################
 
             else:
-                raise ValueError("Loss function \"" + opt + "\" not yet defined.")
+                raise ValueError("Loss function \"" + loss_type + "\" not yet defined.")
 
         # Adds optimizer to graph
         def add_optimizer(opt_type, loss):
@@ -341,7 +341,7 @@ class Network:
             ###########################################################
 
             else:
-                raise ValueError("Optimizer \"" + opt + "\" not yet defined.")
+                raise ValueError("Optimizer \"" + opt_type + "\" not yet defined.")
 
         # Load arguments from network file
         net = json.loads(open(network_file).read())
