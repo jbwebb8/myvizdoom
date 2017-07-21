@@ -18,9 +18,9 @@ class Agent:
     MAIN_SCOPE = "main_network"
     TARGET_SCOPE = "target_network"
 
-    def __init__(self, game, output_directory, agent_file=None, 
-                 train_mode=True, action_set="default", frame_repeat=4, 
-                 **kwargs):
+    def __init__(self, game, output_directory, agent_file=None,
+                 params_file=None, train_mode=True, action_set="default", 
+                 frame_repeat=4, **kwargs):
         # Initialize game
         self.game = game
         self.sess = tf.Session()
@@ -78,16 +78,21 @@ class Agent:
             self.net_file = self.NET_JSON_DIR + self.net_file
         if not self.net_file.endswith(".json"):
             self.net_file += ".json"
+        self.params_file = params_file
         self.network = Network(phi=self.phi, 
-                              num_channels=self.channels, 
-                              output_shape=self.output_size,
-                              learning_rate=self.alpha,
-                              network_file=self.net_file,
-                              output_directory=self.main_net_dir,
-                              session=self.sess,
-                              scope=self.MAIN_SCOPE)
+                               num_channels=self.channels, 
+                               output_shape=self.output_size,
+                               learning_rate=self.alpha,
+                               network_file=self.net_file,
+                               params_file=self.params_file,
+                               output_directory=self.main_net_dir,
+                               session=self.sess,
+                               scope=self.MAIN_SCOPE)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
         if self.train_mode:
+            # TODO: create target first so that only need to save results from
+            # network because its graph will contain nodes from both the main
+            # and target network.
             self.target_network = Network(phi=self.phi, 
                                           num_channels=self.channels, 
                                           output_shape=self.output_size,
@@ -103,19 +108,6 @@ class Agent:
             self.memory = ReplayMemory(capacity=self.rm_capacity, 
                                        state_shape=self.state.shape,
                                        input_overlap=(self.phi-1)*self.channels)
-        
-        ###
-        main_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                      scope=self.MAIN_SCOPE)
-        target_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                        scope=self.TARGET_SCOPE)
-        for mv, tv in zip(main_vars, target_vars):
-            print(mv.name, tv.name, end=" ")
-            m = np.asarray(self.sess.run(mv))
-            t = np.asarray(self.sess.run(tv))
-            if np.array_equal(m, t): print("are equal.")
-            else:                    print("are not equal.")
-        ###
 
         # Create tracking lists
         self.score_history = []
@@ -303,9 +295,9 @@ class Agent:
         else:
             i = 0
             j = [slice(None,)] * ax
-            while np.count_nonzero(self.state[j + [slice(i)]]) != 0:
+            while np.count_nonzero(self.state[j + [slice(i, i+1)]]) != 0:
                 i += 1
-            self.state[j + [slice(i,i+self.channels)]] = new_state
+            self.state[j + [slice(i,i+self.channels)]] = new_state          
 
     def initialize_new_episode(self):
         self.game.new_episode()
@@ -381,26 +373,27 @@ class Agent:
         
         # Learn from minibatch of replay memory experiences
         s1, target_q = self._get_learning_batch()
-        self.network.learn(s1, target_q)
+        _ = self.network.learn(s1, target_q)
     
     def get_best_action(self, state=None):
         if state is None: 
             state = self.state
-        a_best = self.network.get_best_action(state)
+        a_best = self.network.get_best_action(state)[0]
         return self.actions[a_best]
     
     def make_best_action(self, state=None):
         if state is None: 
             state = self.state
         a_best = self.network.get_best_action(state).item()
-        if self.train_mode:
-            # Easier to use built-in feature
-            self.game.make_action(self.actions[a_best], self.frame_repeat)
-        else:
-            # Better for smooth animation if viewing
-            self.game.set_action(self.actions[a_best])
-            for _ in range(self.frame_repeat):
-                self.game.advance_action()
+        self.game.make_action(self.actions[a_best], self.frame_repeat)
+        #if self.train_mode:
+        #    # Easier to use built-in feature
+        #    self.game.make_action(self.actions[a_best], self.frame_repeat)
+        #else:
+        #    # Better for smooth animation if viewing
+        #    self.game.set_action(self.actions[a_best])
+        #    for _ in range(self.frame_repeat):
+        #        self.game.advance_action()
 
     def track_position(self):
         pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
