@@ -75,14 +75,20 @@ def initialize_vizdoom(config_file_path):
 game = initialize_vizdoom(config_file_path)
 print("Loading agent... ", end="")
 # TODO: make action_set not necessary
-agent = Agent(game=game, agent_file=agent_file_path, action_set=action_set,
-              params_file=params_file_path, output_directory=results_directory,
+agent = Agent(game=game, 
+              agent_file=agent_file_path,
+              action_set=action_set,
+              params_file=params_file_path, 
+              output_directory=results_directory,
               train_mode=False)
 print("Done.")
 
 # Save action indices
 if trackable:
-    np.savetxt(results_directory + "action_indices.txt", agent.action_indices)
+    np.savetxt(results_directory + "action_indices.csv", 
+               agent.action_indices,
+               delimiter=",",
+               fmt="%.0d")
 
 # Initialize toolbox
 print("Initializing toolbox... ", end="")
@@ -123,14 +129,27 @@ for test_episode in range(test_episodes):
     # Sleep between episodes
     sleep(1.0)
 
-scores = np.asarray(agent.score_history)
 print("\nSaving results... ", end="")
-np.save(results_directory + "test_scores", scores)
+
+# Save test scores
+scores = np.asarray(agent.score_history)
+np.savetxt(results_directory + "test_scores.csv", 
+        scores,
+        delimiter=",",
+        fmt="%.3f")
+
+# Save game traces if tracking specified
 if trackable:
-    np.save(results_directory + "positions",
-            np.asarray(agent.position_history))
-    np.save(results_directory + "actions",
-            np.asarray(agent.position_history))
+    np.savetxt(results_directory + "positions.csv",
+            np.asarray(agent.position_history),
+            delimiter=",",
+            fmt="%.3f")
+    np.savetxt(results_directory + "actions.csv",
+            np.asarray(agent.action_history),
+            delimiter=",",
+            fmt="%d")
+
+# Save max data of layers if specified
 if len(layer_names) > 0:
     max_values, max_states, max_positions = toolbox.get_max_data()
     for i in range(len(layer_names)):
@@ -142,4 +161,5 @@ if len(layer_names) > 0:
                 max_states[i])
         np.save(results_directory + "max_positions_%s" % abbr_name,
                 max_positions[i])
+
 print("Done.")
