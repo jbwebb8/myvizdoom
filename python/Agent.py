@@ -96,7 +96,7 @@ class Agent:
                                           output_directory=self.target_net_dir,
                                           session=self.sess,
                                           scope=self.TARGET_SCOPE)
-            target_init_ops = self._get_target_update_ops(0.99)
+            target_init_ops = self._get_target_update_ops(1.0)
             self.sess.run(target_init_ops) # copy main network initialized params
             self.target_update_ops = self._get_target_update_ops(self.target_net_rate)
             
@@ -104,6 +104,19 @@ class Agent:
                                        state_shape=self.state.shape,
                                        input_overlap=(self.phi-1)*self.channels)
         
+        ###
+        main_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                      scope=self.MAIN_SCOPE)
+        target_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                        scope=self.TARGET_SCOPE)
+        for mv, tv in zip(main_vars, target_vars):
+            print(mv.name, tv.name, end=" ")
+            m = np.asarray(self.sess.run(mv))
+            t = np.asarray(self.sess.run(tv))
+            if np.array_equal(m, t): print("are equal.")
+            else:                    print("are not equal.")
+        ###
+
         # Create tracking lists
         self.score_history = []
         self.position_history = []
@@ -268,8 +281,9 @@ class Agent:
             warnings.simplefilter("ignore")
             new_img = skimage.transform.resize(new_img, [input_h, input_w])
         
-        # Reshape to [channels, y, x]
-        new_img = np.transpose(new_img, [2, 0, 1])
+        # Reshape to [channels, y, x] if NCHW (i.e. on GPU)
+        if self.network.data_format == "NCHW":
+            new_img = np.transpose(new_img, [2, 0, 1])
 
         # Downsize to save memory
         new_img = new_img.astype(np.float32)
@@ -279,14 +293,19 @@ class Agent:
     # Updates current state to previous phi images
     def update_state(self, new_img, replace=True):
         new_state = self._preprocess_image(new_img)
+        if self.network.data_format == "NCHW":
+            ax = 0
+        else:
+            ax = 2
         if replace:
-            self.state = np.delete(self.state, np.s_[0:self.channels], axis=0)
-            self.state = np.append(self.state, new_state, axis=0)
+            self.state = np.delete(self.state, np.s_[0:self.channels], axis=ax)
+            self.state = np.append(self.state, new_state, axis=ax)
         else:
             i = 0
-            while np.count_nonzero(self.state[i]) != 0:
+            j = [slice(None,)] * ax
+            while np.count_nonzero(self.state[j + [slice(i)]]) != 0:
                 i += 1
-            self.state[i:i+self.channels] = new_state
+            self.state[j + [slice(i,i+self.channels)]] = new_state
 
     def initialize_new_episode(self):
         self.game.new_episode()
@@ -334,11 +353,11 @@ class Agent:
 
         # Remember the transition that was just experienced.
         self.memory.add_transition(s1, a, s2, isterminal, reward)
-        
+
         # Learn from minibatch of replay memory samples and update
         # target network Q' if enough memories
-        #if self.rm_start_size < self.memory.size:
-        self.learn_from_memory()
+        if self.rm_start_size < self.memory.size:
+            self.learn_from_memory()
 
         self.global_step += 1        
 
