@@ -23,6 +23,7 @@ experiments/
 *.npy
 *.data*
 
-# Miscellaneous
+# Mutable files
 *.cfg
 !template.cfg
+test.json
