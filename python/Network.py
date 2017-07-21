@@ -1,4 +1,6 @@
 import tensorflow as tf
+from tensorflow.tensorboard.backend.event_processing \
+    import event_accumulator
 import json
 import os, errno
 
@@ -35,7 +37,7 @@ class Network:
     """
     def __init__(self, phi, num_channels, output_shape, output_directory,
                  session, train_mode=True, learning_rate=None, 
-                 network_file=None, scope=""):
+                 network_file=None, params_file=None, scope=""):
         # Set basic network parameters and objects
         self.input_depth = phi * num_channels
         self.output_shape = output_shape
@@ -121,8 +123,6 @@ class Network:
                     for g, v in gvs:
                         with tf.name_scope(v.name[:-2]):
                             grad_sum.append(tf.summary.histogram("grads", g))
-                    loss_grad = tf.gradients(self.graph_dict["loss"][0], self.graph_dict["Q"][0])
-                    grad_sum.append(tf.summary.histogram("loss_grad", loss_grad))
             
             # Create objects for saving
             self.saver = tf.train.Saver(max_to_keep=None)        
@@ -131,9 +131,13 @@ class Network:
             self.neur_sum = tf.summary.merge(neur_sum)
             self.grad_sum = tf.summary.merge(grad_sum)
             self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
+            self.ea = event_accumulator.EventAccumulator(self.log_dir)
 
-        # Initialize variables
-        self.sess.run(tf.global_variables_initializer())
+        # Initialize variables or load parameters if provided
+        if params_file is not None:
+            self.saver.restore(self.sess, params_file)
+        else:
+            self.sess.run(tf.global_variables_initializer())
         
     def load_json(self, network_file):
         # Returns TensorFlow object with specified name in network file
@@ -383,7 +387,6 @@ class Network:
                                   q_=graph_dict["Q"][0],
                                   target_q_=graph_dict["target_q"][0],
                                   params=loss_params)
-            print(loss_fn)
             graph_dict["loss"] = [loss_fn, "o"]
         else:
             if self.train_mode and "loss" not in graph_dict: 
@@ -405,45 +408,8 @@ class Network:
         if s1_.ndim < 4:
             s1_ = s1_.reshape([1] + list(s1_.shape))
         feed_dict={self.state: s1_, self.target_q: target_q_}
-        ###
-        opt = self.graph_dict["optimizer"][0]
-        var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
-                                                 scope=self.scope)
-
-        print("Q")
-        print(self.sess.run(self.q, feed_dict=feed_dict))
-
-        print("target_Q")
-        print(target_q_)
-
-        loss_ = self.sess.run(self.loss,
-                              feed_dict=feed_dict)
-        print("loss")
-        print(loss_)
-        """
-        sum_grad = self.graph.get_tensor_by_name("main_network/gradients/main_network/loss/Sum_grad/Tile:0")
-        square_grad = self.graph.get_tensor_by_name("main_network/gradients/main_network/loss/Square_grad/mul_1:0")
-        sub_grad = self.graph.get_tensor_by_name("main_network/gradients/main_network/loss/Sub_grad/tuple/control_dependency_1:0")
-        print("sum_grad")
-        print(self.sess.run(sum_grad, feed_dict=feed_dict))
-        print("square_grad")
-        print(self.sess.run(square_grad, feed_dict=feed_dict))
-        print("sub_grad")
-        print(self.sess.run(sub_grad, feed_dict=feed_dict))
-        """
-        print("loss_grad")
-        loss_grad = tf.gradients(self.graph_dict["loss"][0], self.graph_dict["Q"][0])
-        print(self.sess.run(loss_grad, feed_dict=feed_dict))
-
-        print("Q_grad", [v.name for v in var_list[-1:]])
-        q_grad = opt.compute_gradients(self.loss, var_list=var_list[-1:])
-        print(self.sess.run(q_grad, feed_dict=feed_dict))
-
-        input("Press enter...")
-        ###
         loss_, train_step_ = self.sess.run([self.loss, self.train_step],
                                            feed_dict=feed_dict)
-        
         return loss_
     
     def get_q_values(self, s1_):
@@ -475,6 +441,10 @@ class Network:
                 grad_sum_ = self.sess.run(self.grad_sum,
                                           feed_dict=feed_dict)
                 self.writer.add_summary(grad_sum_, global_step)
+            # TODO: implement event accumulator to save files (esp. histograms)
+            # to CSV files.
+            #self.ea.Reload()
+            #print(self.ea.Tags())
 
     def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)
