@@ -2,7 +2,7 @@
     "global_features": {
         "input_layer": "state",
         "output_layer": "Q",
-        "loss": "mean_squared_error",
+        "loss": ["huber", 1.0],
         "optimizer": "rmsprop"        
     },
     
