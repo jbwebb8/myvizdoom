@@ -405,8 +405,7 @@ class Network:
         if s1_.ndim < 4:
             s1_ = s1_.reshape([1] + list(s1_.shape))
         feed_dict={self.state: s1_, self.target_q: target_q_}
-        loss_, train_step_ = self.sess.run([self.loss, self.train_step],
-                                           feed_dict=feed_dict)
+        ###
         opt = self.graph_dict["optimizer"][0]
         var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
                                                  scope=self.scope)
@@ -417,9 +416,21 @@ class Network:
         print("target_Q")
         print(target_q_)
 
+        loss_ = self.sess.run(self.loss,
+                              feed_dict=feed_dict)
         print("loss")
         print(loss_)
-
+        """
+        sum_grad = self.graph.get_tensor_by_name("main_network/gradients/main_network/loss/Sum_grad/Tile:0")
+        square_grad = self.graph.get_tensor_by_name("main_network/gradients/main_network/loss/Square_grad/mul_1:0")
+        sub_grad = self.graph.get_tensor_by_name("main_network/gradients/main_network/loss/Sub_grad/tuple/control_dependency_1:0")
+        print("sum_grad")
+        print(self.sess.run(sum_grad, feed_dict=feed_dict))
+        print("square_grad")
+        print(self.sess.run(square_grad, feed_dict=feed_dict))
+        print("sub_grad")
+        print(self.sess.run(sub_grad, feed_dict=feed_dict))
+        """
         print("loss_grad")
         loss_grad = tf.gradients(self.graph_dict["loss"][0], self.graph_dict["Q"][0])
         print(self.sess.run(loss_grad, feed_dict=feed_dict))
@@ -429,7 +440,10 @@ class Network:
         print(self.sess.run(q_grad, feed_dict=feed_dict))
 
         input("Press enter...")
-
+        ###
+        loss_, train_step_ = self.sess.run([self.loss, self.train_step],
+                                           feed_dict=feed_dict)
+        
         return loss_
     
     def get_q_values(self, s1_):
