@@ -2,6 +2,7 @@
 *.pyd
 *.pyc
 python*/*.ini
+notebooks/*.ini
 
 # Java
 *.jar
