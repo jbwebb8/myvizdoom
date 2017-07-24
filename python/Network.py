@@ -310,7 +310,7 @@ class Network:
                                           0.5*tf.square(error),
                                           delta*(tf.abs(error) - 0.5*delta),
                                           name="huber_loss")
-                    return huber_loss
+                    return tf.reduce_mean(huber_loss, axis=0)
 
             ###########################################################
             # Add new loss function support here.
