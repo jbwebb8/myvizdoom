@@ -411,12 +411,6 @@ class Agent:
         score = self.game.get_total_reward()
         tracking_score = self.game.get_game_variable(GameVariable.USER1)
         self.score_history.append(score)
-    
-    def save_positions(self, filename):
-        np.save(self.agent_dir + filename, self.position_history)
-    
-    def save_actions(self, filename):
-        np.save(self.agent_dir + filename, self.action_history)
 
     def get_layer_output(self, layer_output_names, state=None):
         if state is None: 
