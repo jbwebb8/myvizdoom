@@ -58,6 +58,9 @@ try:
 except OSError as exception:
     if exception.errno != errno.EEXIST:
         raise
+# TODO: check for accidental overwrite
+if len(os.listdir(results_directory)) > 0:
+    pass
 action_set = args.action_set
 epochs = args.epochs
 learning_steps_per_epoch = args.learning_steps
@@ -74,24 +77,26 @@ exp_name = args.name
 #frame_repeat = 12       # frames to repeat action before choosing again 
 
 def initialize_vizdoom(config_file):
-    print("Initializing doom...")
+    print("Initializing doom... ", end="")
     game = DoomGame()
     game.load_config(config_file)
     game.init()
-    print("Doom initialized.")
+    print("Done.")
     return game
 
 # Initialize agent and TensorFlow graph
 game = initialize_vizdoom(config_file_path)
+print("Loading agent... ", end="")
 agent = Agent(game=game, 
               agent_file=agent_file_path,
               action_set=action_set,
               output_directory=results_directory)
-
+print("Done.")
 if trackable:
     np.savetxt(results_directory + "action_indices.txt", agent.action_indices)
 
 # Initialize toolbox
+print("Initializing toolbox... ", end="")
 layer_shapes = agent.get_layer_shape(layer_names)
 layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
 for i in range(len(layer_shapes)):
@@ -101,6 +106,7 @@ for i in range(len(layer_shapes)):
 toolbox = Toolbox(layer_sizes=layer_sizes, 
                   state_shape=agent.state.shape,
                   num_samples=max_samples)
+print("Done.")
 
 # Train and test agent for specified number of epochs
 print("Starting the training!")
@@ -160,25 +166,36 @@ for epoch in range(epochs):
     # otherwise store temporarily after each epoch
     if save_epoch:
         model_filename = exp_name + "_model"
-        print("Saving network...")
+        print("Saving network... ", end="")
         agent.save_model(model_filename, global_step=epoch+1, 
                          save_meta=(epoch == 0), save_summaries=True)
         if trackable:
-            print("Saving tracking data...")
-            agent.save_positions("positions-" + str(epoch+1))
-            agent.save_actions("actions-" + str(epoch+1))
+            sfx = str(epoch+1) + ".csv"
+            np.savetxt(results_directory + "positions-" + sfx,
+                       np.asarray(agent.position_history),
+                       delimiter=",",
+                       fmt="%.3f")
+            np.savetxt(results_directory + "actions-" + sfx,
+                       np.asarray(agent.action_history),
+                       delimiter=",",
+                       fmt="%d")
         if len(layer_names) > 0:
-            print("Saving layer data...")
             toolbox.save_max_data(results_directory + "max_data/",
                                   layer_names=layer_names)
     else:
         model_filename = exp_name + "_model"
-        print("Stashing network...")
+        print("Stashing network... ", end="")
         agent.save_model(model_filename, global_step=None,
                          save_meta=(epoch == 0), save_summaries=False)
 
+    print("Done.")
     print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))
 
+# Close game and save all test scores per epoch
 game.close()
-np.save(results_directory + "test_scores", np.asarray(test_scores_all))
+scores = np.asarray(test_scores_all)
+np.savetxt(results_directory + "test_scores.csv", 
+           scores,
+           delimiter=",",
+           fmt="%.3f")
 print("======================================")
