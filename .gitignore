@@ -25,6 +25,6 @@ experiments/
 *.data*
 
 # Mutable files
-*.cfg
+config/*.cfg
 !template.cfg
 test.json
