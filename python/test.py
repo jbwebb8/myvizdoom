@@ -14,6 +14,7 @@ import argparse
 import os, errno
 from time import time, sleep
 from tqdm import trange
+import matplotlib.pyplot as plt
 
 # Command line arguments
 parser = argparse.ArgumentParser(description='Test a trained agent.')
@@ -38,7 +39,8 @@ parser.add_argument("-m", "--max-samples", default=4, metavar="",
                     help="# of samples associated with max node activation")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
-parser.add_argument("-v", "--view-data")
+parser.add_argument("-v", "--view-data", action="store_true", default=False,
+                    help="view real-time Q values")
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
@@ -59,6 +61,7 @@ action_set = args.action_set
 layer_names = args.layer_names
 max_samples = args.max_samples
 trackable = args.track
+view_data = args.view_data
 
 # Creates and initializes ViZDoom environment.
 def initialize_vizdoom(config_file_path):
@@ -103,6 +106,21 @@ toolbox = Toolbox(layer_sizes=layer_sizes,
                   num_samples=max_samples)
 print("Done.")
 
+# Initialize display (used if view_data=True)
+# TODO: fix hard coding of action labels
+fig, ax = plt.subplots()
+ids = np.arange(agent.output_size)
+bar_width = 0.5
+ax.set_title("Q Values in Real-Time")
+ax.set_xlabel("Actions")
+ax.set_xticks(ids)
+ax.set_xticklabels(["MOVE_FORWARD", "TURN_RIGHT", "TURN_LEFT", "USE"])
+ax.set_ylabel("Q(s,a)")
+ax.set_ylim([-10, 50])
+bars = ax.bar(ids, np.zeros(agent.output_size))
+labels = ax.get_xticklabels()
+prev_action = 0
+
 print("Let's watch!")
 for test_episode in range(test_episodes):
     agent.initialize_new_episode()
@@ -118,6 +136,26 @@ for test_episode in range(test_episodes):
             toolbox.update_max_data(state=agent.state, 
                                     position=agent.position_history[-1],
                                     layer_values=output)
+        if view_data:
+            # Clear data
+            bars.remove()
+
+            # Display Q values
+            q = agent.get_layer_output("Q")
+            bars = ax.bar(ids, q[0][0], bar_width, color='gray')
+
+            # Color label of chosen axis green
+            labels[prev_action].set_color("black")
+            action = np.argmax(q[0])
+            labels[action].set_color("g")
+            prev_action = action
+
+            # Refresh image
+            plt.draw()
+            plt.show(block=False)
+            plt.pause(0.001)
+            sleep(0.5) # HACK: network only works in PLAYER mode, so needed to slow down video
+
         print("Game tick %d of max %d in test episode %d of %d.        " 
               % (game.get_episode_time() - game.get_episode_start_time(), 
                  game.get_episode_timeout(),
