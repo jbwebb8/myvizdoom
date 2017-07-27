@@ -1,8 +1,7 @@
 # Python
 *.pyd
 *.pyc
-python*/*.ini
-notebooks/*.ini
+_vizdoom.ini
 
 # Java
 *.jar
