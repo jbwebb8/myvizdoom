@@ -1,7 +1,7 @@
 # Python
 *.pyd
 *.pyc
-python*/*.ini
+_vizdoom.ini
 
 # Java
 *.jar
@@ -16,12 +16,14 @@ tmp
 temp
 
 # Results (large files)
+experiments/
 *.dump
 *.mov
 *.ogv
 *.npy
 *.data*
 
-# Miscellaneous
-*.cfg
+# Mutable files
+config/*.cfg
 !template.cfg
+test.json

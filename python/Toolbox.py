@@ -11,17 +11,20 @@ class Toolbox:
     - num_samples: Store top k samples that best activated nodes.
     """
 
-    def __init__(self, layer_sizes, state_shape, num_samples):
+    def __init__(self, layer_sizes, state_shape, num_samples=4):
         self.layer_sizes = layer_sizes
         self.num_layers = len(layer_sizes)
         self.max_values, self.max_states, self.max_positions = [], [], []
         # NOTE: must keep separate arrays for each layer because layer sizes
         # differ
         for i in range(self.num_layers):
-            self.max_values.append(np.zeros([layer_sizes[i], num_samples]))
+            self.max_values.append(np.zeros([layer_sizes[i], num_samples],
+                                            dtype=np.float64))
             self.max_states.append(np.zeros([layer_sizes[i], num_samples] 
-                                            + list(state_shape)))
-            self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4]))          
+                                            + list(state_shape), 
+                                            dtype=np.float32))
+            self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4],
+                                               dtype=np.float32))          
 
     def update_max_data(self, state, position, layer_values):
         for i in range(self.num_layers):
@@ -47,6 +50,26 @@ class Toolbox:
 
     def get_max_data(self):
         return self.max_values, self.max_states, self.max_positions
+
+    def save_max_data(self, output_directory, layer_names=None):
+        if layer_names is None:
+            layer_names = ""
+            for s in range(self.num_layers):
+                layer_names += str(s)
+        for i in range(len(layer_names)):
+            layer_name = layer_names[i]
+            slash = layer_names[i].find("/")
+            if slash > -1:
+                layer_name = layer_names[i][0:slash]                    
+            np.save(results_directory + "max_values_%s-%d"
+                    % (layer_name, epoch+1), 
+                    max_values[i])
+            np.save(results_directory + "max_states_%s-%d"
+                    % (layer_name, epoch+1),
+                    max_states[i])
+            np.save(results_directory + "max_positions_%s-%d"
+                    % (layer_name, epoch+1),
+                    max_positions[i])
 
     def visualize_features():
         # TODO: implement visualize_features_theano.py from old_python

@@ -16,6 +16,6 @@
        "batch_size": 64
     },
     "memory_args": {
-        "replay_memory_size": 375000
+        "replay_memory_size": 300000
     }
 }

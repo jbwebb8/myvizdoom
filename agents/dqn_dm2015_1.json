@@ -1,12 +1,12 @@
 {
-    "agent_name": "test",
+    "agent_name": "dqn_dm2015_1",
     "network_args": {
-        "name": "dqn_basic",
+        "name": "dqn_dm2015",
         "type": "dqn",
         "alpha": 0.00025,
         "gamma": 0.99,
         "phi": 4,
-        "channels": 3
+        "channels": 1
     },
     "learning_args": {
        "epsilon_start": 1.0,
@@ -16,6 +16,6 @@
        "batch_size": 64
     },
     "memory_args": {
-        "replay_memory_size": 10000
+        "replay_memory_size": 300000
     }
 }
