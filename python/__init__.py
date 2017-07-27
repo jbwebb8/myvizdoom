@@ -1,3 +1,3 @@
-from .Agent import Agent
-from .Network import Network
-from .ReplayMemory import ReplayMemory
+from python.agent.Agent import Agent
+from python.network.Network import Network
+from python.memory.ReplayMemory import ReplayMemory
