@@ -1,6 +1,8 @@
 from vizdoom import *
-from Network import Network
-from ReplayMemory import ReplayMemory
+#from Network import Network
+from network.Network import Network
+#from ReplayMemory import ReplayMemory
+from memory.ReplayMemory import ReplayMemory
 import numpy as np
 import tensorflow as tf
 import skimage.color, skimage.transform
@@ -216,8 +218,6 @@ class Agent:
         self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
     
     def _get_target_update_ops(self, tau):
-        # TODO: implement function similar to medium blog that gets all
-        # variables and sets target network to weighted average of two
         # Adapted from 
         # https://github.com/awjuliani/DeepRL-Agents/blob/master/Double-Dueling-DQN.ipynb
         update_ops = []
