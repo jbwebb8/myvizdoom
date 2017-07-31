@@ -29,11 +29,9 @@ class Agent:
         # Set up results directories
         if not output_directory.endswith("/"): 
             output_directory += "/"
-        self.agent_dir = output_directory + "agent_data/"
         self.net_dir = output_directory + "net_data/"
         self.main_net_dir = self.net_dir + "main_net/"
-        self.make_directory([self.agent_dir, self.net_dir, 
-                             self.main_net_dir])
+        self._make_directory([self.net_dir, self.main_net_dir])
 
         # Initialize action space
         self.action_indices = np.asarray(self.game.get_available_buttons())
@@ -86,10 +84,10 @@ class Agent:
         self.position_history = []
         self.action_history = []
     
-    def _make_directory(folders):
+    def _make_directory(self, folders):
         for f in folders:
             try:
-                os.makedirs(self.agent_dir)
+                os.makedirs(f)
             except OSError as exception:
                 if exception.errno != errno.EEXIST:
                     raise
@@ -178,7 +176,8 @@ class Agent:
         if not agent_file.lower().endswith(".json"): 
             raise Exception("No agent JSON file.")
         agent = json.loads(open(agent_file).read())
-        self.agent_name = agent["agent_name"]
+        self.agent_name = agent["agent_args"]["name"]
+        self.agent_type = agent["agent_args"]["type"]
         self.net_file = agent["network_args"]["name"]
         self.net_type = agent["network_args"]["type"]
         self.alpha = agent["network_args"]["alpha"]
@@ -192,6 +191,7 @@ class Agent:
         self.batch_size = agent["learning_args"]["batch_size"]
         self.target_net_freq = agent["learning_args"]["target_network_update_freq"]
         self.target_net_rate = agent["learning_args"]["target_network_update_rate"]
+        self.rm_type = agent["memory_args"]["type"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
         self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
 
