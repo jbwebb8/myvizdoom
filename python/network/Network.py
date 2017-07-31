@@ -1,3 +1,4 @@
+from network.NetworkBuilder import NetworkBuilder
 import tensorflow as tf
 from tensorflow.tensorboard.backend.event_processing \
     import event_accumulator
@@ -85,11 +86,11 @@ class Network:
                     
             # Create summaries for TensorBoard visualization
             with tf.name_scope("summaries"):
-               builder.add_summaries()
+               var_sum, neur_sum, grad_sum = builder.add_summaries()
             
             # Create objects for saving
             self.saver = tf.train.Saver(max_to_keep=None)        
-            self.graph = tf.get_default_graph()
+            self.graph = tf.get_default_graph() 
             self.var_sum = tf.summary.merge(var_sum)
             self.neur_sum = tf.summary.merge(neur_sum)
             self.grad_sum = tf.summary.merge(grad_sum)
