@@ -6,11 +6,13 @@
 #####################################################################
 
 from vizdoom import *
-from Agent import Agent
+#from Agent import Agent
+from agent.Agent import Agent
 from Toolbox import Toolbox
 import numpy as np
 import tensorflow as tf
 import argparse
+import warnings
 import os, errno
 from time import time, sleep
 from tqdm import trange
@@ -151,9 +153,11 @@ for test_episode in range(test_episodes):
             prev_action = action
 
             # Refresh image
-            plt.draw()
-            plt.show(block=False)
-            plt.pause(0.001)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                plt.draw()
+                plt.show(block=False)
+                plt.pause(0.001)
             sleep(0.5) # HACK: network only works in PLAYER mode, so needed to slow down video
 
         print("Game tick %d of max %d in test episode %d of %d.        " 
