@@ -311,3 +311,5 @@ class NetworkBuilder:
             for g, v in gvs:
                 with tf.name_scope(v.name[:-2]):
                     grad_sum.append(tf.summary.histogram("grads", g))
+        
+        return var_sum, neur_sum, grad_sum
