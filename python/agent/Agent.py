@@ -1,7 +1,5 @@
 from vizdoom import *
-#from Network import Network
 from network.Network import Network
-#from ReplayMemory import ReplayMemory
 from memory.ReplayMemory import ReplayMemory
 import numpy as np
 import tensorflow as tf
@@ -18,7 +16,6 @@ class Agent:
 
     NET_JSON_DIR = "../networks/"
     MAIN_SCOPE = "main_network"
-    TARGET_SCOPE = "target_network"
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default", 
@@ -30,21 +27,13 @@ class Agent:
         self.train_mode = train_mode
 
         # Set up results directories
-        def make_directory(folders):
-            for f in folders:
-                try:
-                    os.makedirs(self.agent_dir)
-                except OSError as exception:
-                    if exception.errno != errno.EEXIST:
-                        raise
         if not output_directory.endswith("/"): 
             output_directory += "/"
         self.agent_dir = output_directory + "agent_data/"
         self.net_dir = output_directory + "net_data/"
         self.main_net_dir = self.net_dir + "main_net/"
-        self.target_net_dir = self.net_dir + "target_net/"
-        make_directory([self.agent_dir, self.net_dir, 
-                        self.main_net_dir, self.target_net_dir])
+        self.make_directory([self.agent_dir, self.net_dir, 
+                             self.main_net_dir])
 
         # Initialize action space
         self.action_indices = np.asarray(self.game.get_available_buttons())
@@ -91,31 +80,20 @@ class Agent:
                                session=self.sess,
                                scope=self.MAIN_SCOPE)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
-        if self.train_mode:
-            # TODO: create target first so that only need to save results from
-            # network because its graph will contain nodes from both the main
-            # and target network.
-            self.target_network = Network(phi=self.phi, 
-                                          num_channels=self.channels, 
-                                          output_shape=self.output_size,
-                                          learning_rate=self.alpha,
-                                          network_file=self.net_file,
-                                          output_directory=self.target_net_dir,
-                                          session=self.sess,
-                                          scope=self.TARGET_SCOPE)
-            target_init_ops = self._get_target_update_ops(1.0)
-            self.sess.run(target_init_ops) # copy main network initialized params
-            self.target_update_ops = self._get_target_update_ops(self.target_net_rate)
-            
-            self.memory = ReplayMemory(capacity=self.rm_capacity, 
-                                       state_shape=self.state.shape,
-                                       input_overlap=(self.phi-1)*self.channels)
 
         # Create tracking lists
         self.score_history = []
         self.position_history = []
         self.action_history = []
     
+    def _make_directory(folders):
+        for f in folders:
+            try:
+                os.makedirs(self.agent_dir)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+
     def _set_actions(self, action_set):
         # For dictionary of buttons and their integer values, see
         # ViZDoom/include/ViZDoomTypes.h
@@ -216,19 +194,6 @@ class Agent:
         self.target_net_rate = agent["learning_args"]["target_network_update_rate"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
         self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
-    
-    def _get_target_update_ops(self, tau):
-        # Adapted from 
-        # https://github.com/awjuliani/DeepRL-Agents/blob/master/Double-Dueling-DQN.ipynb
-        update_ops = []
-        main_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                      scope=self.MAIN_SCOPE)
-        target_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                        scope=self.TARGET_SCOPE)
-        for mv, tv in zip(main_vars, target_vars):
-            update = tf.assign(tv, tau * mv.value() + (1 - tau) * tv.value())
-            update_ops.append(update)
-        return update_ops
 
     def reset_state(self):
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
@@ -305,75 +270,6 @@ class Agent:
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
             self.update_state(current_screen, replace=False)
-
-    def perform_learning_step(self, epoch, epoch_tot):
-        def get_exploration_rate(epoch, epoch_tot):
-            epsilon_const_epochs = self.epsilon_const_rate * epoch_tot
-            epsilon_decay_epochs = self.epsilon_decay_rate * epoch_tot
-            if epoch < epsilon_const_epochs:
-                return self.epsilon_start
-            elif epoch < epsilon_decay_epochs:
-                # Linear decay
-                return (self.epsilon_start
-                        + (self.epsilon_start - self.epsilon_end) / epsilon_decay_epochs 
-                        * (epsilon_const_epochs - epoch))
-            else:
-                return self.epsilon_end
-        
-        # NOTE: is copying array most efficient implementation?
-        s1 = np.copy(self.state)
-        
-        # With probability epsilon make a random action.
-        epsilon = get_exploration_rate(epoch, epoch_tot)
-        if random() <= epsilon:
-            a = randint(0, self.output_size - 1)
-        else:
-            # Choose the best action according to the network.
-            a = self.network.get_best_action(s1).item()
-        
-        # Receive reward from environment.
-        reward = self.game.make_action(self.actions[a], self.frame_repeat)
-        
-        # Get new state if not terminal.
-        isterminal = self.game.is_episode_finished()
-        if not isterminal:
-            current_screen = self.game.get_state().screen_buffer
-            self.update_state(current_screen)
-            s2 = np.copy(self.state)
-        else:
-            s2 = None
-
-        # Remember the transition that was just experienced.
-        self.memory.add_transition(s1, a, s2, isterminal, reward)
-
-        # Learn from minibatch of replay memory samples and update
-        # target network Q' if enough memories
-        if self.rm_start_size < self.memory.size:
-            self.learn_from_memory()
-
-        self.global_step += 1        
-
-    def _get_learning_batch(self):
-        # All variables have shape [batch_size, ...]
-        s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
-        
-        # Update target Q for selected action using target network Q':
-        # if not terminal: target_Q'(s,a) = r + gamma * max(Q'(s',_))
-        # if terminal:     target_Q'(s,a) = r
-        q2 = np.max(self.target_network.get_q_values(s2), axis=1)
-        target_q = self.target_network.get_q_values(s1)
-        target_q[np.arange(target_q.shape[0]), a] = r + self.gamma * (1 - isterminal) * q2
-
-        return s1, target_q
-
-    def learn_from_memory(self):
-        # Update target network Q' every k steps
-        if self.global_step % self.target_net_freq == 0:
-            self.sess.run(self.target_update_ops)
-        
-        # Learn from minibatch of replay memory experiences
-        s1, target_q = self._get_learning_batch()
-        _ = self.network.learn(s1, target_q)
     
     def get_best_action(self, state=None):
         if state is None: 
@@ -419,19 +315,3 @@ class Agent:
 
     def get_layer_shape(self, layer_output_names):
         return self.network.get_layer_shape(layer_output_names)
-
-    def save_model(self, model_name, global_step=None, save_meta=True,
-                   save_summaries=True):
-        batch = None
-        if save_summaries:
-            batch = self._get_learning_batch()
-        self.network.save_model(model_name,
-                                global_step=global_step,
-                                save_meta=save_meta,
-                                save_summaries=save_summaries,
-                                test_batch=batch)
-        self.target_network.save_model(model_name,
-                                global_step=global_step,
-                                save_meta=save_meta,
-                                save_summaries=save_summaries,
-                                test_batch=batch)
