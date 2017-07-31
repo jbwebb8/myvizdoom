@@ -1,5 +1,8 @@
 {
-    "agent_name": "dqn_dm2015_1",
+    "agent_args": {
+        "name": "dqn_dm2015_1",
+        "type": "dqn"
+    },
     "network_args": {
         "name": "dqn_dm2015",
         "type": "dqn",
