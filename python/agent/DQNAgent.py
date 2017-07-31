@@ -1,4 +1,10 @@
-from Agent import Agent
+from agent.Agent import Agent
+from network.Network import Network
+from memory.ReplayMemory import ReplayMemory
+from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
+import tensorflow as tf
+import numpy as np
+from random import randint, random
 
 class DQNAgent(Agent):
     
@@ -18,10 +24,11 @@ class DQNAgent(Agent):
                        frame_repeat=frame_repeat, 
                        **kwargs)
         
-        # Create target network to bootstrap Q'(s', a')
+        # Create target network and replay memory if training
         if self.train_mode:
+            # Create target network to bootstrap Q'(s', a')
             self.target_net_dir = self.net_dir + "target_net/"
-            self.make_directory([self.target_net_dir])
+            self._make_directory([self.target_net_dir])
             self.target_network = Network(phi=self.phi, 
                                           num_channels=self.channels, 
                                           output_shape=self.output_size,
@@ -34,10 +41,21 @@ class DQNAgent(Agent):
             self.sess.run(target_init_ops) # copy main network initialized params
             self.target_update_ops = self._get_target_update_ops(self.target_net_rate)
             
-            self.memory = ReplayMemory(capacity=self.rm_capacity, 
-                                       state_shape=self.state.shape,
-                                       input_overlap=(self.phi-1)*self.channels)
+            # Create replay memory
+            self.memory = self._create_memory(self.rm_type)
 
+    def _create_memory(self, memory_type):
+        if memory_type.lower() == "standard":
+            return ReplayMemory(capacity=self.rm_capacity, 
+                                state_shape=self.state.shape,
+                                input_overlap=(self.phi-1)*self.channels)
+        elif memory_type.lower() == "prioritized":
+            return PrioritizedReplayMemory(capacity=self.rm_capacity, 
+                                           state_shape=self.state.shape,
+                                           input_overlap=(self.phi-1)*self.channels)
+        else:
+            raise ValueError("Replay memory type \"" + memory_type + "\" not defined.")
+    
     def _get_target_update_ops(self, tau):
         # Adapted from 
         # https://github.com/awjuliani/DeepRL-Agents/blob/master/Double-Dueling-DQN.ipynb
@@ -50,7 +68,7 @@ class DQNAgent(Agent):
             update = tf.assign(tv, tau * mv.value() + (1 - tau) * tv.value())
             update_ops.append(update)
         return update_ops
-
+    
     def perform_learning_step(self, epoch, epoch_tot):
         def get_exploration_rate(epoch, epoch_tot):
             epsilon_const_epochs = self.epsilon_const_rate * epoch_tot
@@ -89,7 +107,14 @@ class DQNAgent(Agent):
             s2 = None
 
         # Remember the transition that was just experienced.
-        self.memory.add_transition(s1, a, s2, isterminal, reward)
+        if self.rm_type == "prioritized":
+            q = self.network.get_q_values(s1)
+            target_q = self._get_target_q(s1, a, s2, isterminal, reward)
+            p = abs(q - target_q) + 0.1
+            print(p)
+            self.memory.add_transition(s1, a, s2, isterminal, reward, p)
+        else:
+            self.memory.add_transition(s1, a, s2, isterminal, reward)
 
         # Learn from minibatch of replay memory samples and update
         # target network Q' if enough memories
@@ -98,18 +123,22 @@ class DQNAgent(Agent):
 
         self.global_step += 1        
 
-    def _get_learning_batch(self):
-        # All variables have shape [batch_size, ...]
-        s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
-        
+    def _get_target_q(self, s1, a, s2, isterminal, r):
         # Update target Q for selected action using target network Q':
         # if not terminal: target_Q'(s,a) = r + gamma * max(Q'(s',_))
         # if terminal:     target_Q'(s,a) = r
         q2 = np.max(self.target_network.get_q_values(s2), axis=1)
         target_q = self.target_network.get_q_values(s1)
         target_q[np.arange(target_q.shape[0]), a] = r + self.gamma * (1 - isterminal) * q2
+        return target_q
 
-        return s1, target_q
+    def _get_learning_batch(self):
+        # All variables have shape [batch_size, ...]
+        # TODO: fix hard-coding of priorited replay memory
+        # TODO: target_q should be single value; otherwise learning from all actions
+        # possible to take, rather than just from action taken
+        s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
+        return s1, self._get_target_q(s1, a, s2, isterminal, r)
 
     def learn_from_memory(self):
         # Update target network Q' every k steps
@@ -118,6 +147,9 @@ class DQNAgent(Agent):
         
         # Learn from minibatch of replay memory experiences
         s1, target_q = self._get_learning_batch()
+        if self.rm_type == "prioritized":
+            pass
+            #w = (1 / self.memory.size * 1 / )
         _ = self.network.learn(s1, target_q)
     
     def save_model(self, model_name, global_step=None, save_meta=True,
