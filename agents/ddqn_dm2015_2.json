@@ -1,0 +1,28 @@
+{
+    "agent_args": {
+        "name": "ddqn_dm2015_1",
+        "type": "ddqn"
+    },
+    "network_args": {
+        "name": "dqn_dm2015",
+        "type": "dqn",
+        "alpha": 0.00025,
+        "gamma": 0.99,
+        "phi": 4,
+        "channels": 3
+    },
+    "learning_args": {
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.1,
+        "epsilon_const_rate": 0.1,
+        "epsilon_decay_rate": 0.6,
+        "batch_size": 32,
+        "target_network_update_freq": 4,
+        "target_network_update_rate": 0.001
+    },
+    "memory_args": {
+        "type": "prioritized",
+        "replay_memory_size": 80000,
+        "replay_memory_start_size": 20000
+    }
+}
