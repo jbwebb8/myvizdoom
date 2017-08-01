@@ -11,7 +11,7 @@ from Toolbox import Toolbox
 import numpy as np
 import tensorflow as tf
 import argparse
-import os, errno
+import os, errno, sys
 from shutil import copy
 from time import time
 from tqdm import trange
@@ -103,14 +103,12 @@ def save_exp_details(folder):
 
 # Initializes DoomGame from config file
 def initialize_vizdoom(config_file):
-    print("Initializing doom... ", end="")
+    print("Initializing doom... ", end=""), sys.stdout.flush()
     game = DoomGame()
     game.load_config(config_file)
     game.init()
     print("Done.")
     return game  
-
-# Creates 
 
 # Make output directories and save experiment details
 details_dir = results_dir + "details/"
@@ -121,7 +119,7 @@ save_exp_details(details_dir)
 
 # Initialize agent and TensorFlow graph
 game = initialize_vizdoom(config_file_path)
-print("Loading agent... ", end="")
+print("Loading agent... ", end=""), sys.stdout.flush()
 agent = create_agent(agent_file_path,
                      game=game, 
                      params_file=params_file_path,
@@ -133,7 +131,7 @@ if trackable:
 print("Done.")
 
 # Initialize toolbox
-print("Initializing toolbox... ", end="")
+print("Initializing toolbox... ", end=""), sys.stdout.flush()
 layer_shapes = agent.get_layer_shape(layer_names)
 layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
 for i in range(len(layer_shapes)):
