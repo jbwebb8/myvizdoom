@@ -6,12 +6,14 @@
 #####################################################################
 
 from vizdoom import *
-from Agent import Agent
+from helper import create_agent
 from Toolbox import Toolbox
 import numpy as np
 import tensorflow as tf
 import argparse
+import warnings
 import os, errno
+from shutil import copy
 from time import time, sleep
 from tqdm import trange
 import matplotlib.pyplot as plt
@@ -41,20 +43,19 @@ parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
 parser.add_argument("-v", "--view-data", action="store_true", default=False,
                     help="view real-time Q values")
+parser.add_argument("-n", "--name", default="test", metavar="", 
+                    help="experiment name (for saving files)")
+parser.add_argument("-d", "--description", default="testing", metavar="", 
+                    help="description of experiment")
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
 agent_file_path = args.agent_file_path
 params_file_path = args.params_file_path
 config_file_path = args.config_file_path
-results_directory = args.results_directory
-if not results_directory.endswith("/"): 
-    results_directory += "/"
-try:
-    os.makedirs(results_directory)
-except OSError as exception:
-    if exception.errno != errno.EEXIST:
-        raise
+results_dir = args.results_directory
+if not results_dir.endswith("/"): 
+    results_dir += "/"
 meta_file_path = args.meta_file
 test_episodes = args.test_episodes
 action_set = args.action_set
@@ -62,6 +63,16 @@ layer_names = args.layer_names
 max_samples = args.max_samples
 trackable = args.track
 view_data = args.view_data
+exp_name = args.name
+exp_descr = args.description
+
+def make_directory(folders):
+    for f in folders:
+        try:
+            os.makedirs(f)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
 
 # Creates and initializes ViZDoom environment.
 def initialize_vizdoom(config_file_path):
@@ -73,22 +84,40 @@ def initialize_vizdoom(config_file_path):
     print("Done.")
     return game
 
+# Make output directories
+details_dir = results_dir + "details/"
+game_dir = results_dir + "game_data/"
+max_dir = results_dir + "max_data/"
+make_directory([results_dir, details_dir, game_dir, max_dir])
+
+# Save txt file of important experimental settings
+# and copy (small) configuration files
+f = open(details_dir + "settings.txt", "w+")
+f.write("Name: " + exp_name + "\n")
+f.write("Description: " + exp_descr + "\n")
+f.write("Agent file: " + agent_file_path + "\n")
+f.write("Params file: " + params_file_path + "\n")
+f.write("Config file: " + config_file_path + "\n")
+f.write("Action set: " + action_set)
+files_to_copy = [agent_file_path, config_file_path]
+for fp in files_to_copy:
+    copy(fp, details_dir)
 
 # Initialize DoomGame and load network into Agent instance
 game = initialize_vizdoom(config_file_path)
 print("Loading agent... ", end="")
 # TODO: make action_set not necessary
-agent = Agent(game=game, 
-              agent_file=agent_file_path,
-              action_set=action_set,
-              params_file=params_file_path, 
-              output_directory=results_directory,
-              train_mode=False)
+agent = create_agent(agent_file_path,
+                     game=game,
+                     action_set=action_set,
+                     params_file=params_file_path, 
+                     output_directory=results_dir,
+                     train_mode=False)
 print("Done.")
 
 # Save action indices
 if trackable:
-    np.savetxt(results_directory + "action_indices.csv", 
+    np.savetxt(game_dir + "action_indices.csv", 
                agent.action_indices,
                delimiter=",",
                fmt="%.0d")
@@ -151,9 +180,11 @@ for test_episode in range(test_episodes):
             prev_action = action
 
             # Refresh image
-            plt.draw()
-            plt.show(block=False)
-            plt.pause(0.001)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                plt.draw()
+                plt.show(block=False)
+                plt.pause(0.001)
             sleep(0.5) # HACK: network only works in PLAYER mode, so needed to slow down video
 
         print("Game tick %d of max %d in test episode %d of %d.        " 
@@ -171,21 +202,21 @@ print("\nSaving results... ", end="")
 
 # Save test scores
 scores = np.asarray(agent.score_history)
-np.savetxt(results_directory + "test_scores.csv", 
-        scores,
-        delimiter=",",
-        fmt="%.3f")
+np.savetxt(game_dir + "test_scores.csv", 
+           scores,
+           delimiter=",",
+           fmt="%.3f")
 
 # Save game traces if tracking specified
 if trackable:
-    np.savetxt(results_directory + "positions.csv",
-            np.asarray(agent.position_history),
-            delimiter=",",
-            fmt="%.3f")
-    np.savetxt(results_directory + "actions.csv",
-            np.asarray(agent.action_history),
-            delimiter=",",
-            fmt="%d")
+    np.savetxt(game_dir + "positions.csv",
+               np.asarray(agent.position_history),
+               delimiter=",",
+               fmt="%.3f")
+    np.savetxt(game_dir + "actions.csv",
+               np.asarray(agent.action_history),
+               delimiter=",",
+               fmt="%d")
 
 # Save max data of layers if specified
 if len(layer_names) > 0:
@@ -193,11 +224,11 @@ if len(layer_names) > 0:
     for i in range(len(layer_names)):
         slash = layer_names[i].find("/")
         abbr_name = layer_names[i][0:slash]                    
-        np.save(results_directory + "max_values_%s" % abbr_name, 
+        np.save(max_dir + "max_values_%s" % abbr_name, 
                 max_values[i])
-        np.save(results_directory + "max_states_%s" % abbr_name,
+        np.save(max_dir + "max_states_%s" % abbr_name,
                 max_states[i])
-        np.save(results_directory + "max_positions_%s" % abbr_name,
+        np.save(max_dir + "max_positions_%s" % abbr_name,
                 max_positions[i])
 
 print("Done.")
