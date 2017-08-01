@@ -41,8 +41,9 @@ class DQNAgent(Agent):
             self.sess.run(target_init_ops) # copy main network initialized params
             self.target_update_ops = self._get_target_update_ops(self.target_net_rate)
             
-            # Create replay memory
+            # Create replay memory and set specific functions
             self.memory = self._create_memory(self.rm_type)
+            self.memory_fns = self._set_memory_fns(self.rm_type)
 
     def _create_memory(self, memory_type):
         if memory_type.lower() == "standard":
@@ -55,7 +56,23 @@ class DQNAgent(Agent):
                                            input_overlap=(self.phi-1)*self.channels)
         else:
             raise ValueError("Replay memory type \"" + memory_type + "\" not defined.")
-    
+
+    def _set_memory_fns(self, memory_type):
+        # TODO: add memory functions
+        # TODO: need to incorporate IS weights into network loss function
+        fns = {}
+        if memory_type.lower() == "standard":
+            def add_transition_to_memory(self, s1, a, s2, isterminal, r):
+                self.memory.add_transition(s1, a, s2, isterminal, reward)
+        
+        elif memory_type.lower() == "prioritized":
+            def add_transition_to_memory(self, s1, a, s2, isterminal, r):
+                q = self.network.get_q_values(s1)[a]
+                target_q = self._get_target_q(s1, a, s2, isterminal, reward)
+                p = abs(q - target_q) + 0.01
+                self.memory.add_transition(s1, a, s2, isterminal, reward, p)
+
+
     def _get_target_update_ops(self, tau):
         # Adapted from 
         # https://github.com/awjuliani/DeepRL-Agents/blob/master/Double-Dueling-DQN.ipynb
@@ -70,7 +87,7 @@ class DQNAgent(Agent):
         return update_ops
     
     def perform_learning_step(self, epoch, epoch_tot):
-        def get_exploration_rate(epoch, epoch_tot):
+        def get_exploration_rate():
             epsilon_const_epochs = self.epsilon_const_rate * epoch_tot
             epsilon_decay_epochs = self.epsilon_decay_rate * epoch_tot
             if epoch < epsilon_const_epochs:
@@ -87,7 +104,7 @@ class DQNAgent(Agent):
         s1 = np.copy(self.state)
         
         # With probability epsilon make a random action.
-        epsilon = get_exploration_rate(epoch, epoch_tot)
+        epsilon = get_exploration_rate()
         if random() <= epsilon:
             a = randint(0, self.output_size - 1)
         else:
@@ -107,14 +124,7 @@ class DQNAgent(Agent):
             s2 = None
 
         # Remember the transition that was just experienced.
-        if self.rm_type == "prioritized":
-            q = self.network.get_q_values(s1)
-            target_q = self._get_target_q(s1, a, s2, isterminal, reward)
-            p = abs(q - target_q) + 0.1
-            print(p)
-            self.memory.add_transition(s1, a, s2, isterminal, reward, p)
-        else:
-            self.memory.add_transition(s1, a, s2, isterminal, reward)
+        self.add_transition_to_memory(s1, a, s2, isterminal, reward)
 
         # Learn from minibatch of replay memory samples and update
         # target network Q' if enough memories
@@ -128,8 +138,7 @@ class DQNAgent(Agent):
         # if not terminal: target_Q'(s,a) = r + gamma * max(Q'(s',_))
         # if terminal:     target_Q'(s,a) = r
         q2 = np.max(self.target_network.get_q_values(s2), axis=1)
-        target_q = self.target_network.get_q_values(s1)
-        target_q[np.arange(target_q.shape[0]), a] = r + self.gamma * (1 - isterminal) * q2
+        target_q = r + self.gamma * (1 - isterminal) * q2 
         return target_q
 
     def _get_learning_batch(self):
@@ -138,7 +147,8 @@ class DQNAgent(Agent):
         # TODO: target_q should be single value; otherwise learning from all actions
         # possible to take, rather than just from action taken
         s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
-        return s1, self._get_target_q(s1, a, s2, isterminal, r)
+        target_q = self._get_target_q(s1, a, s2, isterminal, r)
+        return s1, a, target_q
 
     def learn_from_memory(self):
         # Update target network Q' every k steps
@@ -146,11 +156,11 @@ class DQNAgent(Agent):
             self.sess.run(self.target_update_ops)
         
         # Learn from minibatch of replay memory experiences
-        s1, target_q = self._get_learning_batch()
+        s1, a, target_q = self._get_learning_batch()
         if self.rm_type == "prioritized":
             pass
             #w = (1 / self.memory.size * 1 / )
-        _ = self.network.learn(s1, target_q)
+        _ = self.network.learn(s1, a, target_q, weight=w)
     
     def save_model(self, model_name, global_step=None, save_meta=True,
                    save_summaries=True):
