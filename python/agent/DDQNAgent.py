@@ -17,17 +17,12 @@ class DDQNAgent(DQNAgent):
                           **kwargs)
 
     # Override DQN update function with Double DQN update
-    def _get_learning_batch(self):
-        # All variables have shape [batch_size, ...]
-        s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
-        
+    def _get_target_q(self, s1, a, s2, isterminal, r):
         # Update target Q for selected action using target network Q':
         # if not terminal: target_Q'(s,a) = r + gamma * Q'(s', argmax{Q(s',_)})
         # if terminal:     target_Q'(s,a) = r
         a_max = np.argmax(self.network.get_q_values(s2), axis=1)
-        q2 = self.target_network.get_q_values(s2)
-        q2 = q2[np.arange(q2.shape[0]), a_max]
-        target_q = self.target_network.get_q_values(s1)
-        target_q[np.arange(target_q.shape[0]), a] = r + self.gamma * (1 - isterminal) * q2
-
-        return s1, target_q
+        q2_ = self.target_network.get_q_values(s2)
+        q2 = q2_[np.arange(q2_.shape[0]), a_max]
+        target_q = r + self.gamma * (1 - isterminal) * q2
+        return target_q
