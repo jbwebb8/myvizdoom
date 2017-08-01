@@ -4,7 +4,8 @@ import math
 
 class PrioritizedReplayMemory(ReplayMemory):
 
-    def __init__(self, capacity, state_shape, input_overlap=0):
+    def __init__(self, capacity, state_shape, input_overlap=0, 
+                 alpha=0.6, beta_start=0.4, beta_end=1.0):
         # Initialize base replay memory
         ReplayMemory.__init__(self, capacity, state_shape, input_overlap)
 
@@ -12,7 +13,13 @@ class PrioritizedReplayMemory(ReplayMemory):
         heap_size = 2 ** math.ceil(math.log(capacity, 2)) + capacity
         self.start_pos = 2 ** math.ceil(math.log(capacity, 2))
         self.heap = np.zeros(heap_size, dtype=np.float32)
-    
+        self.alpha = alpha
+        self.beta = beta_start
+
+    def update_beta(self, epoch, total_epochs):
+        self.beta = ( (self.beta_end - self.beta_start) / total_epochs * epoch
+                      + self.beta_start )
+
     # Overrides base ReplayMemory function with prioritization
     def add_transition(self, s1, action, s2, isterminal, reward, p):
         # Store transition variables at current position
@@ -29,15 +36,15 @@ class PrioritizedReplayMemory(ReplayMemory):
         # Add priority of transition
         self.add_priority(p, self.pos)
         
-        #Increment pointer or start over if reached end (sliding window)
+        # Increment pointer or start over if reached end (sliding window)
         self.pos = (self.pos + 1) % self.capacity
         self.size = min(self.size + 1, self.capacity)
     
     # Recursive function to update parent of node j
     def _propagate(self, child_id):
         parent_id = child_id // 2
-        self.heap[parent_id] = self.heap[2 * parent_id] \
-                               + self.heap[2 * parent_id + 1]
+        self.heap[parent_id] = ( self.heap[2 * parent_id]
+                                 + self.heap[2 * parent_id + 1] )
 
     # Add priority leaf to heap and update parent nodes
     def add_priority(self, p, i):
@@ -45,7 +52,7 @@ class PrioritizedReplayMemory(ReplayMemory):
         j = self.start_pos + i 
 
         # Add priority of transition i to heap
-        self.heap[j] = p
+        self.heap[j] = p ** self.alpha
 
         # Recursively update parent nodes
         while j > 1:
@@ -74,19 +81,26 @@ class PrioritizedReplayMemory(ReplayMemory):
 
         # Create offset that corresponds to start value of each bin
         offset = np.zeros(sample_size)
-        offset[np.arange(sample_size)] = self.heap[1] \
-                                         * np.arange(sample_size) / sample_size
+        offset[np.arange(sample_size)] = ( self.heap[1] 
+                                           * np.arange(sample_size) / sample_size )
         
         # Draw random numbers from bin size, 
         # then add offset to create uniformly spaced distribution
-        m[np.arange(sample_size)] = (self.heap[1] / sample_size) \
-                                    * np.random.random(sample_size) + offset
+        m[np.arange(sample_size)] = ( (self.heap[1] / sample_size)
+                                       * np.random.random(sample_size) + offset )
 
         # Retrieve transition indices with probability proportional
         # to priority values
         t = np.zeros(sample_size, dtype=np.int32)
         for i in range(sample_size):
             t[i] = self._retrieve(1, m[i]) - self.start_pos
+        
+        # Calculate importance-sampling (IS) weights w_i of transition:
+        # w_i = (1/N * )
+        # where P(i) = probability of transition i, N = memory size, 
+        # and beta = hyperparameter
         t_ = start_pos + t
-        p_values = self.heap[t_]
-        return self.s1[t], self.a[t], self.s2[t], self.r[t], self.isterminal[t], p_values
+        P = self.heap[t_] / self.heap[1]
+        w = (1 / self.size + 1 / P) ** self.beta
+        
+        return self.s1[t], self.a[t], self.s2[t], self.isterminal[t], self.r[t], w
