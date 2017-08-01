@@ -1,4 +1,5 @@
 from agent.DQNAgent import DQNAgent
+import numpy as np
 
 class DDQNAgent(DQNAgent):
 
