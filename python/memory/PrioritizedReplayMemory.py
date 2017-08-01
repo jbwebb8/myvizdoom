@@ -14,6 +14,8 @@ class PrioritizedReplayMemory(ReplayMemory):
         self.start_pos = 2 ** math.ceil(math.log(capacity, 2))
         self.heap = np.zeros(heap_size, dtype=np.float32)
         self.alpha = alpha
+        self.beta_start = beta_start
+        self.beta_end = beta_end
         self.beta = beta_start
 
     def update_beta(self, epoch, total_epochs):
@@ -21,7 +23,7 @@ class PrioritizedReplayMemory(ReplayMemory):
                       + self.beta_start )
 
     # Overrides base ReplayMemory function with prioritization
-    def add_transition(self, s1, action, s2, isterminal, reward, p):
+    def add_transition(self, s1, action, s2, isterminal, reward, delta):
         # Store transition variables at current position
         self.s1[self.pos, ...] = s1
         self.a[self.pos] = action
@@ -33,7 +35,9 @@ class PrioritizedReplayMemory(ReplayMemory):
         self.isterminal[self.pos] = isterminal
         self.r[self.pos] = reward
         
-        # Add priority of transition
+        # Create priority following proportional prioritization:
+        # p_i = |Q'(s,a) - Q(s,a)| + ε
+        p = abs(delta) + 0.01
         self.add_priority(p, self.pos)
         
         # Increment pointer or start over if reached end (sliding window)
@@ -99,8 +103,18 @@ class PrioritizedReplayMemory(ReplayMemory):
         # w_i = (1/N * )
         # where P(i) = probability of transition i, N = memory size, 
         # and beta = hyperparameter
-        t_ = start_pos + t
+        t_ = self.start_pos + t
         P = self.heap[t_] / self.heap[1]
         w = (1 / self.size + 1 / P) ** self.beta
         
-        return self.s1[t], self.a[t], self.s2[t], self.isterminal[t], self.r[t], w
+        # Stack overlapping frames from s1 to stored frames of s2 to
+        # recreate full s2 state
+        if self.overlap > 0:    
+            s2 = np.concatenate((self.s1[[t] + [slice(None)] * self.chdim 
+                                 + [slice(None, self.overlap)]], 
+                                 self.s2[t]), 
+                                 axis=self.chdim+1)
+        else:
+            s2 = self.s2[t]
+
+        return self.s1[t], self.a[t], s2, self.isterminal[t], self.r[t], w
