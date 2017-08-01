@@ -28,6 +28,7 @@ class Network:
     Reserved names and name scopes:
     - state
     - Q
+    - actions
     - target_q
     - loss
     - train_step
@@ -62,6 +63,7 @@ class Network:
             else:
                 self.input_res = self.input_shape[:-1]
             self.q = self.graph_dict["Q"][0]
+            self.actions = self.graph_dict["actions"][0]
             self.target_q = self.graph_dict["target_q"][0]
             self.loss = self.graph_dict["loss"][0]
             self.train_step = self.graph_dict["train_step"][0]
@@ -103,10 +105,10 @@ class Network:
         else:
             self.sess.run(tf.global_variables_initializer())
 
-    def learn(self, s1_, target_q_):
+    def learn(self, s1_, a_, target_q_, weight=1.0):
         if s1_.ndim < 4:
             s1_ = s1_.reshape([1] + list(s1_.shape))
-        feed_dict={self.state: s1_, self.target_q: target_q_}
+        feed_dict={self.state: s1_, self.actions: a_, self.target_q: target_q_}
         loss_, train_step_ = self.sess.run([self.loss, self.train_step],
                                            feed_dict=feed_dict)
         return loss_
@@ -132,8 +134,10 @@ class Network:
             var_sum_ = self.sess.run(self.var_sum)
             self.writer.add_summary(var_sum_, global_step)
             if test_batch is not None:
-                feed_dict={self.state: test_batch[0], 
-                           self.target_q: test_batch[1]}
+                s1, a, target_q = test_batch
+                feed_dict={self.state: s1,
+                           self.actions: a, 
+                           self.target_q: target_q}
                 neur_sum_ = self.sess.run(self.neur_sum,
                                           feed_dict=feed_dict)
                 self.writer.add_summary(neur_sum_, global_step)

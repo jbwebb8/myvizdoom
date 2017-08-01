@@ -163,21 +163,23 @@ class NetworkBuilder:
                 raise ValueError("Op \"" + op["type"] + "\" not yet defined.")
 
         # Adds loss function to graph
-        def add_loss_fn(loss_type, q_, target_q_, params=None):
-            if loss_type.lower() == "squared_error":
+        def add_loss_fn(loss_type, q_, a, target_q, params=None):
+            if loss_type.lower() == "mean_squared_error":
                 with tf.name_scope("loss"):
-                    mse = tf.reduce_sum(tf.square(tf.subtract(target_q_, q_)))
+                    q = q_[a]
+                    mse = tf.reduce_mean(tf.square(tf.subtract(target_q, q)))
                     tf.add_to_collection(tf.GraphKeys.LOSSES, mse)
                     return mse
             elif loss_type.lower() == "huber":
                 with tf.name_scope("loss"):
                     delta = params[0]
-                    error = tf.subtract(target_q_, q_)
+                    q = q_[a]
+                    error = tf.subtract(target_q, q)
                     huber_loss = tf.where(tf.abs(error) < delta, 
                                           0.5*tf.square(error),
                                           delta*(tf.abs(error) - 0.5*delta),
                                           name="huber_loss")
-                    return tf.reduce_mean(huber_loss, axis=0)
+                    return huber_loss
 
             ###########################################################
             # Add new loss function support here.
@@ -217,8 +219,11 @@ class NetworkBuilder:
 
         # Add placeholders
         graph_dict["target_q"] = [tf.placeholder(tf.float32, 
-                                                 shape=[None, self.network.output_shape],
+                                                 shape=[None],
                                                  name="target_q"), "p"]
+        graph_dict["actions"] = [tf.placeholder(tf.float32,
+                                                shape=[None],
+                                                name="actions"), "p"]
         for ph in net["placeholders"]:
             if net["global_features"]["input_layer"] == ph["name"]:
                 node = add_input_layer(ph) 
@@ -252,7 +257,8 @@ class NetworkBuilder:
                 loss_params = None
             loss_fn = add_loss_fn(loss_type=loss_type,
                                   q_=graph_dict["Q"][0],
-                                  target_q_=graph_dict["target_q"][0],
+                                  a=graph_dict["actions"][0],
+                                  target_q=graph_dict["target_q"][0],
                                   params=loss_params)
             graph_dict["loss"] = [loss_fn, "o"]
         else:
