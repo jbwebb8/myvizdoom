@@ -6,8 +6,7 @@
 #####################################################################
 
 from vizdoom import *
-#from Agent import Agent
-from agent.Agent import Agent
+from helper import create_agent
 from Toolbox import Toolbox
 import numpy as np
 import tensorflow as tf
@@ -44,9 +43,9 @@ parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
 parser.add_argument("-v", "--view-data", action="store_true", default=False,
                     help="view real-time Q values")
-parser.add_argument("-n", "--name", default="train", metavar="", 
+parser.add_argument("-n", "--name", default="test", metavar="", 
                     help="experiment name (for saving files)")
-parser.add_argument("-d", "--description", default="training", metavar="", 
+parser.add_argument("-d", "--description", default="testing", metavar="", 
                     help="description of experiment")
 args = parser.parse_args()
 
@@ -108,12 +107,12 @@ for fp in files_to_copy:
 game = initialize_vizdoom(config_file_path)
 print("Loading agent... ", end="")
 # TODO: make action_set not necessary
-agent = Agent(game=game, 
-              agent_file=agent_file_path,
-              action_set=action_set,
-              params_file=params_file_path, 
-              output_directory=results_dir,
-              train_mode=False)
+agent = create_agent(agent_file_path,
+                     game=game,
+                     action_set=action_set,
+                     params_file=params_file_path, 
+                     output_directory=results_dir,
+                     train_mode=False)
 print("Done.")
 
 # Save action indices
