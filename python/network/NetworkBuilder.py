@@ -164,31 +164,35 @@ class NetworkBuilder:
 
         # Adds loss function to graph
         def add_loss_fn(loss_type, q_, a, target_q, params=None):
-            if loss_type.lower() == "mean_squared_error":
-                with tf.name_scope("loss"):
-                    q = q_[a]
+            with tf.name_scope("loss"):
+                # Extract Q(s,a) and utilize importance sampling weights
+                q = tf.gather_nd(q_, a, name="q_sa")
+                w = tf.placeholder(tf.float32, shape=[None], name="IS_weights")
+                graph_dict["IS_weights"] = [w, "p"]
+                error = w * tf.subtract(target_q, q, name="error")
+
+                # Custom loss functions
+                if loss_type.lower() == "mean_squared_error": 
                     mse = tf.reduce_mean(tf.square(tf.subtract(target_q, q)))
                     tf.add_to_collection(tf.GraphKeys.LOSSES, mse)
                     return mse
-            elif loss_type.lower() == "huber":
-                with tf.name_scope("loss"):
+                elif loss_type.lower() == "huber":
                     delta = params[0]
-                    q = q_[a]
                     error = tf.subtract(target_q, q)
                     huber_loss = tf.where(tf.abs(error) < delta, 
-                                          0.5*tf.square(error),
-                                          delta*(tf.abs(error) - 0.5*delta),
-                                          name="huber_loss")
+                                        0.5*tf.square(error),
+                                        delta*(tf.abs(error) - 0.5*delta),
+                                        name="huber_loss")
                     return huber_loss
 
-            ###########################################################
-            # Add new loss function support here.
-            # elif loss_type.lower() == "new_loss_fn":
-            #     return <...>
-            ###########################################################
+                ###########################################################
+                # Add new loss function support here.
+                # elif loss_type.lower() == "new_loss_fn":
+                #     return <...>
+                ###########################################################
 
-            else:
-                raise ValueError("Loss function \"" + loss_type + "\" not yet defined.")
+                else:
+                    raise ValueError("Loss function \"" + loss_type + "\" not yet defined.")
 
         # Adds optimizer to graph
         def add_optimizer(opt_type, loss):
@@ -217,12 +221,13 @@ class NetworkBuilder:
         graph_dict = {}
         data_format = get_data_format()             
 
-        # Add placeholders
+        # Add placeholders. <actions> must be [?, 2] rather than [None]
+        # due to tf indexing constraints (tf.gather_nd)
         graph_dict["target_q"] = [tf.placeholder(tf.float32, 
                                                  shape=[None],
                                                  name="target_q"), "p"]
-        graph_dict["actions"] = [tf.placeholder(tf.float32,
-                                                shape=[None],
+        graph_dict["actions"] = [tf.placeholder(tf.int32,
+                                                shape=[None, 2],
                                                 name="actions"), "p"]
         for ph in net["placeholders"]:
             if net["global_features"]["input_layer"] == ph["name"]:

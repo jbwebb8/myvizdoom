@@ -2,6 +2,7 @@ from network.NetworkBuilder import NetworkBuilder
 import tensorflow as tf
 from tensorflow.tensorboard.backend.event_processing \
     import event_accumulator
+import numpy as np
 import json
 import os, errno
 
@@ -31,6 +32,7 @@ class Network:
     - actions
     - target_q
     - loss
+    - IS_weights
     - train_step
     - best_action
 
@@ -66,6 +68,7 @@ class Network:
             self.actions = self.graph_dict["actions"][0]
             self.target_q = self.graph_dict["target_q"][0]
             self.loss = self.graph_dict["loss"][0]
+            self.IS_weights = self.graph_dict["IS_weights"][0]
             self.train_step = self.graph_dict["train_step"][0]
             self.best_a = self.graph_dict["best_action"][0]
 
@@ -105,23 +108,36 @@ class Network:
         else:
             self.sess.run(tf.global_variables_initializer())
 
-    def learn(self, s1_, a_, target_q_, weight=1.0):
-        if s1_.ndim < 4:
-            s1_ = s1_.reshape([1] + list(s1_.shape))
-        feed_dict={self.state: s1_, self.actions: a_, self.target_q: target_q_}
+    def _check_state(self, state):
+        if state is not None and state.ndim < 4:
+            return state.reshape([1] + list(state.shape))
+        else:
+            return state
+    
+    def _check_actions(self, actions):
+        if actions.ndim < 2:
+            return np.column_stack([np.arange(actions.shape[0]), actions])
+        else:
+            return actions
+
+    def learn(self, s1, a, target_q, weights=None):
+        s1 = self._check_state(s1)
+        a = self._check_actions(a)
+        if weights is None:
+            weights = np.ones(a.shape[0])
+        feed_dict={self.state: s1, self.actions: a, 
+                   self.target_q: target_q, self.IS_weights: weights}
         loss_, train_step_ = self.sess.run([self.loss, self.train_step],
                                            feed_dict=feed_dict)
         return loss_
     
     def get_q_values(self, s1_):
-        if s1_.ndim < 4:
-            s1_ = s1_.reshape([1] + list(s1_.shape))
+        s1_ = self._check_state(s1_)
         feed_dict={self.state: s1_}
         return self.sess.run(self.q, feed_dict=feed_dict)
     
     def get_best_action(self, s1_):
-        if s1_.ndim < 4:
-            s1_ = s1_.reshape([1] + list(s1_.shape))
+        s1_ = self._check_state(s1_)
         feed_dict={self.state: s1_}
         return self.sess.run(self.best_a, feed_dict=feed_dict)
 
@@ -134,7 +150,9 @@ class Network:
             var_sum_ = self.sess.run(self.var_sum)
             self.writer.add_summary(var_sum_, global_step)
             if test_batch is not None:
-                s1, a, target_q = test_batch
+                s1, a, target_q, _ = test_batch
+                s1 = self._check_state(s1)
+                a = self._check_actions(a)
                 feed_dict={self.state: s1,
                            self.actions: a, 
                            self.target_q: target_q}
