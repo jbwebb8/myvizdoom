@@ -43,7 +43,8 @@ class DQNAgent(Agent):
             
             # Create replay memory and set specific functions
             self.memory = self._create_memory(self.rm_type)
-            self.memory_fns = self._set_memory_fns(self.rm_type)
+            self.add_transition_to_memory, self.learn_from_memory \
+                = self._set_memory_fns(self.rm_type)
 
     def _create_memory(self, memory_type):
         if memory_type.lower() == "standard":
@@ -58,20 +59,34 @@ class DQNAgent(Agent):
             raise ValueError("Replay memory type \"" + memory_type + "\" not defined.")
 
     def _set_memory_fns(self, memory_type):
-        # TODO: add memory functions
-        # TODO: need to incorporate IS weights into network loss function
-        fns = {}
         if memory_type.lower() == "standard":
-            def add_transition_to_memory(self, s1, a, s2, isterminal, r):
-                self.memory.add_transition(s1, a, s2, isterminal, reward)
-        
-        elif memory_type.lower() == "prioritized":
-            def add_transition_to_memory(self, s1, a, s2, isterminal, r):
-                q = self.network.get_q_values(s1)[a]
-                target_q = self._get_target_q(s1, a, s2, isterminal, reward)
-                p = abs(q - target_q) + 0.01
-                self.memory.add_transition(s1, a, s2, isterminal, reward, p)
+            def add_transition_to_memory(s1, a, s2, isterminal, r):
+                self.memory.add_transition(s1, a, s2, isterminal, r)
+            
+            def learn_from_memory(*args):
+                # Learn from minibatch of replay memory experiences
+                s1, a, target_q, w = self._get_learning_batch()
+                _ = self.network.learn(s1, a, target_q)
 
+            return add_transition_to_memory, learn_from_memory
+
+        elif memory_type.lower() == "prioritized":
+            def add_transition_to_memory(s1, a, s2, isterminal, r):
+                q_ = self.network.get_q_values(s1)
+                q = q_[np.arange(q_.shape[0]), a]
+                target_q = self._get_target_q(s1, a, s2, isterminal, r)
+                error = target_q - q
+                self.memory.add_transition(s1, a, s2, isterminal, r, error)
+            
+            def learn_from_memory(epoch, epochs):
+                # Update IS parameter β
+                self.memory.update_beta(epoch, epochs)
+
+                # Learn from minibatch of replay memory experiences
+                s1, a, target_q, w = self._get_learning_batch()
+                _ = self.network.learn(s1, a, target_q, weights=w)
+
+            return add_transition_to_memory, learn_from_memory
 
     def _get_target_update_ops(self, tau):
         # Adapted from 
@@ -121,15 +136,18 @@ class DQNAgent(Agent):
             self.update_state(current_screen)
             s2 = np.copy(self.state)
         else:
-            s2 = None
+            s2 = np.zeros(self.state.shape)
 
         # Remember the transition that was just experienced.
         self.add_transition_to_memory(s1, a, s2, isterminal, reward)
 
-        # Learn from minibatch of replay memory samples and update
-        # target network Q' if enough memories
         if self.rm_start_size < self.memory.size:
-            self.learn_from_memory()
+            # Update target network Q' every k steps
+            if self.global_step % self.target_net_freq == 0:
+                self.sess.run(self.target_update_ops)
+
+            # Learn from minibatch of replay memory samples
+            self.learn_from_memory(epoch, epoch_tot)
 
         self.global_step += 1        
 
@@ -143,24 +161,9 @@ class DQNAgent(Agent):
 
     def _get_learning_batch(self):
         # All variables have shape [batch_size, ...]
-        # TODO: fix hard-coding of priorited replay memory
-        # TODO: target_q should be single value; otherwise learning from all actions
-        # possible to take, rather than just from action taken
-        s1, a, s2, isterminal, r = self.memory.get_sample(self.batch_size)
+        s1, a, s2, isterminal, r, w = self.memory.get_sample(self.batch_size)
         target_q = self._get_target_q(s1, a, s2, isterminal, r)
-        return s1, a, target_q
-
-    def learn_from_memory(self):
-        # Update target network Q' every k steps
-        if self.global_step % self.target_net_freq == 0:
-            self.sess.run(self.target_update_ops)
-        
-        # Learn from minibatch of replay memory experiences
-        s1, a, target_q = self._get_learning_batch()
-        if self.rm_type == "prioritized":
-            pass
-            #w = (1 / self.memory.size * 1 / )
-        _ = self.network.learn(s1, a, target_q, weight=w)
+        return s1, a, target_q, w
     
     def save_model(self, model_name, global_step=None, save_meta=True,
                    save_summaries=True):
