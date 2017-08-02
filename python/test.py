@@ -11,8 +11,7 @@ from Toolbox import Toolbox
 import numpy as np
 import tensorflow as tf
 import argparse
-import warnings
-import os, errno
+import os, errno, sys
 from shutil import copy
 from time import time, sleep
 from tqdm import trange
@@ -39,6 +38,9 @@ parser.add_argument("-m", "--max-samples", default=0, metavar="",
                     help="# of samples associated with max node activation")
 parser.add_argument("-v", "--visualize-network", action="store_true", default=False,
                     help="visualize agent state and network activation")
+parser.add_argument("-c", "--color", default="RGB", 
+                    choices=["RGB", "RBG", "GBR", "GRB", "BRG", "BGR"],
+                    metavar="", help="order of color channels (if color img)")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
 parser.add_argument("-q", "--view-q-values", action="store_true", default=False,
@@ -56,12 +58,12 @@ config_file_path = args.config_file_path
 results_dir = args.results_directory
 if not results_dir.endswith("/"): 
     results_dir += "/"
-meta_file_path = args.meta_file
 test_episodes = args.test_episodes
 action_set = args.action_set
 layer_names = args.layer_names
 max_samples = args.max_samples
 visualize_network = args.visualize_network
+color_format = args.color
 trackable = args.track
 view_q_values = args.view_q_values
 exp_name = args.name
@@ -77,7 +79,7 @@ def make_directory(folders):
 
 # Creates and initializes ViZDoom environment.
 def initialize_vizdoom(config_file_path):
-    print("Initializing doom... ", end="")
+    print("Initializing doom... ", end=""), sys.stdout.flush()
     game = DoomGame()
     game.load_config(config_file_path)
     game.set_window_visible(True)
@@ -104,9 +106,11 @@ files_to_copy = [agent_file_path, config_file_path]
 for fp in files_to_copy:
     copy(fp, details_dir)
 
-# Initialize DoomGame and load network into Agent instance
+# Initialize DoomGame
 game = initialize_vizdoom(config_file_path)
-print("Loading agent... ", end="")
+
+# Load network into Agent instance
+print("Loading agent... ", end=""), sys.stdout.flush()
 # TODO: make action_set not necessary
 agent = create_agent(agent_file_path,
                      game=game,
@@ -114,24 +118,23 @@ agent = create_agent(agent_file_path,
                      params_file=params_file_path, 
                      output_directory=results_dir,
                      train_mode=False)
+np.savetxt(game_dir + "action_indices.csv", 
+           agent.action_indices,
+           delimiter=",",
+           fmt="%.0d")
 print("Done.")
 
-# Save action indices
-if trackable:
-    np.savetxt(game_dir + "action_indices.csv", 
-               agent.action_indices,
-               delimiter=",",
-               fmt="%.0d")
-
 # Initialize toolbox
-print("Initializing toolbox... ", end="")
+print("Initializing toolbox... ", end=""), sys.stdout.flush()
 layer_shapes = agent.get_layer_shape(layer_names)
 toolbox = Toolbox(layer_shapes=layer_shapes, 
                   state_shape=agent.state.shape,
                   phi=agent.phi,
                   channels=agent.channels,
                   actions=agent.action_indices,
-                  num_samples=max_samples)
+                  num_samples=max_samples,
+                  data_format=agent.network.data_format,
+                  color_format=color_format)
 print("Done.")
 
 # Test agent performance in scenario
@@ -139,16 +142,14 @@ print("Let's watch!")
 for test_episode in range(test_episodes):
     agent.initialize_new_episode()
     while not game.is_episode_finished():
-        # Update state and make best action
+        # Update current state and position
         current_screen = game.get_state().screen_buffer
         agent.update_state(current_screen)
-        agent.make_best_action()
+        agent.track_action()
+        agent.track_position()
 
         # Store and show specified features
         output = None
-        if trackable:
-            agent.track_action()
-            agent.track_position()
         if max_samples > 0:
             output = agent.get_layer_output(layer_names)
             toolbox.update_max_data(state=agent.state, 
@@ -161,11 +162,13 @@ for test_episode in range(test_episodes):
                                        position=agent.position_history[-1],
                                        layer_values=output)
         if view_q_values:
-            q = agent.get_layer_output("Q")
-            print(q)
+            q = agent.get_layer_output("Q")[0] # shape [1, 4] --> [4,]
             toolbox.display_q_values(q)   
-            sleep(0.5) # HACK: network only works in PLAYER mode, so needed to slow down video
+            sleep(0.5) # HACK: network only works in PLAYER mode,
+                       # so needed to slow down video
 
+        # Make best action
+        agent.make_best_action()
         print("Game tick %d of max %d in test episode %d of %d.        " 
               % (game.get_episode_time() - game.get_episode_start_time(), 
                  game.get_episode_timeout(),
@@ -173,8 +176,9 @@ for test_episode in range(test_episodes):
                  test_episodes), 
               end='\r')
     
+    # Save scores and sleep between episodes
     agent.update_score_history()
-    sleep(1.0) # sleep between episodes
+    sleep(1.0) 
 
 print("\nSaving results... ", end="")
 
