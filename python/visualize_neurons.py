@@ -6,7 +6,7 @@
 #####################################################################
 
 from vizdoom import *
-from Agent import Agent
+from agent.Agent import Agent
 from Toolbox import Toolbox
 import numpy as np
 import tensorflow as tf
@@ -87,7 +87,7 @@ def initialize_display():
         #ax_j.axis('off')
         #print(layer_shapes[j])
         if len(layer_shapes[j]) == 4:
-            n = int(np.ceil(np.sqrt(layer_shapes[i][1])))
+            n = int(np.ceil(np.sqrt(layer_shapes[j][3])))
             grid = gridspec.GridSpecFromSubplotSpec(n, n, 
                                                     subplot_spec=inner[j])
             n_square = int(n*n)
@@ -114,10 +114,13 @@ def preprocess_state(state):
     if state.shape[0] == agent.phi * agent.channels:
         state = np.transpose(state, [1, 2, 0])
     imgs = np.split(state, agent.phi, axis=2)
-    r = color_order.find("R")
-    g = color_order.find("G")
-    b = color_order.find("B")
-    imgs = [imgs[i][..., [r, g, b]] for i in range(len(imgs))]
+    if agent.channels == 3:
+        r = color_order.find("R")
+        g = color_order.find("G")
+        b = color_order.find("B")
+        imgs = [imgs[i][..., [r, g, b]] for i in range(len(imgs))]
+    elif agent.channels == 1:
+        imgs = [np.squeeze(img) for img in imgs]
     return np.asarray(imgs)
 
 # Initialize DoomGame and load netwnvork into Agent instance
@@ -128,7 +131,7 @@ print("Loading the network weights from:", params_file_path)
 # TODO: make action_set not necessary
 agent = Agent(game=game, agent_file=agent_file_path, action_set=action_set,
               session=sess, meta_file=meta_file_path, 
-              params_file=params_file_path)
+              params_file=params_file_path, output_directory="../tmp/tmp_results/")
 
 # Initialize toolbox
 layer_shapes = agent.get_layer_shape(layer_names)
@@ -170,9 +173,7 @@ for test_episode in range(test_episodes):
         for i in range(len(layer_names)):
             if layer_output[i].ndim == 4:
                 for j in range(32):
-                    #print(layer_output[i].shape)
-                    #print(np.max(layer_output[i]))
-                    axes[1][i][j].imshow(np.squeeze(layer_output[i][:, j]), cmap="gray")
+                    axes[1][i][j].imshow(np.squeeze(layer_output[i][..., j]), cmap="gray")
             else:
                 #print(layer_output[i].shape)
                 axes[1][i].imshow(layer_output[i])
