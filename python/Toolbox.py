@@ -1,6 +1,8 @@
 from helper import get_game_button_names
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import warnings
 
 class Toolbox:
     """
@@ -14,8 +16,9 @@ class Toolbox:
     """
 
     def __init__(self, layer_shapes, state_shape, phi, channels, actions,
-                 num_samples=4, data_format="NCHW"):
+                 num_samples=4, data_format="NCHW", color_format="RGB"):
         # Set toolbox parameters
+        self.layer_shapes = layer_shapes
         layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
         for i in range(len(layer_shapes)):
             for j in range(len(layer_shapes[i])):
@@ -26,7 +29,7 @@ class Toolbox:
         self.phi = phi
         self.channels = channels
         self.actions = actions
-        if data_format != "NCHW" or "NWHC":
+        if data_format != ("NCHW" or "NWHC"):
             raise ValueError("Unknown data format: %s" % data_format)
         self.data_format = data_format
 
@@ -44,9 +47,10 @@ class Toolbox:
                                                dtype=np.float32)) 
 
         # Initialize visualization tools                                      
-        self.fig_f, self.axes_f = self._initialize_feature_display()
-        self.fig_q, self.ax_q, self.bar_q, self.labels_q \
-            = self._initialize_q_display()
+        self.fig_f, self.ax_f = self._initialize_feature_display()
+        self.fig_q, self.ax_q, self.idx_q, self.bars_q, self.labels_q \
+            = self._initialize_q_display(self.actions)
+        self.color_format = color_format
         self.prev_action = 0
         plt.ion()         
 
@@ -96,15 +100,15 @@ class Toolbox:
                     max_positions[i])
     
     def preprocess_state(self, state):
-        if state.shape[0] == agent.phi * agent.channels:
+        if state.shape[0] == self.phi * self.channels:
             state = np.transpose(state, [1, 2, 0])
-        imgs = np.split(state, agent.phi, axis=2)
-        if agent.channels == 3:
-            r = color_order.find("R")
-            g = color_order.find("G")
-            b = color_order.find("B")
+        imgs = np.split(state, self.phi, axis=2)
+        if self.channels == 3:
+            r = self.color_format.find("R")
+            g = self.color_format.find("G")
+            b = self.color_format.find("B")
             imgs = [imgs[i][..., [r, g, b]] for i in range(len(imgs))]
-        elif agent.channels == 1:
+        elif self.channels == 1:
             imgs = [np.squeeze(img) for img in imgs]
         return np.asarray(imgs)
 
@@ -128,14 +132,14 @@ class Toolbox:
 
         # Lower row:
         # One subplot per layer visualized
-        inner = gridspec.GridSpecFromSubplotSpec(1, self.num_layers+1, subplot_spec=outer[1])
+        inner = gridspec.GridSpecFromSubplotSpec(1, self.num_layers, subplot_spec=outer[1])
         ax = []
         for j in range(self.num_layers):
             ax_j = []
             
             # Convolutional layers: grid of feature maps
             if len(self.layer_shapes[j]) == 4:
-                n = int(np.ceil(np.sqrt(layer_shapes[j][1])))
+                n = int(np.ceil(np.sqrt(self.layer_shapes[j][1])))
                 grid = gridspec.GridSpecFromSubplotSpec(n, n, subplot_spec=inner[j])
                 n_square = int(n*n)
                 for k in range(n_square):
@@ -160,66 +164,74 @@ class Toolbox:
  
         return fig, axes
 
-     def visualize_features(self, state, pos, layer_output):
+    def visualize_features(self, state, position, layer_values):
         # Display state
         images = self.preprocess_state(state)
-        for i in range(agent.phi):
-            img = axes[0][i].imshow(images[i])
+        for i in range(self.phi):
+            img = self.ax_f[0][i].imshow(images[i])
         
         # Display position
-        axes[0][self.phi].plot(pos[1], pos[2], 'x', scalex=False, scaley=False)
+        self.ax_f[0][self.phi].plot(position[1], position[2], color="black",
+                                    marker='.', scalex=False, scaley=False)
 
         # Display layers
         for i in range(self.num_layers):
             # Convolutional layers: display activations of each feature map
-            if layer_output[i].ndim == 4:
-                for j in range(32):
-                    if self.data_format == "NCHW":
-                        # Layer shape = [1, features, [kernel]]
-                        mod_output = np.squeeze(layer_output[i][:, j, ...])
-                    elif self.data_format == "NHWC":
-                        # Layer shape = [1, [kernel], features]
-                        mod_output = np.squeeze(layer_output[i][..., j])
-                    axes[1][i][j].imshow(mod_output, cmap="gray")
+            if layer_values[i].ndim == 4:
+                if self.data_format == "NCHW":
+                    # Layer shape = [1, features, [kernel]]
+                    for j in range(layer_values[i].shape[1]):
+                        mod_output = np.squeeze(layer_values[i][:, j, ...])
+                        self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
+                elif self.data_format == "NHWC":
+                    # Layer shape = [1, [kernel], features]
+                    for j in range(layer_values[i].shape[3]):
+                        mod_output = np.squeeze(layer_values[i][..., j])
+                        self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
             
             # Fully connected layers: display activations of neurons reshaped
             # into grid
             else:
-                n = int(np.ceil(np.sqrt(layer_output[i].size)))
-                mod_output = np.reshape(layer_output[i], [n, -1])
-                axes[1][i].imshow(mod_output)
+                n = int(np.ceil(np.sqrt(layer_values[i].size)))
+                pad = np.ones(n ** 2 - layer_values[i].size)
+                mod_output = np.append(np.squeeze(layer_values[i]), pad)
+                mod_output = np.reshape(mod_output, [n, -1])
+                self.ax_f[1][i].imshow(mod_output, cmap="gray")
         
         # Refresh image
-        plt.draw()
-        plt.show(block=False)
-        plt.pause(0.001)
-    
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            plt.draw()
+            plt.show(block=False)
+            plt.pause(0.001)
+        
     def _initialize_q_display(self, actions, ybounds=[-10, 50]):
         fig, ax = plt.subplots()
-        ids = np.arange(actions.size)
+        idx = np.arange(actions.size)
+        # TODO: fix action label bug
         action_labels = get_game_button_names(actions)
         ax.set_title("Q Values in Real-Time")
         ax.set_xlabel("Actions")
-        ax.set_xticks(ids)
+        ax.set_xticks(idx)
         ax.set_xticklabels(action_labels)
         ax.set_ylabel("Q(s,a)")
         ax.set_ylim(ybounds)
-        bars = ax.bar(ids, np.zeros(actions.size))
+        bars = ax.bar(idx, np.zeros(actions.size))
         labels = ax.get_xticklabels()
-        return fig, ax, bars, labels
+        return fig, ax, idx, bars, labels
 
     def display_q_values(self, q):
         # Clear data
-        self.bars.remove()
+        self.bars_q.remove()
 
         # Display Q values
         bar_width = 0.5
-        self.bars = ax.bar(ids, q[0], bar_width, color='gray')
+        self.bars_q = self.ax_q.bar(self.idx_q, q[0], bar_width, color='gray')
 
         # Color label of chosen axis green
-        self.labels[self.prev_action].set_color("black")
+        self.labels_q[self.prev_action].set_color("black")
         action = np.argmax(q[0])
-        self.labels[action].set_color("g")
+        self.labels_q[action].set_color("g")
         self.prev_action = action
 
         # Refresh image
