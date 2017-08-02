@@ -51,5 +51,5 @@ class ReplayMemory:
                                  axis=self.chdim+1)
         else:
             s2 = self.s2[i]
-        return self.s1[i], self.a[i], s2, self.isterminal[i], self.r[i]
-        
+        w = np.ones(sample_size)
+        return self.s1[i], self.a[i], s2, self.isterminal[i], self.r[i], w

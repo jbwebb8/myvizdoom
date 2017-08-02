@@ -6,12 +6,13 @@
 from __future__ import division
 from __future__ import print_function
 from vizdoom import *
-from Agent import Agent
+from helper import create_agent
 from Toolbox import Toolbox
 import numpy as np
 import tensorflow as tf
 import argparse
-import os, errno
+import os, errno, sys
+from shutil import copy
 from time import time
 from tqdm import trange
 
@@ -22,15 +23,18 @@ parser.add_argument("agent_file_path",
 parser.add_argument("config_file_path", help="config file for scenario")
 parser.add_argument("results_directory",
                     help="directory where results will be saved")
-parser.add_argument("-a", "--action-set", default="default",
+parser.add_argument("-p", "--params-file", default=None, metavar="", 
+                    help="TF filename (no extension) containing network \
+                          parameters")
+parser.add_argument("-a", "--action-set", default="default", metavar="", 
                     help="name of action set available to agent")
-parser.add_argument("-e", "--epochs", type=int, default=100,
+parser.add_argument("-e", "--epochs", type=int, default=100, metavar="", 
                     help="number of epochs to train")
-parser.add_argument("-s", "--learning-steps", type=int, default=2000,
+parser.add_argument("-s", "--learning-steps", type=int, default=2000, metavar="", 
                     help="learning steps per epoch")
-parser.add_argument("-t", "--test-episodes", type=int, default=1,
+parser.add_argument("-t", "--test-episodes", type=int, default=1, metavar="", 
                     help="test episodes per epoch")
-parser.add_argument("-f", "--save-freq", type=int, default=0,
+parser.add_argument("-f", "--save-freq", type=int, default=0, metavar="", 
                     help="save params every x epochs")
 parser.add_argument("-l", "--layer-names", default=[], metavar="", nargs='*',
                     help="layer output names to probe")
@@ -38,11 +42,10 @@ parser.add_argument("-m", "--max-samples", type=int, default=1, metavar="",
                     help="# of samples associated with max node activation")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
-parser.add_argument("-n", "--name", default="train",
+parser.add_argument("-n", "--name", default="train", metavar="", 
                     help="experiment name (for saving files)")
-parser.add_argument("-v", "--verbose", type=bool, default=False,
-                    help="print extra info about network (helpful for \
-                    debugging)")
+parser.add_argument("-d", "--description", default="training", metavar="", 
+                    help="description of experiment")
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
@@ -50,17 +53,13 @@ agent_file_path = args.agent_file_path
 if not agent_file_path.lower().endswith(".json"): 
     raise Exception("No agent JSON file.")
 config_file_path = args.config_file_path
-results_directory = args.results_directory
-if not results_directory.endswith("/"): 
-    results_directory += "/"
-try:
-    os.makedirs(results_directory)
-except OSError as exception:
-    if exception.errno != errno.EEXIST:
-        raise
+results_dir = args.results_directory
+if not results_dir.endswith("/"): 
+    results_dir += "/"
 # TODO: check for accidental overwrite
-if len(os.listdir(results_directory)) > 0:
-    pass
+#if len(os.listdir(results_dir)) > 0:
+#    pass
+params_file_path = args.params_file
 action_set = args.action_set
 epochs = args.epochs
 learning_steps_per_epoch = args.learning_steps
@@ -70,47 +69,71 @@ if save_freq == 0: save_freq = epochs
 layer_names = args.layer_names
 max_samples = args.max_samples
 trackable = args.track
-verbose = args.verbose
 exp_name = args.name
+exp_descr = args.description
 
 # Other parameters
 #frame_repeat = 12       # frames to repeat action before choosing again 
 
+# Makes directory if does not already exist
+def make_directory(folders):
+    for f in folders:
+        try:
+            os.makedirs(f)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+
+# Saves txt file of important experimental settings
+# and copies (small) configuration files
+def save_exp_details(folder):
+    f = open(folder + "settings.txt", "w+")
+    f.write("Name: " + exp_name + "\n")
+    f.write("Description: " + exp_descr + "\n")
+    f.write("Agent file: " + agent_file_path + "\n")
+    f.write("Params file: " + str(params_file_path) + "\n")
+    f.write("Config file: " + config_file_path + "\n")
+    f.write("Action set: " + action_set + "\n")
+    f.write("Epochs: " + str(epochs) + "\n")
+    f.write("Learning steps per epoch: " + str(learning_steps_per_epoch) + "\n")
+    f.write("Test episodes per epoch: " + str(test_episodes_per_epoch))
+    files_to_copy = [agent_file_path, config_file_path]
+    for fp in files_to_copy:
+        copy(fp, folder)
+
+# Initializes DoomGame from config file
 def initialize_vizdoom(config_file):
-    print("Initializing doom... ", end="")
+    print("Initializing doom... ", end=""), sys.stdout.flush()
     game = DoomGame()
     game.load_config(config_file)
     game.init()
     print("Done.")
-    return game
+    return game  
+
+# Make output directories and save experiment details
+details_dir = results_dir + "details/"
+game_dir = results_dir + "game_data/"
+max_dir = results_dir + "max_data/"
+make_directory([results_dir, details_dir, game_dir, max_dir])
+save_exp_details(details_dir)
 
 # Initialize agent and TensorFlow graph
 game = initialize_vizdoom(config_file_path)
-print("Loading agent... ", end="")
-agent = Agent(game=game, 
-              agent_file=agent_file_path,
-              action_set=action_set,
-              output_directory=results_directory)
-print("Done.")
+print("Loading agent... ", end=""), sys.stdout.flush()
+agent = create_agent(agent_file_path,
+                     game=game, 
+                     params_file=params_file_path,
+                     action_set=action_set,
+                     output_directory=results_dir)
 if trackable:
-    np.savetxt(results_directory + "action_indices.txt", agent.action_indices)
-
-# Initialize toolbox
-print("Initializing toolbox... ", end="")
-layer_shapes = agent.get_layer_shape(layer_names)
-layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
-for i in range(len(layer_shapes)):
-    for j in range(len(layer_shapes[i])):
-        if layer_shapes[i][j] is not None:
-            layer_sizes[i] *= layer_shapes[i][j] 
-toolbox = Toolbox(layer_sizes=layer_sizes, 
-                  state_shape=agent.state.shape,
-                  num_samples=max_samples)
+    np.savetxt(game_dir + "action_indices.txt", 
+               agent.action_indices)
 print("Done.")
 
 # Train and test agent for specified number of epochs
 print("Starting the training!")
 test_scores_all = []
+train_scores_all = []
 time_start = time()
 for epoch in range(epochs):
     print("\nEpoch %d\n-------" % (epoch + 1))
@@ -127,6 +150,8 @@ for epoch in range(epochs):
             train_episodes_finished += 1
     print("%d training episodes played." % train_episodes_finished)
     train_scores = np.asarray(agent.score_history)
+    train_scores_all.append([np.mean(train_scores, axis=0), 
+                             np.std(train_scores, axis=0)])
     print("Results: mean: %.1f±%.1f," % (train_scores.mean(), train_scores.std()), \
           "min: %.1f," % train_scores.min(), "max: %.1f," % train_scores.max())
     
@@ -138,14 +163,9 @@ for epoch in range(epochs):
         agent.initialize_new_episode()
         while not game.is_episode_finished():
             agent.make_best_action()
-            if save_epoch:
+            if save_epoch and trackable:
                 agent.track_action()
                 agent.track_position()
-                if len(layer_names) > 0:
-                    output = agent.get_layer_output(layer_names)
-                    toolbox.update_max_data(state=agent.state, 
-                                            position=agent.position_history[-1],
-                                            layer_values=output)
             print("Game tick %d of max %d in test episode %d of %d." 
                   % (game.get_episode_time() - game.get_episode_start_time(), 
                      game.get_episode_timeout(),
@@ -171,17 +191,14 @@ for epoch in range(epochs):
                          save_meta=(epoch == 0), save_summaries=True)
         if trackable:
             sfx = str(epoch+1) + ".csv"
-            np.savetxt(results_directory + "positions-" + sfx,
+            np.savetxt(game_dir + "positions-" + sfx,
                        np.asarray(agent.position_history),
                        delimiter=",",
                        fmt="%.3f")
-            np.savetxt(results_directory + "actions-" + sfx,
+            np.savetxt(game_dir + "actions-" + sfx,
                        np.asarray(agent.action_history),
                        delimiter=",",
                        fmt="%d")
-        if len(layer_names) > 0:
-            toolbox.save_max_data(results_directory + "max_data/",
-                                  layer_names=layer_names)
     else:
         model_filename = exp_name + "_model"
         print("Stashing network... ", end="")
@@ -191,11 +208,14 @@ for epoch in range(epochs):
     print("Done.")
     print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))
 
-# Close game and save all test scores per epoch
+# Close game and save all scores per epoch
 game.close()
-scores = np.asarray(test_scores_all)
-np.savetxt(results_directory + "test_scores.csv", 
-           scores,
+np.savetxt(game_dir + "train_scores.csv", 
+           np.asarray(train_scores_all),
+           delimiter=",",
+           fmt="%.3f")
+np.savetxt(game_dir + "test_scores.csv", 
+           np.asarray(test_scores_all),
            delimiter=",",
            fmt="%.3f")
 print("======================================")
