@@ -130,19 +130,6 @@ if trackable:
                agent.action_indices)
 print("Done.")
 
-# Initialize toolbox
-print("Initializing toolbox... ", end=""), sys.stdout.flush()
-layer_shapes = agent.get_layer_shape(layer_names)
-layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
-for i in range(len(layer_shapes)):
-    for j in range(len(layer_shapes[i])):
-        if layer_shapes[i][j] is not None:
-            layer_sizes[i] *= layer_shapes[i][j] 
-toolbox = Toolbox(layer_sizes=layer_sizes,
-                  state_shape=agent.state.shape,
-                  num_samples=max_samples)
-print("Done.")
-
 # Train and test agent for specified number of epochs
 print("Starting the training!")
 test_scores_all = []
@@ -176,14 +163,9 @@ for epoch in range(epochs):
         agent.initialize_new_episode()
         while not game.is_episode_finished():
             agent.make_best_action()
-            if save_epoch:
+            if save_epoch and trackable:
                 agent.track_action()
                 agent.track_position()
-                if len(layer_names) > 0:
-                    output = agent.get_layer_output(layer_names)
-                    toolbox.update_max_data(state=agent.state, 
-                                            position=agent.position_history[-1],
-                                            layer_values=output)
             print("Game tick %d of max %d in test episode %d of %d." 
                   % (game.get_episode_time() - game.get_episode_start_time(), 
                      game.get_episode_timeout(),
@@ -217,9 +199,6 @@ for epoch in range(epochs):
                        np.asarray(agent.action_history),
                        delimiter=",",
                        fmt="%d")
-        if len(layer_names) > 0:
-            toolbox.save_max_data(max_dir,
-                                  layer_names=layer_names)
     else:
         model_filename = exp_name + "_model"
         print("Stashing network... ", end="")
