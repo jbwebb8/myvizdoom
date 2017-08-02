@@ -29,19 +29,19 @@ parser.add_argument("config_file_path",
                     help="config file for scenario")
 parser.add_argument("results_directory",
                     help="directory where results will be saved")
-parser.add_argument("--meta-file", default=None, metavar="",
-                    help="TF .meta file containing network skeleton")
 parser.add_argument("-t", "--test-episodes", type=int, default=100, metavar="",
                     help="episodes to be played (default=100)")
 parser.add_argument("-a", "--action-set", default="default", metavar="",
                     help="name of action set available to agent")
 parser.add_argument("-l", "--layer-names", default=[], metavar="", nargs='*',
                     help="layer output names to probe")
-parser.add_argument("-m", "--max-samples", default=4, metavar="",
+parser.add_argument("-m", "--max-samples", default=0, metavar="",
                     help="# of samples associated with max node activation")
+parser.add_argument("-v", "--visualize-network", action="store_true", default=False,
+                    help="visualize agent state and network activation")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
-parser.add_argument("-v", "--view-data", action="store_true", default=False,
+parser.add_argument("-q", "--view-q-values", action="store_true", default=False,
                     help="view real-time Q values")
 parser.add_argument("-n", "--name", default="test", metavar="", 
                     help="experiment name (for saving files)")
@@ -61,8 +61,9 @@ test_episodes = args.test_episodes
 action_set = args.action_set
 layer_names = args.layer_names
 max_samples = args.max_samples
+visualize_network = args.visualize_network
 trackable = args.track
-view_data = args.view_data
+view_q_values = args.view_q_values
 exp_name = args.name
 exp_descr = args.description
 
@@ -125,66 +126,44 @@ if trackable:
 # Initialize toolbox
 print("Initializing toolbox... ", end="")
 layer_shapes = agent.get_layer_shape(layer_names)
-layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
-for i in range(len(layer_shapes)):
-    for j in range(len(layer_shapes[i])):
-        if layer_shapes[i][j] is not None:
-            layer_sizes[i] *= layer_shapes[i][j] 
-toolbox = Toolbox(layer_sizes=layer_sizes, 
+toolbox = Toolbox(layer_shapes=layer_shapes, 
                   state_shape=agent.state.shape,
+                  phi=agent.phi,
+                  channels=agent.channels,
+                  actions=agent.action_indices,
                   num_samples=max_samples)
 print("Done.")
 
-# Initialize display (used if view_data=True)
-# TODO: fix hard coding of action labels
-fig, ax = plt.subplots()
-ids = np.arange(agent.output_size)
-bar_width = 0.5
-ax.set_title("Q Values in Real-Time")
-ax.set_xlabel("Actions")
-ax.set_xticks(ids)
-ax.set_xticklabels(["MOVE_FORWARD", "TURN_RIGHT", "TURN_LEFT", "USE"])
-ax.set_ylabel("Q(s,a)")
-ax.set_ylim([-10, 50])
-bars = ax.bar(ids, np.zeros(agent.output_size))
-labels = ax.get_xticklabels()
-prev_action = 0
-
+# Test agent performance in scenario
 print("Let's watch!")
 for test_episode in range(test_episodes):
     agent.initialize_new_episode()
     while not game.is_episode_finished():
+        # Update state and make best action
         current_screen = game.get_state().screen_buffer
         agent.update_state(current_screen)
         agent.make_best_action()
+
+        # Store and show specified features
+        output = None
         if trackable:
             agent.track_action()
             agent.track_position()
-        if len(layer_names) > 0:
+        if max_samples > 0:
             output = agent.get_layer_output(layer_names)
             toolbox.update_max_data(state=agent.state, 
                                     position=agent.position_history[-1],
                                     layer_values=output)
-        if view_data:
-            # Clear data
-            bars.remove()
-
-            # Display Q values
+        if visualize_network:
+            if output == None:
+                output = agent.get_layer_output(layer_names)
+            toolbox.visualize_features(state=agent.state, 
+                                       position=agent.position_history[-1],
+                                       layer_values=output)
+        if view_q_values:
             q = agent.get_layer_output("Q")
-            bars = ax.bar(ids, q[0][0], bar_width, color='gray')
-
-            # Color label of chosen axis green
-            labels[prev_action].set_color("black")
-            action = np.argmax(q[0])
-            labels[action].set_color("g")
-            prev_action = action
-
-            # Refresh image
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                plt.draw()
-                plt.show(block=False)
-                plt.pause(0.001)
+            print(q)
+            toolbox.display_q_values(q)   
             sleep(0.5) # HACK: network only works in PLAYER mode, so needed to slow down video
 
         print("Game tick %d of max %d in test episode %d of %d.        " 
@@ -193,10 +172,9 @@ for test_episode in range(test_episodes):
                  test_episode+1,
                  test_episodes), 
               end='\r')
-    agent.update_score_history()
     
-    # Sleep between episodes
-    sleep(1.0)
+    agent.update_score_history()
+    sleep(1.0) # sleep between episodes
 
 print("\nSaving results... ", end="")
 

@@ -1,4 +1,6 @@
+from helper import get_game_button_names
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Toolbox:
     """
@@ -6,17 +8,27 @@ class Toolbox:
     during training and testing agents.
 
     Args:
-    - layer_sizes: Lengths of (flattened) layers.
+    - layer_shapes: Shapes of layers.
     - state_shape: Shape of input state.
     - num_samples: Store top k samples that best activated nodes.
     """
 
-    def __init__(self, layer_sizes, state_shape, phi, channels, num_samples=4):
+    def __init__(self, layer_shapes, state_shape, phi, channels, actions,
+                 num_samples=4, data_format="NCHW"):
         # Set toolbox parameters
+        layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
+        for i in range(len(layer_shapes)):
+            for j in range(len(layer_shapes[i])):
+                if layer_shapes[i][j] is not None:
+                    layer_sizes[i] *= layer_shapes[i][j] 
         self.layer_sizes = layer_sizes
         self.num_layers = len(layer_sizes)
         self.phi = phi
         self.channels = channels
+        self.actions = actions
+        if data_format != "NCHW" or "NWHC":
+            raise ValueError("Unknown data format: %s" % data_format)
+        self.data_format = data_format
 
         # Initialize max data arrays
         self.max_values, self.max_states, self.max_positions = [], [], []
@@ -32,7 +44,11 @@ class Toolbox:
                                                dtype=np.float32)) 
 
         # Initialize visualization tools                                      
-        self.fig, self.axes = self._initialize_display()         
+        self.fig_f, self.axes_f = self._initialize_feature_display()
+        self.fig_q, self.ax_q, self.bar_q, self.labels_q \
+            = self._initialize_q_display()
+        self.prev_action = 0
+        plt.ion()         
 
     def update_max_data(self, state, position, layer_values):
         for i in range(self.num_layers):
@@ -78,9 +94,6 @@ class Toolbox:
             np.save(results_directory + "max_positions_%s-%d"
                     % (layer_name, epoch+1),
                     max_positions[i])
-
-    def visualize_features():
-        # TODO: implement visualize_features_theano.py from old_python
     
     def preprocess_state(self, state):
         if state.shape[0] == agent.phi * agent.channels:
@@ -95,7 +108,7 @@ class Toolbox:
             imgs = [np.squeeze(img) for img in imgs]
         return np.asarray(imgs)
 
-    def _initialize_display(self, xbounds=None, ybounds=None):
+    def _initialize_feature_display(self, xbounds=[-600, 600], ybounds=[-600, 600]):
         # Set up outermost components
         fig = plt.figure()
         outer = gridspec.GridSpec(2, 1)
@@ -141,8 +154,77 @@ class Toolbox:
         axes.append(ax)
         
         # Set maze boundaries to display position
-        axes[0][self.phi].set_xbound(lower=-600, upper=600)
-        axes[0][self.phi].set_ybound(lower=-600, upper=600)
+        axes[0][self.phi].set_xbound(lower=xbounds[0], upper=xbounds[1])
+        axes[0][self.phi].set_ybound(lower=ybounds[0], upper=ybounds[1])
         axes[0][self.phi].set_aspect('equal')
  
         return fig, axes
+
+     def visualize_features(self, state, pos, layer_output):
+        # Display state
+        images = self.preprocess_state(state)
+        for i in range(agent.phi):
+            img = axes[0][i].imshow(images[i])
+        
+        # Display position
+        axes[0][self.phi].plot(pos[1], pos[2], 'x', scalex=False, scaley=False)
+
+        # Display layers
+        for i in range(self.num_layers):
+            # Convolutional layers: display activations of each feature map
+            if layer_output[i].ndim == 4:
+                for j in range(32):
+                    if self.data_format == "NCHW":
+                        # Layer shape = [1, features, [kernel]]
+                        mod_output = np.squeeze(layer_output[i][:, j, ...])
+                    elif self.data_format == "NHWC":
+                        # Layer shape = [1, [kernel], features]
+                        mod_output = np.squeeze(layer_output[i][..., j])
+                    axes[1][i][j].imshow(mod_output, cmap="gray")
+            
+            # Fully connected layers: display activations of neurons reshaped
+            # into grid
+            else:
+                n = int(np.ceil(np.sqrt(layer_output[i].size)))
+                mod_output = np.reshape(layer_output[i], [n, -1])
+                axes[1][i].imshow(mod_output)
+        
+        # Refresh image
+        plt.draw()
+        plt.show(block=False)
+        plt.pause(0.001)
+    
+    def _initialize_q_display(self, actions, ybounds=[-10, 50]):
+        fig, ax = plt.subplots()
+        ids = np.arange(actions.size)
+        action_labels = get_game_button_names(actions)
+        ax.set_title("Q Values in Real-Time")
+        ax.set_xlabel("Actions")
+        ax.set_xticks(ids)
+        ax.set_xticklabels(action_labels)
+        ax.set_ylabel("Q(s,a)")
+        ax.set_ylim(ybounds)
+        bars = ax.bar(ids, np.zeros(actions.size))
+        labels = ax.get_xticklabels()
+        return fig, ax, bars, labels
+
+    def display_q_values(self, q):
+        # Clear data
+        self.bars.remove()
+
+        # Display Q values
+        bar_width = 0.5
+        self.bars = ax.bar(ids, q[0], bar_width, color='gray')
+
+        # Color label of chosen axis green
+        self.labels[self.prev_action].set_color("black")
+        action = np.argmax(q[0])
+        self.labels[action].set_color("g")
+        self.prev_action = action
+
+        # Refresh image
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            plt.draw()
+            plt.show(block=False)
+            plt.pause(0.001)
