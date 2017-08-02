@@ -11,9 +11,14 @@ class Toolbox:
     - num_samples: Store top k samples that best activated nodes.
     """
 
-    def __init__(self, layer_sizes, state_shape, num_samples=4):
+    def __init__(self, layer_sizes, state_shape, phi, channels, num_samples=4):
+        # Set toolbox parameters
         self.layer_sizes = layer_sizes
         self.num_layers = len(layer_sizes)
+        self.phi = phi
+        self.channels = channels
+
+        # Initialize max data arrays
         self.max_values, self.max_states, self.max_positions = [], [], []
         # NOTE: must keep separate arrays for each layer because layer sizes
         # differ
@@ -24,7 +29,10 @@ class Toolbox:
                                             + list(state_shape), 
                                             dtype=np.float32))
             self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4],
-                                               dtype=np.float32))          
+                                               dtype=np.float32)) 
+
+        # Initialize visualization tools                                      
+        self.fig, self.axes = self._initialize_display()         
 
     def update_max_data(self, state, position, layer_values):
         for i in range(self.num_layers):
@@ -73,4 +81,68 @@ class Toolbox:
 
     def visualize_features():
         # TODO: implement visualize_features_theano.py from old_python
-        pass
+    
+    def preprocess_state(self, state):
+        if state.shape[0] == agent.phi * agent.channels:
+            state = np.transpose(state, [1, 2, 0])
+        imgs = np.split(state, agent.phi, axis=2)
+        if agent.channels == 3:
+            r = color_order.find("R")
+            g = color_order.find("G")
+            b = color_order.find("B")
+            imgs = [imgs[i][..., [r, g, b]] for i in range(len(imgs))]
+        elif agent.channels == 1:
+            imgs = [np.squeeze(img) for img in imgs]
+        return np.asarray(imgs)
+
+    def _initialize_display(self, xbounds=None, ybounds=None):
+        # Set up outermost components
+        fig = plt.figure()
+        outer = gridspec.GridSpec(2, 1)
+        axes = []
+        
+        # Upper row:
+        # One subplot per frame in phi
+        # One subplot for tracking position
+        inner = gridspec.GridSpecFromSubplotSpec(1, self.phi+1, subplot_spec=outer[0])
+        ax = []
+        for j in range(self.phi+1):
+            ax_j = plt.Subplot(fig, inner[j])
+            fig.add_subplot(ax_j)
+            ax_j.axis('off')
+            ax.append(ax_j)
+        axes.append(ax)
+
+        # Lower row:
+        # One subplot per layer visualized
+        inner = gridspec.GridSpecFromSubplotSpec(1, self.num_layers+1, subplot_spec=outer[1])
+        ax = []
+        for j in range(self.num_layers):
+            ax_j = []
+            
+            # Convolutional layers: grid of feature maps
+            if len(self.layer_shapes[j]) == 4:
+                n = int(np.ceil(np.sqrt(layer_shapes[j][1])))
+                grid = gridspec.GridSpecFromSubplotSpec(n, n, subplot_spec=inner[j])
+                n_square = int(n*n)
+                for k in range(n_square):
+                    a_k = plt.Subplot(fig, grid[k])
+                    fig.add_subplot(a_k)
+                    a_k.axis('off')
+                    ax_j.append(a_k)
+            
+            # Fully connected layers: single grid of neurons
+            else:
+                ax_j = plt.Subplot(fig, inner[j])
+                fig.add_subplot(ax_j)
+                ax_j.axis('off')
+
+            ax.append(ax_j)
+        axes.append(ax)
+        
+        # Set maze boundaries to display position
+        axes[0][self.phi].set_xbound(lower=-600, upper=600)
+        axes[0][self.phi].set_ybound(lower=-600, upper=600)
+        axes[0][self.phi].set_aspect('equal')
+ 
+        return fig, axes
