@@ -110,6 +110,8 @@ class NetworkBuilder:
             if layer["kwargs"]["biases_initializer"][0] == "constant":
                 c = float(layer["kwargs"]["biases_initializer"][1])
                 layer["kwargs"]["biases_initializer"] = tf.constant_initializer(c)
+            elif layer["kwargs"]["biases_initializer"] == "None":
+                layer["kwargs"]["biases_initializer"] = None
             else:
                 raise ValueError("Biases initializer \""
                                     + layer["kwargs"]["biases_initializer"] 
