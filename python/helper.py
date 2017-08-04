@@ -21,7 +21,7 @@ def create_network(network_filename, **kwargs):
     network_types = {"dqn": DQNetwork.DQNetwork,
                      "ac": ACNetwork.ACNetwork}
     net_file = json.loads(open(network_filename).read())
-    net_type = net_file["global_features"]["type"]
+    net_type = net_file["global_features"]["type"].lower()
     return network_types[net_type](network_file=network_filename, **kwargs)
 
 def create_memory(memory_type, **kwargs):
