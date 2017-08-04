@@ -1,5 +1,5 @@
 from agent.Agent import Agent
-from network.Network import Network
+from network.DQNetwork import DQNetwork
 from memory.ReplayMemory import ReplayMemory
 from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
 import tensorflow as tf
@@ -8,6 +8,7 @@ from random import randint, random
 
 class DQNAgent(Agent):
     
+    MAIN_SCOPE = "main_network"
     TARGET_SCOPE = "target_network"
 
     def __init__(self, game, output_directory, agent_file=None,
@@ -23,20 +24,20 @@ class DQNAgent(Agent):
                        action_set=action_set, 
                        frame_repeat=frame_repeat, 
                        **kwargs)
-        
+
         # Create target network and replay memory if training
         if self.train_mode:
             # Create target network to bootstrap Q'(s', a')
             self.target_net_dir = self.net_dir + "target_net/"
             self._make_directory([self.target_net_dir])
-            self.target_network = Network(phi=self.phi, 
-                                          num_channels=self.channels, 
-                                          output_shape=self.output_size,
-                                          learning_rate=self.alpha,
-                                          network_file=self.net_file,
-                                          output_directory=self.target_net_dir,
-                                          session=self.sess,
-                                          scope=self.TARGET_SCOPE)
+            self.target_network = DQNetwork(phi=self.phi, 
+                                            num_channels=self.channels, 
+                                            num_actions=self.num_actions,
+                                            learning_rate=self.alpha,
+                                            network_file=self.net_file,
+                                            output_directory=self.target_net_dir,
+                                            session=self.sess,
+                                            scope=self.TARGET_SCOPE)
             target_init_ops = self._get_target_update_ops(1.0)
             self.sess.run(target_init_ops) # copy main network initialized params
             self.target_update_ops = self._get_target_update_ops(self.target_net_rate)
@@ -45,7 +46,7 @@ class DQNAgent(Agent):
             self.memory = self._create_memory(self.rm_type)
             self.add_transition_to_memory, self.learn_from_memory \
                 = self._set_memory_fns(self.rm_type)
-
+        
     def _create_memory(self, memory_type):
         if memory_type.lower() == "standard":
             return ReplayMemory(capacity=self.rm_capacity, 
@@ -121,7 +122,7 @@ class DQNAgent(Agent):
         # With probability epsilon make a random action.
         epsilon = get_exploration_rate()
         if random() <= epsilon:
-            a = randint(0, self.output_size - 1)
+            a = randint(0, self.num_actions - 1)
         else:
             # Choose the best action according to the network.
             a = self.network.get_best_action(s1).item()
