@@ -1,4 +1,5 @@
 from vizdoom import *
+from helper import create_network
 from network.Network import Network
 from memory.ReplayMemory import ReplayMemory
 import numpy as np
@@ -36,7 +37,7 @@ class Agent:
         # Initialize action space
         self.action_indices = np.asarray(self.game.get_available_buttons())
         self.actions = self._set_actions(action_set)
-        self.output_size = len(self.actions)
+        self.num_actions = len(self.actions)
         # FIXME: how not to hard code frame_repeat?
         self.frame_repeat = frame_repeat
         
@@ -62,21 +63,23 @@ class Agent:
                              "game instance do not match. Please check config "
                              "and/or agent file.")
         
-        # Create network components
+        # Save readable network pointers
         if not self.net_file.startswith(self.NET_JSON_DIR):
             self.net_file = self.NET_JSON_DIR + self.net_file
         if not self.net_file.endswith(".json"):
             self.net_file += ".json"
         self.params_file = params_file
-        self.network = Network(phi=self.phi, 
-                               num_channels=self.channels, 
-                               output_shape=self.output_size,
-                               learning_rate=self.alpha,
-                               network_file=self.net_file,
-                               params_file=self.params_file,
-                               output_directory=self.main_net_dir,
-                               session=self.sess,
-                               scope=self.MAIN_SCOPE)
+
+        # Create primary network
+        self.network = create_network(self.net_file,
+                                      phi=self.phi, 
+                                      num_channels=self.channels, 
+                                      num_actions=self.num_actions,
+                                      learning_rate=self.alpha,
+                                      params_file=self.params_file,
+                                      output_directory=self.main_net_dir,
+                                      session=self.sess,
+                                      scope=self.MAIN_SCOPE)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
 
         # Create tracking lists
