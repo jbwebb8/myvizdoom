@@ -1,5 +1,6 @@
 {
     "global_features": {
+        "type": "DQN",
         "input_layer": "state",
         "output_layer": "Q",
         "loss": ["huber", 1.0],
