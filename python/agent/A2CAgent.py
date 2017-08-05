@@ -44,6 +44,16 @@ class A2CAgent(Agent):
             self.memory = self._create_memory(self.rm_type)
             self.add_transition_to_memory, self.learn_from_memory \
                 = self._set_memory_fns(self.rm_type)
+        
+        # Initialize n-step learning buffers
+        self.n_step = n_step
+        self.s1_buffer = np.zeros([n_step] + self.state.shape, dtype=np.float32)
+        self.a_buffer = np.zeros(n_step, dtype=np.int32)
+        self.s2_buffer = np.zeros([n_step] + self.state.shape, dtype=np.float32)
+        self.isterminal_buffer = np.zeros(n_step, dtype=np.float32)
+        self.r_buffer = np.zeros(n_step, dtype=np.float32)
+        self.gamma_buffer = np.asarray([self.gamma ** k for k in range(n_step)])
+        self.buffer_pos = 0
     
     def _create_memory(self, memory_type):
         if memory_type.lower() == "standard":
@@ -109,6 +119,21 @@ class A2CAgent(Agent):
         pi = self.network.get_policy_output(state)
         return np.random.choice(np.arange(self.num_actions), p=pi)
 
+    def _perform_n_step_learning(self, s_t):
+        # Calculate expectation of R_t-n ≈ Q(s_t-n, a_t-n):
+        #      Σ(γ**i * r_i) + γ**k * V(s_t)
+        t_start = self.buffer_pos - self.n_step
+        V = self.target_network.get_value_output(s2)
+        R_t_start = ( self.gamma_buffer * self.r_buffer
+                      + (self.gamma ** self.n_step) * V )
+        self.add_transition_to_memory(self.s1_buffer[t_start],
+                                        self.a_buffer[t_start],
+                                        self.s2_buffer[t_start],
+                                        self.isterminal_buffer[t_start],
+                                        R_t_start)
+        self.gamma_buffer = np.roll(self.gamma_buffer, 1)
+        self.buffer_pos = self.buffer_pos % self.n_step
+
     def perform_learning_step(self):
         # NOTE: is copying array most efficient implementation?
         s1 = np.copy(self.state)
@@ -126,12 +151,16 @@ class A2CAgent(Agent):
             self.update_state(current_screen)
             s2 = np.copy(self.state)
 
-            # Update R <-- r_i + γ * R
-            self.r_running = reward + self.gamma * self.r_running
+            # Update buffers of previous n transitions
+            self.s1_buffer[self.buffer_pos] = s1
+            self.a_buffer[self.buffer_pos] = a
+            self.s2_buffer[self.buffer_pos] = s2
+            self.isterminal_buffer[self.buffer_pos] = isterminal
+            self.r_buffer[self.buffer_pos] = r
 
-            if self.t > self.t_max:
-            # Remember the transition that was just experienced
-                self.add_transition_to_memory(s1, a, s2, isterminal, reward)
+            if self.t > self.n_step:
+                self._perform_n_step_learning(s2)
+                
         else:
             s2 = np.zeros(self.state.shape)
 
