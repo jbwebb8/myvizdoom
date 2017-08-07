@@ -110,7 +110,7 @@ class A2CAgent(Agent):
             update_ops.append(update)
         return update_ops
 
-     def _get_learning_batch(self):
+    def _get_learning_batch(self):
         # All variables have shape [batch_size, ...]
         s1, a, s2, isterminal, q_sa, w = self.memory.get_sample(self.batch_size)
         return s1, a, q_sa, w
@@ -119,7 +119,7 @@ class A2CAgent(Agent):
         pi = self.network.get_policy_output(state)
         return np.random.choice(np.arange(self.num_actions), p=pi)
 
-    def _perform_n_step_learning(self, s_t):
+    def _add_n_step_transition(self, s_t):
         # Calculate expectation of R_t-n ≈ Q(s_t-n, a_t-n):
         #      Σ(γ**i * r_i) + γ**k * V(s_t)
         t_start = self.buffer_pos - self.n_step
@@ -128,7 +128,7 @@ class A2CAgent(Agent):
                       + (self.gamma ** self.n_step) * V )
         self.add_transition_to_memory(self.s1_buffer[t_start],
                                         self.a_buffer[t_start],
-                                        self.s2_buffer[t_start],
+                                        self.s2_buffer[t_start], # TODO: avoid passing s2
                                         self.isterminal_buffer[t_start],
                                         R_t_start)
         self.gamma_buffer = np.roll(self.gamma_buffer, 1)
@@ -158,15 +158,14 @@ class A2CAgent(Agent):
             self.isterminal_buffer[self.buffer_pos] = isterminal
             self.r_buffer[self.buffer_pos] = r
 
+            # 
             if self.t > self.n_step:
-                self._perform_n_step_learning(s2)
+                self._add_n_step_transition(s2)
                 
         else:
             s2 = np.zeros(self.state.shape)
 
-        if self.t > self.t_max:
-            # Remember the transition that was just experienced
-            self.add_transition_to_memory(s1, a, s2, isterminal, reward)
+    
 
         if self.rm_start_size < self.memory.size:
             # Update target network Q' every k steps
