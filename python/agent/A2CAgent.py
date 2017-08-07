@@ -3,6 +3,7 @@ from network.ACNetwork import ACNetwork
 from memory.ReplayMemory import ReplayMemory
 from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
 import tensorflow as tf
+import numpy as np
 
 class A2CAgent(Agent):
     
@@ -11,7 +12,7 @@ class A2CAgent(Agent):
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default", 
-                 frame_repeat=4, **kwargs):
+                 frame_repeat=4, n_step=5, **kwargs):
         # Initialize base agent class instance
         Agent.__init__(self, 
                        game, 
@@ -46,10 +47,12 @@ class A2CAgent(Agent):
                 = self._set_memory_fns(self.rm_type)
         
         # Initialize n-step learning buffers
-        self.n_step = n_step
-        self.s1_buffer = np.zeros([n_step] + self.state.shape, dtype=np.float32)
+        self.n_step = n_step # TODO: pass this as argument
+        self.s1_buffer = np.zeros([n_step] + list(self.state.shape), 
+                                  dtype=np.float32)
         self.a_buffer = np.zeros(n_step, dtype=np.int32)
-        self.s2_buffer = np.zeros([n_step] + self.state.shape, dtype=np.float32)
+        self.s2_buffer = np.zeros([n_step] + list(self.state.shape),
+                                  dtype=np.float32)
         self.isterminal_buffer = np.zeros(n_step, dtype=np.float32)
         self.r_buffer = np.zeros(n_step, dtype=np.float32)
         self.gamma_buffer = np.asarray([self.gamma ** k for k in range(n_step)])
@@ -69,31 +72,29 @@ class A2CAgent(Agent):
 
     def _set_memory_fns(self, memory_type):
         if memory_type.lower() == "standard":
-            def add_transition_to_memory(s1, a, s2, isterminal, r):
-                self.memory.add_transition(s1, a, s2, isterminal, r)
+            def add_transition_to_memory(s1, a, s2, isterminal, q_sa):
+                self.memory.add_transition(s1, a, s2, isterminal, q_sa)
             
             def learn_from_memory(*args):
                 # Learn from minibatch of replay memory experiences
-                s1, a, target_q, w = self._get_learning_batch()
-                _ = self.network.learn(s1, a, target_q)
+                s1, a, q_sa, w = self._get_learning_batch()
+                _ = self.network.learn(s1, a, q_sa)
 
             return add_transition_to_memory, learn_from_memory
 
         elif memory_type.lower() == "prioritized":
-            def add_transition_to_memory(s1, a, s2, isterminal, r):
-                q_ = self.network.get_q_values(s1)
-                q = q_[np.arange(q_.shape[0]), a]
-                target_q = self._get_target_q(s1, a, s2, isterminal, r)
-                error = target_q - q
-                self.memory.add_transition(s1, a, s2, isterminal, r, error)
+            def add_transition_to_memory(s1, a, s2, isterminal, q_sa):
+                v_s = self.target_network.get_value_output(s1)
+                advantage = q_sa -v_s
+                self.memory.add_transition(s1, a, s2, isterminal, q_sa, advantage)
             
             def learn_from_memory(epoch, epochs):
                 # Update IS parameter β
                 self.memory.update_beta(epoch, epochs)
 
                 # Learn from minibatch of replay memory experiences
-                s1, a, target_q, w = self._get_learning_batch()
-                _ = self.network.learn(s1, a, target_q, weights=w)
+                s1, a, q_sa, w = self._get_learning_batch()
+                _ = self.network.learn(s1, a, q_sa, weights=w)
 
             return add_transition_to_memory, learn_from_memory
 
@@ -116,21 +117,21 @@ class A2CAgent(Agent):
         return s1, a, q_sa, w
 
     def get_action(self, state):
-        pi = self.network.get_policy_output(state)
+        pi = np.squeeze(self.network.get_policy_output(state))
         return np.random.choice(np.arange(self.num_actions), p=pi)
 
     def _add_n_step_transition(self, s_t):
         # Calculate expectation of R_t-n ≈ Q(s_t-n, a_t-n):
         #      Σ(γ**i * r_i) + γ**k * V(s_t)
         t_start = self.buffer_pos - self.n_step
-        V = self.target_network.get_value_output(s2)
-        R_t_start = ( self.gamma_buffer * self.r_buffer
+        V = self.target_network.get_value_output(s_t)
+        R_t_start = ( np.dot(self.gamma_buffer, self.r_buffer)
                       + (self.gamma ** self.n_step) * V )
         self.add_transition_to_memory(self.s1_buffer[t_start],
-                                        self.a_buffer[t_start],
-                                        self.s2_buffer[t_start], # TODO: avoid passing s2
-                                        self.isterminal_buffer[t_start],
-                                        R_t_start)
+                                      self.a_buffer[t_start],
+                                      self.s2_buffer[t_start], # TODO: avoid passing s2
+                                      self.isterminal_buffer[t_start],
+                                      R_t_start)
         self.gamma_buffer = np.roll(self.gamma_buffer, 1)
         self.buffer_pos = self.buffer_pos % self.n_step
 
@@ -142,7 +143,7 @@ class A2CAgent(Agent):
         a = self.get_action(s1)
         
         # Receive reward from environment
-        reward = self.game.make_action(self.actions[a], self.frame_repeat)
+        r = self.game.make_action(self.actions[a], self.frame_repeat)
         
         isterminal = self.game.is_episode_finished()
         if not isterminal:
@@ -157,9 +158,11 @@ class A2CAgent(Agent):
             self.s2_buffer[self.buffer_pos] = s2
             self.isterminal_buffer[self.buffer_pos] = isterminal
             self.r_buffer[self.buffer_pos] = r
+            self.buffer_pos += 1
 
             # 
-            if self.t > self.n_step:
+            if self.buffer_pos == self.n_step:
+
                 self._add_n_step_transition(s2)
                 
         else:
@@ -175,5 +178,4 @@ class A2CAgent(Agent):
             # Learn from minibatch of replay memory samples
             self.learn_from_memory(epoch, epoch_tot)
 
-        self.global_step += 1
-        self.t += 1      
+        self.global_step += 1     
