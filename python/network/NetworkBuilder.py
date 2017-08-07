@@ -414,9 +414,10 @@ class _AC:
     def _add_output_layer(self, layer):
         if layer["name"].lower() == "v":
             layer["name"] = "V"
+            layer["kwargs"]["num_outputs"] = 1
         elif layer["name"].lower() == "pi":
             layer["name"] = "pi"
-        layer["kwargs"]["num_outputs"] = self.nb.network.num_actions
+            layer["kwargs"]["num_outputs"] = self.nb.network.num_actions
         return self.nb.add_layer(layer)                
 
     def _add_reserved_ops(self):
