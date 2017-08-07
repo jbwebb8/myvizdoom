@@ -43,9 +43,11 @@ class ACNetwork(Network):
         return pi_l, v_l
 
     def get_value_output(self, s):
+        s = self._check_state(s)
         feed_dict = {self.state: s}
         return self.sess.run(self.v, feed_dict=feed_dict)
 
     def get_policy_output(self, s):
+        s = self._check_state(s)
         feed_dict = {self.state: s}
         return self.sess.run(self.pi, feed_dict=feed_dict)
