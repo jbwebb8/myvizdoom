@@ -186,8 +186,10 @@ class NetworkBuilder:
             pi_a = tf.gather_nd(pi, 
                                 self.graph_dict["actions"][0],
                                 name="pi_a")
-            adv_loss = tf.log(pi_a * error, name="advantage_loss")
-            entropy_loss = -tf.reduce_sum(pi * tf.log(pi), name="entropy_loss")
+            # Note the negative sign on adv_loss and positive (actually double
+            # negative) on entropy_loss to use grad descent instead of ascent
+            adv_loss = -tf.multiply(tf.log(pi_a), error, name="advantage_loss")
+            entropy_loss = tf.reduce_sum(pi * tf.log(pi), name="entropy_loss")
             pi_loss_fn = tf.multiply(weights, 
                                      tf.add(adv_loss, beta * entropy_loss),
                                      name="policy_loss")
@@ -448,9 +450,9 @@ class _AC:
                                             prediction=v,
                                             weights=w,
                                             params=loss_params)
-            
         else:
             raise ValueError("Loss type \"" + loss_type + "not recognized.")
+        
         self.nb.graph_dict["IS_weights"] = [w, "p"]
         self.nb.graph_dict["loss_pi"] = [pi_loss_fn, "o"]
         self.nb.graph_dict["loss_v"] = [v_loss_fn, "o"]
