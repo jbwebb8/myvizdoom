@@ -1,4 +1,5 @@
 from network.Network import Network
+import numpy as np
 
 class ACNetwork(Network):
 
@@ -36,9 +37,8 @@ class ACNetwork(Network):
             weights = np.ones(a.shape[0])
         feed_dict={self.state: s1, self.actions: a, 
                    self.q_sa: q_sa, self.IS_weights: weights}
-        learn_fns = [self.pi_loss, self.v_loss, 
-                     self.pi_train_step, self.v_train_step]
-        pi_l, v_l, pi_ts, v_ts = self.sess.run(learn_fns,
+        learn_fns = [self.loss_pi, self.loss_v, self.train_step]
+        pi_l, v_l, ts = self.sess.run(learn_fns,
                                                feed_dict=feed_dict)
         return pi_l, v_l
 
