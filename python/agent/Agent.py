@@ -273,26 +273,6 @@ class Agent:
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
             self.update_state(current_screen, replace=False)
-    
-    def get_best_action(self, state=None):
-        if state is None: 
-            state = self.state
-        a_best = self.network.get_best_action(state)[0]
-        return self.actions[a_best]
-    
-    def make_best_action(self, state=None):
-        if state is None: 
-            state = self.state
-        a_best = self.network.get_best_action(state).item()
-        self.game.make_action(self.actions[a_best], self.frame_repeat)
-        #if self.train_mode:
-        #    # Easier to use built-in feature
-        #    self.game.make_action(self.actions[a_best], self.frame_repeat)
-        #else:
-        #    # Better for smooth animation if viewing
-        #    self.game.set_action(self.actions[a_best])
-        #    for _ in range(self.frame_repeat):
-        #        self.game.advance_action()
 
     def track_position(self):
         pos_x = self.game.get_game_variable(GameVariable.POSITION_X)

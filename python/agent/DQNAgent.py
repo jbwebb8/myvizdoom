@@ -166,6 +166,26 @@ class DQNAgent(Agent):
         target_q = self._get_target_q(s1, a, s2, isterminal, r)
         return s1, a, target_q, w
     
+    def get_best_action(self, state=None):
+        if state is None: 
+            state = self.state
+        a_best = self.network.get_best_action(state)[0]
+        return self.actions[a_best]
+    
+    def make_best_action(self, state=None):
+        if state is None: 
+            state = self.state
+        a_best = self.network.get_best_action(state).item()
+        self.game.make_action(self.actions[a_best], self.frame_repeat)
+        #if self.train_mode:
+        #    # Easier to use built-in feature
+        #    self.game.make_action(self.actions[a_best], self.frame_repeat)
+        #else:
+        #    # Better for smooth animation if viewing
+        #    self.game.set_action(self.actions[a_best])
+        #    for _ in range(self.frame_repeat):
+        #        self.game.advance_action()
+
     def save_model(self, model_name, global_step=None, save_meta=True,
                    save_summaries=True):
         batch = None
