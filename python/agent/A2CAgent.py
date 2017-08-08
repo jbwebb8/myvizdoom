@@ -57,6 +57,7 @@ class A2CAgent(Agent):
         self.r_buffer = np.zeros(n_step, dtype=np.float32)
         self.gamma_buffer = np.asarray([self.gamma ** k for k in range(n_step)])
         self.buffer_pos = 0
+        self.episode_step = 0
     
     def _create_memory(self, memory_type):
         if memory_type.lower() == "standard":
@@ -116,14 +117,11 @@ class A2CAgent(Agent):
         s1, a, s2, isterminal, q_sa, w = self.memory.get_sample(self.batch_size)
         return s1, a, q_sa, w
 
-    def get_action(self, state):
-        pi = np.squeeze(self.network.get_policy_output(state))
-        return np.random.choice(np.arange(self.num_actions), p=pi)
-
-    def _add_n_step_transition(self, s_t):
+    def _add_n_step_transition(self):
         # Calculate expectation of R_t-n ≈ Q(s_t-n, a_t-n):
         #      Σ(γ**i * r_i) + γ**k * V(s_t)
-        t_start = self.buffer_pos - self.n_step
+        t_start = self.buffer_pos - (self.n_step - 1)
+        s_t = self.s2_buffer[self.buffer_pos]
         V = self.target_network.get_value_output(s_t)
         R_t_start = ( np.dot(self.gamma_buffer, self.r_buffer)
                       + (self.gamma ** self.n_step) * V )
@@ -132,10 +130,19 @@ class A2CAgent(Agent):
                                       self.s2_buffer[t_start], # TODO: avoid passing s2
                                       self.isterminal_buffer[t_start],
                                       R_t_start)
-        self.gamma_buffer = np.roll(self.gamma_buffer, 1)
-        self.buffer_pos = self.buffer_pos % self.n_step
 
-    def perform_learning_step(self):
+    def _add_terminal_transitions(self):
+        running_r = 0
+        for i in range(self.n_step):
+            pos = self.buffer_pos - i
+            running_r = self.r_buffer[pos] + (self.gamma * running_r)
+            self.add_transition_to_memory(self.s1_buffer[pos],
+                                          self.a_buffer[pos],
+                                          self.s2_buffer[pos], # TODO: avoid passing s2
+                                          self.isterminal_buffer[pos],
+                                          running_r)
+
+    def perform_learning_step(self, epoch, epoch_tot):
         # NOTE: is copying array most efficient implementation?
         s1 = np.copy(self.state)
         
@@ -152,23 +159,45 @@ class A2CAgent(Agent):
             self.update_state(current_screen)
             s2 = np.copy(self.state)
 
-            # Update buffers of previous n transitions
+            # Update buffers containing previous n transitions
             self.s1_buffer[self.buffer_pos] = s1
             self.a_buffer[self.buffer_pos] = a
             self.s2_buffer[self.buffer_pos] = s2
             self.isterminal_buffer[self.buffer_pos] = isterminal
             self.r_buffer[self.buffer_pos] = r
-            self.buffer_pos += 1
-
-            # 
-            if self.buffer_pos == self.n_step:
-
-                self._add_n_step_transition(s2)
+            
+            if self.episode_step >= self.n_step-1: # 0-indexed
+                # Store transition (t-n) in memory
+                self._add_n_step_transition()
                 
+                # Update n-step variables
+                self.gamma_buffer = np.roll(self.gamma_buffer, 1)
+
+            self.buffer_pos = (self.buffer_pos + 1) % self.n_step
+            self.episode_step += 1      
         else:
+            # Terminal state set to zero
             s2 = np.zeros(self.state.shape)
 
-    
+            # Update buffers containing previous n transitions
+            self.s1_buffer[self.buffer_pos] = s1
+            self.a_buffer[self.buffer_pos] = a
+            self.s2_buffer[self.buffer_pos] = s2
+            self.isterminal_buffer[self.buffer_pos] = isterminal
+            self.r_buffer[self.buffer_pos] = r
+
+            # Store last n transitions (T-n,...,T-1) in memory
+            self._add_terminal_transitions()
+
+            # Reset n-step buffers and variables
+            self.s1_buffer.fill(0)
+            self.a_buffer.fill(0)
+            self.s2_buffer.fill(0)
+            self.isterminal_buffer.fill(0)
+            self.r_buffer.fill(0)
+            self.gamma_buffer = np.asarray([self.gamma ** k for k in range(self.n_step)])
+            self.buffer_pos = 0
+            self.episode_step = 0
 
         if self.rm_start_size < self.memory.size:
             # Update target network Q' every k steps
@@ -178,4 +207,28 @@ class A2CAgent(Agent):
             # Learn from minibatch of replay memory samples
             self.learn_from_memory(epoch, epoch_tot)
 
-        self.global_step += 1     
+        self.global_step += 1    
+
+    def get_action(self, state=None):
+        if state is None: 
+            state = self.state
+        pi = np.squeeze(self.network.get_policy_output(state))
+        return np.random.choice(np.arange(self.num_actions), p=pi)
+
+    def make_action(self, state=None):
+        if state is None: 
+            state = self.state
+        a = self.get_action(state)
+        self.game.make_action(self.actions[a], self.frame_repeat)
+
+    def get_best_action(self, state=None):
+        if state is None: 
+            state = self.state
+        pi = np.squeeze(self.network.get_policy_output(state))
+        return np.argmax(pi)
+
+    def make_best_action(self, state=None):
+        if state is None: 
+            state = self.state
+        a_best = self.get_best_action(state)
+        self.game.make_action(self.actions[a_best], self.frame_repeat)
