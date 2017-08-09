@@ -38,8 +38,7 @@ class ACNetwork(Network):
         feed_dict={self.state: s1, self.actions: a, 
                    self.q_sa: q_sa, self.IS_weights: weights}
         learn_fns = [self.loss_pi, self.loss_v, self.train_step]
-        pi_l, v_l, ts = self.sess.run(learn_fns,
-                                               feed_dict=feed_dict)
+        pi_l, v_l, ts = self.sess.run(learn_fns, feed_dict=feed_dict)
         return pi_l, v_l
 
     def get_value_output(self, s):
