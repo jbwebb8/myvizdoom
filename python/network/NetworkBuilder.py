@@ -190,9 +190,8 @@ class NetworkBuilder:
             # negative) on entropy_loss to use grad descent instead of ascent
             adv_loss = -tf.multiply(tf.log(pi_a), error, name="advantage_loss")
             entropy_loss = tf.reduce_sum(pi * tf.log(pi), name="entropy_loss")
-            pi_loss_fn = tf.multiply(weights, 
-                                     tf.add(adv_loss, beta * entropy_loss),
-                                     name="policy_loss")
+            pi_loss_fn = tf.add(adv_loss, beta * entropy_loss,
+                                name="policy_loss")
             tf.add_to_collection(tf.GraphKeys.LOSSES, pi_loss_fn)
             return pi_loss_fn
 
@@ -210,12 +209,14 @@ class NetworkBuilder:
         if opt_type.lower() == "rmsprop":
             optimizer = tf.train.RMSPropOptimizer(self.network.learning_rate, 
                                                     epsilon=1e-10)
+            train_step = []
             for l in loss:
                 gvs = optimizer.compute_gradients(l, var_list=var_list) # list of [grad(var), var]
                 #with tf.name_scope("clip"):
                 #    capped_gvs = [(tf.clip_by_value(g, -1.0, 1.0), v) for g, v in gvs]
                 #train_step = optimizer.apply_gradients(capped_gvs, name="train_step")
-                train_step = optimizer.apply_gradients(gvs, name="train_step")
+                train_step.append(optimizer.apply_gradients(gvs, name="train_step"))
+            # TODO: fix train_step, currently only returning last one
             return optimizer, train_step
         
         ###########################################################
