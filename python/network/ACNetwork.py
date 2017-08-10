@@ -50,3 +50,30 @@ class ACNetwork(Network):
         s = self._check_state(s)
         feed_dict = {self.state: s}
         return self.sess.run(self.pi, feed_dict=feed_dict)
+
+    def save_model(self, model_name, global_step=None, save_meta=True,
+                   save_summaries=True, test_batch=None):
+        self.saver.save(self.sess, self.params_dir + model_name, 
+                        global_step=global_step,
+                        write_meta_graph=save_meta)
+        if save_summaries:
+            var_sum_ = self.sess.run(self.var_sum)
+            self.writer.add_summary(var_sum_, global_step)
+            if test_batch is not None:
+                s1, a, q_sa, w = test_batch
+                s1 = self._check_state(s1)
+                a = self._check_actions(a)
+                feed_dict={self.state: s1,
+                           self.actions: a, 
+                           self.q_sa: q_sa,
+                           self.IS_weights: w}
+                neur_sum_ = self.sess.run(self.neur_sum,
+                                          feed_dict=feed_dict)
+                self.writer.add_summary(neur_sum_, global_step)
+                grad_sum_ = self.sess.run(self.grad_sum,
+                                          feed_dict=feed_dict)
+                self.writer.add_summary(grad_sum_, global_step)
+            # TODO: implement event accumulator to save files (esp. histograms)
+            # to CSV files.
+            #self.ea.Reload()
+            #print(self.ea.Tags())
