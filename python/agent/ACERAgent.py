@@ -199,7 +199,7 @@ class ACERAgent(Agent):
             self.buffer_pos = 0
             self.episode_step = 0
 
-        if self.rm_start_size < self.memory.size:
+        if self.rm_start_size <= self.memory.size:
             # Update target network Q' every k steps
             if self.global_step % self.target_net_freq == 0:
                 self.sess.run(self.target_update_ops)
@@ -220,3 +220,20 @@ class ACERAgent(Agent):
             state = self.state
         a = self.get_action(state)
         self.game.make_action(self.actions[a], self.frame_repeat)
+
+    def save_model(self, model_name, global_step=None, save_meta=True,
+                   save_summaries=True):
+        batch = None
+        if save_summaries:
+            batch = self._get_learning_batch()
+        self.network.save_model(model_name,
+                                global_step=global_step,
+                                save_meta=save_meta,
+                                save_summaries=save_summaries,
+                                test_batch=batch)
+        if self.train_mode:
+            self.target_network.save_model(model_name,
+                                    global_step=global_step,
+                                    save_meta=save_meta,
+                                    save_summaries=save_summaries,
+                                    test_batch=batch)
