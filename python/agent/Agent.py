@@ -298,3 +298,14 @@ class Agent:
 
     def get_layer_shape(self, layer_output_names):
         return self.network.get_layer_shape(layer_output_names)
+
+    def save_model(self, model_name, global_step=None, save_meta=True,
+                   save_summaries=True):
+        batch = None
+        if save_summaries:
+            batch = self._get_learning_batch()
+        self.network.save_model(model_name,
+                                global_step=global_step,
+                                save_meta=save_meta,
+                                save_summaries=save_summaries,
+                                test_batch=batch)
