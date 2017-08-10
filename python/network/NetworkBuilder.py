@@ -265,12 +265,12 @@ class NetworkBuilder:
             loss = tf.get_collection(tf.GraphKeys.LOSSES,
                                         scope=self.network.scope)
             optimizer = self.graph_dict["optimizer"][0]
-            for l in loss:
+            for i, l in enumerate(loss):
                 gvs = optimizer.compute_gradients(l, var_list=var_list)
                 for g, v in gvs:
                     with tf.name_scope(v.name[:-2]):
                         if g is not None:
-                            grad_sum.append(tf.summary.histogram("grads", g))
+                            grad_sum.append(tf.summary.histogram("grads_%d" % i, g))
             
         return var_sum, neur_sum, grad_sum
 
