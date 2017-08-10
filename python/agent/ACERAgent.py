@@ -5,7 +5,7 @@ from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
 import tensorflow as tf
 import numpy as np
 
-class A2CAgent(Agent):
+class ACERAgent(Agent):
     
     MAIN_SCOPE = "global_network"
     TARGET_SCOPE = "target_network"
@@ -220,15 +220,3 @@ class A2CAgent(Agent):
             state = self.state
         a = self.get_action(state)
         self.game.make_action(self.actions[a], self.frame_repeat)
-
-    def get_best_action(self, state=None):
-        if state is None: 
-            state = self.state
-        pi = np.squeeze(self.network.get_policy_output(state))
-        return np.argmax(pi)
-
-    def make_best_action(self, state=None):
-        if state is None: 
-            state = self.state
-        a_best = self.get_best_action(state)
-        self.game.make_action(self.actions[a_best], self.frame_repeat)

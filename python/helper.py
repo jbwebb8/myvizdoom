@@ -7,11 +7,11 @@ import json
 ###############################################################################
 
 def create_agent(agent_filename, **kwargs):
-    from agent import Agent, DQNAgent, DDQNAgent, A2CAgent
+    from agent import Agent, DQNAgent, DDQNAgent, ACERAgent
     agent_types = {"agent": Agent.Agent,
                    "dqn": DQNAgent.DQNAgent,
                    "ddqn": DDQNAgent.DDQNAgent,
-                   "a2c": A2CAgent.A2CAgent}
+                   "acer": ACERAgent.ACERAgent}
     agent_file = json.loads(open(agent_filename).read())
     agent_type = agent_file["agent_args"]["type"]
     return agent_types[agent_type](agent_file=agent_filename, **kwargs)

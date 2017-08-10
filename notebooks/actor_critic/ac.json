@@ -1,7 +1,7 @@
 {
     "agent_args": {
         "name": "notebook_ac",
-        "type": "a2c"
+        "type": "acer"
     },
     "network_args": {
         "name": "ac_basic",
