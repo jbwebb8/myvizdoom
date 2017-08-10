@@ -142,7 +142,7 @@ class DQNAgent(Agent):
         # Remember the transition that was just experienced.
         self.add_transition_to_memory(s1, a, s2, isterminal, reward)
 
-        if self.rm_start_size < self.memory.size:
+        if self.rm_start_size <= self.memory.size:
             # Update target network Q' every k steps
             if self.global_step % self.target_net_freq == 0:
                 self.sess.run(self.target_update_ops)
