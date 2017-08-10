@@ -106,6 +106,7 @@ class PrioritizedReplayMemory(ReplayMemory):
         t_ = self.start_pos + t
         P = self.heap[t_] / self.heap[1]
         w = (1 / self.size + 1 / P) ** self.beta
+        w = w / np.max(w) # normalize weights so all <= 1.0
         if (P == 0).any() or self.size == 0:
             print("t_: ", t_)
             print("heap[t_]: ", self.heap[t_])
