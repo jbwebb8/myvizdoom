@@ -166,13 +166,13 @@ class DQNAgent(Agent):
         target_q = self._get_target_q(s1, a, s2, isterminal, r)
         return s1, a, target_q, w
     
-    def get_best_action(self, state=None):
+    def get_action(self, state=None):
         if state is None: 
             state = self.state
         a_best = self.network.get_best_action(state)[0]
         return self.actions[a_best]
     
-    def make_best_action(self, state=None):
+    def make_action(self, state=None):
         if state is None: 
             state = self.state
         a_best = self.network.get_best_action(state).item()

@@ -1,4 +1,5 @@
 from network.Network import Network
+import numpy as np
 
 class DQNetwork(Network):
     """
