@@ -3,8 +3,6 @@ import json
 
 class NetworkBuilder:
 
-    NET_TYPES = ["dqn", "ac"]
-
     def __init__(self, network, network_file):
         self.network = network
         self.graph_dict = {}
@@ -206,19 +204,45 @@ class NetworkBuilder:
 
     # Adds optimizer to graph
     def add_optimizer(self, opt_type, loss, var_list, *params):
+        def modify_gradients(grad, mod_type, *params):
+            if mod_type == "scale":
+                return params[0] * grad
+            elif mod_type == "clip_by_value":
+                return tf.clip_by_value(grad, params[0], params[1])
+            elif mod_type == "clip_by_norm":
+                return tf.clip_by_norm(grad, params[0])
+            else:
+                raise ValueError("Gradient modification type \"" + mod_type
+                                 + "not yet defined.")
+
         if opt_type.lower() == "rmsprop":
             optimizer = tf.train.RMSPropOptimizer(self.network.learning_rate, 
                                                     epsilon=1e-10)
             train_step = []
             for l in loss:
                 gvs = optimizer.compute_gradients(l, var_list=var_list) # list of [grad(var), var]
-                #with tf.name_scope("clip"):
-                #    capped_gvs = [(tf.clip_by_value(g, -1.0, 1.0), v) for g, v in gvs]
-                #train_step = optimizer.apply_gradients(capped_gvs, name="train_step")
                 train_step.append(optimizer.apply_gradients(gvs, name="train_step"))
-            # TODO: fix train_step, currently only returning last one
             return optimizer, train_step
-        
+        elif opt_type.lower() == "rmsprop_clip":
+            # params = lists of [layer_name, clip_type]
+            # clip_type: scale, clip_by_value, clip_by_norm
+            optimizer = tf.train.RMSPropOptimizer(self.network.learning_rate, 
+                                                    epsilon=1e-10)
+            train_step = []
+            for l in loss:
+                mod_gvs = optimizer.compute_gradients(l, var_list=var_list) # list of [grad(var), var]
+                for par in params:
+                    layer_name = par[0]
+                    clip_type = par[1]
+                    if layer_name.lower() == "all":
+                        mod_gvs = [[modify_gradients(g, clip_type, *params[2:]), v]
+                                   for g, v in mod_gvs]
+                    else:
+                        mod_gvs = [[modify_gradients(g, clip_type, *params[2:]), v]
+                                   if layer_name in v.name else g for g, v in mod_gvs]
+                train_step.append(optimizer.apply_gradients(mod_gvs, name="train_step"))
+            return optimizer, train_step
+                
         ###########################################################
         # Add new optimizer support here.
         # elif opt.lower() == "new_opt":
@@ -227,52 +251,6 @@ class NetworkBuilder:
 
         else:
             raise ValueError("Optimizer \"" + opt_type + "\" not yet defined.")
-
-    def add_summaries(self):
-        # Create summaries for trainable variables (weights and biases)
-        var_sum = []
-        with tf.name_scope("trainable_variables"):
-            for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                         scope=self.network.scope):
-                with tf.name_scope(var.name[:-2]):
-                    mean = tf.reduce_mean(var)
-                    var_sum.append(tf.summary.scalar("mean", mean))
-                    with tf.name_scope("stddev"):
-                        stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-                    var_sum.append(tf.summary.scalar("stddev", stddev))
-                    var_sum.append(tf.summary.scalar("max", tf.reduce_max(var)))
-                    var_sum.append(tf.summary.scalar("min", tf.reduce_min(var)))
-                    var_sum.append(tf.summary.histogram("histogram", var))
-        
-        # Create summaries for neurons (% activated, values)
-        neur_sum = []
-        with tf.name_scope("neurons"):
-            for name in self.graph_dict:
-                if self.graph_dict[name][1] == "l":
-                    layer = self.graph_dict[name][0]
-                    with tf.name_scope(name):
-                        num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
-                        num_act = tf.cast(tf.count_nonzero(layer), tf.float64)
-                        frac_act = tf.div(num_act, num_elements) # TODO: get fraction of neurons ever activated
-                        neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
-                        neur_sum.append(tf.summary.histogram("values", layer))
-        
-        # Create summaries for gradients
-        grad_sum = []
-        with tf.name_scope("gradients"):
-            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
-                                        scope=self.network.scope)
-            loss = tf.get_collection(tf.GraphKeys.LOSSES,
-                                        scope=self.network.scope)
-            optimizer = self.graph_dict["optimizer"][0]
-            for i, l in enumerate(loss):
-                gvs = optimizer.compute_gradients(l, var_list=var_list)
-                for g, v in gvs:
-                    with tf.name_scope(v.name[:-2]):
-                        if g is not None:
-                            grad_sum.append(tf.summary.histogram("grads_%d" % i, g))
-            
-        return var_sum, neur_sum, grad_sum
 
     def load_json(self, network_file):
         # Load arguments from network file
@@ -287,7 +265,11 @@ class NetworkBuilder:
             builder_type = _DQN(self)
         elif net_type == "ac":
             builder_type = _AC(self)
-        if net_type not in self.NET_TYPES:
+        elif net_type == "dueling_dqn":
+            builder_type = _DuelingDQN(self)
+        elif net_type == "custom":
+            builder_type = _Custom(self)
+        else:
             raise ValueError("Unknown network type: " + net_type)
 
         # Add placeholders
@@ -335,7 +317,13 @@ class NetworkBuilder:
         if "optimizer" in net["global_features"]:
             # TODO: does update op keep separate rms variables for gradient
             # wrt to each loss fn?
-            opt_type = net["global_features"]["optimizer"]
+            opt_keys = net["global_features"]["optimizer"]
+            if type(opt_keys) == list:
+                opt_type = net["global_features"]["optimizer"][0]
+                opt_params = net["global_features"]["optimizer"][1:]
+            else:
+                opt_type = net["global_features"]["optimizer"]
+                opt_params = None
             loss = tf.get_collection(tf.GraphKeys.LOSSES, 
                                      scope=self.network.scope)
             var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
@@ -350,6 +338,52 @@ class NetworkBuilder:
                 raise ValueError("optimizer not found in network file.") 
 
         return self.graph_dict, self.data_format           
+
+    def add_summaries(self):
+        # Create summaries for trainable variables (weights and biases)
+        var_sum = []
+        with tf.name_scope("trainable_variables"):
+            for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                         scope=self.network.scope):
+                with tf.name_scope(var.name[:-2]):
+                    mean = tf.reduce_mean(var)
+                    var_sum.append(tf.summary.scalar("mean", mean))
+                    with tf.name_scope("stddev"):
+                        stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+                    var_sum.append(tf.summary.scalar("stddev", stddev))
+                    var_sum.append(tf.summary.scalar("max", tf.reduce_max(var)))
+                    var_sum.append(tf.summary.scalar("min", tf.reduce_min(var)))
+                    var_sum.append(tf.summary.histogram("histogram", var))
+        
+        # Create summaries for neurons (% activated, values)
+        neur_sum = []
+        with tf.name_scope("neurons"):
+            for name in self.graph_dict:
+                if self.graph_dict[name][1] == "l":
+                    layer = self.graph_dict[name][0]
+                    with tf.name_scope(name):
+                        num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
+                        num_act = tf.cast(tf.count_nonzero(layer), tf.float64)
+                        frac_act = tf.div(num_act, num_elements) # TODO: get fraction of neurons ever activated
+                        neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
+                        neur_sum.append(tf.summary.histogram("values", layer))
+        
+        # Create summaries for gradients
+        grad_sum = []
+        with tf.name_scope("gradients"):
+            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
+                                        scope=self.network.scope)
+            loss = tf.get_collection(tf.GraphKeys.LOSSES,
+                                        scope=self.network.scope)
+            optimizer = self.graph_dict["optimizer"][0]
+            for i, l in enumerate(loss):
+                gvs = optimizer.compute_gradients(l, var_list=var_list)
+                for g, v in gvs:
+                    with tf.name_scope(v.name[:-2]):
+                        if g is not None:
+                            grad_sum.append(tf.summary.histogram("grads_%d" % i, g))
+            
+        return var_sum, neur_sum, grad_sum
 
 class _DQN:
     def __init__(self, network_builder):
@@ -367,7 +401,6 @@ class _DQN:
                                                 shape=[None, 2],
                                                 name="actions"), "p"]
 
-    # Adds output layer to graph
     def _add_output_layer(self, layer):
         layer["name"] = "Q"
         layer["kwargs"]["num_outputs"] = self.nb.network.num_actions
@@ -393,7 +426,40 @@ class _DQN:
                                     params=loss_params)
         self.nb.graph_dict["IS_weights"] = [w, "p"]
         self.nb.graph_dict["loss"] = [loss_fn, "o"]
+
+class _DuelingDQN(_DQN):
+    def __init__(self, network_builder):
+        _DQN.__init__(self, network_builder)
     
+    # Override DQN function
+    def _add_output_layer(self, layer):
+        if layer["name"].lower() == "v":
+            layer["name"] = "V"
+            layer["kwargs"]["num_outputs"] = 1
+        elif layer["name"].lower() == "a":
+            layer["name"] = "A"
+            layer["kwargs"]["num_outputs"] = self.nb.network.num_actions
+        return self.nb.add_layer(layer) 
+
+    # Override DQN function
+    def _add_reserved_ops(self):
+        # Add Q estimation from value and advantage streams:
+        # Q(s,a;θ,α,β) = V(s;θ,β) + [A(s,a;θ,α) - 1/|A| * Σ(A(s,a';θ,α))],
+        # where θ, α, β are the parameters of the shared convolutional layers,
+        # fully-connected stream into V, and fully-connected stream into A,
+        # respectively
+        V = self.nb.graph_dict["V"][0]
+        A = self.nb.graph_dict["A"][0]
+        with tf.name_scope("Q"):
+            A_mean = tf.reduce_mean(A, axis=1)
+            Q = tf.add(V, tf.subtract(A, A_mean), name="Q")
+            self.nb.graph_dict["Q"] = [Q, "o"]
+
+        # Add deterministic policy
+        best_action = tf.argmax(self.nb.graph_dict["Q"][0], axis=1, 
+                                name="best_action")
+        self.nb.graph_dict["best_action"] = [best_action, "o"]
+
 class _AC:
     def __init__(self, network_builder):
         self.nb = network_builder
@@ -413,7 +479,6 @@ class _AC:
                                                        shape=[None], 
                                                        name="IS_weights"), "p"]
 
-    # Adds output layer to graph
     def _add_output_layer(self, layer):
         if layer["name"].lower() == "v":
             layer["name"] = "V"
@@ -457,3 +522,26 @@ class _AC:
         self.nb.graph_dict["IS_weights"] = [w, "p"]
         self.nb.graph_dict["loss_pi"] = [pi_loss_fn, "o"]
         self.nb.graph_dict["loss_v"] = [v_loss_fn, "o"]
+
+class _Custom:
+
+    def __init__(self, network_builder):
+        self.nb = network_builder
+
+    def _add_reserved_placeholders(self):
+        self.nb.graph_dict["target"] = tf.placeholder(tf.float32, 
+                                                      shape=[None],
+                                                      name="target")
+    
+    def _add_output_layer(self, layer):
+        self.output_name = layer["name"]
+        return self.nb.add_layer(layer)
+    
+    def _add_reserved_ops(self):
+        pass
+    
+    def _add_loss_fn(self, loss_type, loss_params):
+        target = self.nb.graph_dict["target"]
+        prediction = self.nb.graph_dict[self.output_name]
+        self.nb.add_loss_fn(loss_type, target, prediction, 
+                            weights=None, params=loss_params)
