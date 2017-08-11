@@ -1,1 +1,1 @@
-__all__ = ["Agent", "DQNAgent", "DDQNAgent", "ACERAgent"]
+__all__ = ["Agent", "DQNAgent", "DoubleDQNAgent", "DuelingDQNAgent", "ACERAgent"]

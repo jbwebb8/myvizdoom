@@ -1,7 +1,7 @@
 {
     "agent_args": {
-        "name": "ddqn_dm2015_1",
-        "type": "ddqn"
+        "name": "doubledqn_dm2015_1",
+        "type": "doubledqn"
     },
     "network_args": {
         "name": "dqn_dm2015",
@@ -21,7 +21,7 @@
         "target_network_update_rate": 0.001
     },
     "memory_args": {
-        "type": "standard",
+        "type": "prioritized",
         "replay_memory_size": 80000,
         "replay_memory_start_size": 20000
     }
