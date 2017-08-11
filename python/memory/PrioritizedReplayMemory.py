@@ -100,12 +100,22 @@ class PrioritizedReplayMemory(ReplayMemory):
             t[i] = self._retrieve(1, m[i]) - self.start_pos
         
         # Calculate importance-sampling (IS) weights w_i of transition:
-        # w_i = (1/N * )
-        # where P(i) = probability of transition i, N = memory size, 
-        # and beta = hyperparameter
+        # w_i = (1/N * 1/P_i) ** β
+        # where P_i = probability of transition i, N = memory size, 
+        # and β = hyperparameter
         t_ = self.start_pos + t
         P = self.heap[t_] / self.heap[1]
         w = (1 / self.size + 1 / P) ** self.beta
+        w = w / np.max(w) # normalize weights so all <= 1.0
+        if (P == 0).any() or self.size == 0:
+            print("t_: ", t_)
+            print("heap[t_]: ", self.heap[t_])
+            print("heap[1]: ", self.heap[1])
+            print("P: ", P)
+            print("size: ", self.size)
+            print("beta: ", self.beta)
+            print("w: ", w)
+            np.savetxt("../tmp/tmp_results/heap.txt", self.heap)
         
         # Stack overlapping frames from s1 to stored frames of s2 to
         # recreate full s2 state

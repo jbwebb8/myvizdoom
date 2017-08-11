@@ -162,7 +162,7 @@ for epoch in range(epochs):
     for test_episode in range(test_episodes_per_epoch):
         agent.initialize_new_episode()
         while not game.is_episode_finished():
-            agent.make_best_action()
+            agent.make_action()
             if save_epoch and trackable:
                 agent.track_action()
                 agent.track_position()

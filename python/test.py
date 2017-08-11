@@ -167,8 +167,8 @@ for test_episode in range(test_episodes):
             sleep(0.5) # HACK: network only works in PLAYER mode,
                        # so needed to slow down video
 
-        # Make best action
-        agent.make_best_action()
+        # Make action based on learning algorithm
+        agent.make_action()
         print("Game tick %d of max %d in test episode %d of %d.        " 
               % (game.get_episode_time() - game.get_episode_start_time(), 
                  game.get_episode_timeout(),

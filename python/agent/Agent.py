@@ -1,4 +1,5 @@
 from vizdoom import *
+from helper import create_network
 from network.Network import Network
 from memory.ReplayMemory import ReplayMemory
 import numpy as np
@@ -36,7 +37,7 @@ class Agent:
         # Initialize action space
         self.action_indices = np.asarray(self.game.get_available_buttons())
         self.actions = self._set_actions(action_set)
-        self.output_size = len(self.actions)
+        self.num_actions = len(self.actions)
         # FIXME: how not to hard code frame_repeat?
         self.frame_repeat = frame_repeat
         
@@ -62,21 +63,23 @@ class Agent:
                              "game instance do not match. Please check config "
                              "and/or agent file.")
         
-        # Create network components
+        # Save readable network pointers
         if not self.net_file.startswith(self.NET_JSON_DIR):
             self.net_file = self.NET_JSON_DIR + self.net_file
         if not self.net_file.endswith(".json"):
             self.net_file += ".json"
         self.params_file = params_file
-        self.network = Network(phi=self.phi, 
-                               num_channels=self.channels, 
-                               output_shape=self.output_size,
-                               learning_rate=self.alpha,
-                               network_file=self.net_file,
-                               params_file=self.params_file,
-                               output_directory=self.main_net_dir,
-                               session=self.sess,
-                               scope=self.MAIN_SCOPE)
+
+        # Create primary network
+        self.network = create_network(self.net_file,
+                                      phi=self.phi, 
+                                      num_channels=self.channels, 
+                                      num_actions=self.num_actions,
+                                      learning_rate=self.alpha,
+                                      params_file=self.params_file,
+                                      output_directory=self.main_net_dir,
+                                      session=self.sess,
+                                      scope=self.MAIN_SCOPE)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
 
         # Create tracking lists
@@ -270,26 +273,6 @@ class Agent:
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
             self.update_state(current_screen, replace=False)
-    
-    def get_best_action(self, state=None):
-        if state is None: 
-            state = self.state
-        a_best = self.network.get_best_action(state)[0]
-        return self.actions[a_best]
-    
-    def make_best_action(self, state=None):
-        if state is None: 
-            state = self.state
-        a_best = self.network.get_best_action(state).item()
-        self.game.make_action(self.actions[a_best], self.frame_repeat)
-        #if self.train_mode:
-        #    # Easier to use built-in feature
-        #    self.game.make_action(self.actions[a_best], self.frame_repeat)
-        #else:
-        #    # Better for smooth animation if viewing
-        #    self.game.set_action(self.actions[a_best])
-        #    for _ in range(self.frame_repeat):
-        #        self.game.advance_action()
 
     def track_position(self):
         pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
@@ -315,3 +298,14 @@ class Agent:
 
     def get_layer_shape(self, layer_output_names):
         return self.network.get_layer_shape(layer_output_names)
+
+    def save_model(self, model_name, global_step=None, save_meta=True,
+                   save_summaries=True):
+        batch = None
+        if save_summaries:
+            batch = self._get_learning_batch()
+        self.network.save_model(model_name,
+                                global_step=global_step,
+                                save_meta=save_meta,
+                                save_summaries=save_summaries,
+                                test_batch=batch)
