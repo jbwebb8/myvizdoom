@@ -1,11 +1,11 @@
 {
     "agent_args": {
-        "name": "ddqn_dm2016_1",
+        "name": "ddqn_dueling",
         "type": "ddqn"
     },
     "network_args": {
-        "name": "duelingdqn_dm2016",
-        "type": "duelingdqn",
+        "name": "duelingdqn_basic",
+        "type": "dueling_dqn",
         "alpha": 0.00025,
         "gamma": 0.99,
         "phi": 4,
