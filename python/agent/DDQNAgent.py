@@ -1,7 +1,7 @@
 from agent.DQNAgent import DQNAgent
 import numpy as np
 
-class DoubleDQNAgent(DQNAgent):
+class DDQNAgent(DQNAgent):
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default", 
