@@ -203,17 +203,17 @@ class NetworkBuilder:
             raise ValueError("Loss function \"" + loss_type + "\" not yet defined.")
 
     # Adds optimizer to graph
-    def add_optimizer(self, opt_type, loss, var_list, *params):
+    def add_optimizer(self, opt_type, loss, var_list, params=None):
         def modify_gradients(grad, mod_type, *params):
-            if mod_type == "scale":
-                return params[0] * grad
-            elif mod_type == "clip_by_value":
-                return tf.clip_by_value(grad, params[0], params[1])
-            elif mod_type == "clip_by_norm":
-                return tf.clip_by_norm(grad, params[0])
-            else:
-                raise ValueError("Gradient modification type \"" + mod_type
-                                 + "not yet defined.")
+                if mod_type == "scale":
+                    return params[0] * grad
+                elif mod_type == "clip_by_value":
+                    return tf.clip_by_value(grad, params[0], params[1])
+                elif mod_type == "clip_by_norm":
+                    return tf.clip_by_norm(grad, params[0])
+                else:
+                    raise ValueError("Gradient modification type \"" + mod_type
+                                     + "not yet defined.")
 
         if opt_type.lower() == "rmsprop":
             optimizer = tf.train.RMSPropOptimizer(self.network.learning_rate, 
@@ -234,12 +234,13 @@ class NetworkBuilder:
                 for par in params:
                     layer_name = par[0]
                     clip_type = par[1]
-                    if layer_name.lower() == "all":
-                        mod_gvs = [[modify_gradients(g, clip_type, *params[2:]), v]
-                                   for g, v in mod_gvs]
-                    else:
-                        mod_gvs = [[modify_gradients(g, clip_type, *params[2:]), v]
-                                   if layer_name in v.name else g for g, v in mod_gvs]
+                    with tf.name_scope("gradients/mod"):
+                        if layer_name.lower() == "all":
+                            mod_gvs = [[modify_gradients(g, clip_type, *par[2:]), v]
+                                    for g, v in mod_gvs]
+                        else:
+                            mod_gvs = [[modify_gradients(g, clip_type, *par[2:]), v]
+                                    if layer_name in v.name else [g, v] for g, v in mod_gvs]
                 train_step.append(optimizer.apply_gradients(mod_gvs, name="train_step"))
             return optimizer, train_step
                 
@@ -330,7 +331,8 @@ class NetworkBuilder:
                                      scope=self.network.scope)
             opt, ts = self.add_optimizer(opt_type=opt_type,
                                          loss=loss,
-                                         var_list=var_list)
+                                         var_list=var_list,
+                                         params=opt_params)
             self.graph_dict["optimizer"] = [opt, "s"]
             self.graph_dict["train_step"] = [ts, "s"]
         else:
