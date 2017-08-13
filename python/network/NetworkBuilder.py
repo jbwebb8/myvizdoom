@@ -453,7 +453,7 @@ class _DuelingDQN(_DQN):
         V = self.nb.graph_dict["V"][0]
         A = self.nb.graph_dict["A"][0]
         with tf.name_scope("Q"):
-            A_mean = tf.reduce_mean(A, axis=1)
+            A_mean = tf.reduce_mean(A, axis=1, keep_dims=True)
             Q = tf.add(V, tf.subtract(A, A_mean), name="Q")
             self.nb.graph_dict["Q"] = [Q, "o"]
 
