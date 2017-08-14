@@ -317,7 +317,7 @@ class DQNAgent(Agent):
             a = self.network.get_best_action(s1).item()
         
         # Receive reward from environment.
-        reward = self.game.make_action(self.actions[a], self.frame_repeat)
+        r = self.game.make_action(self.actions[a], self.frame_repeat)
         
         # Get new state if not terminal.
         isterminal = self.game.is_episode_finished()
