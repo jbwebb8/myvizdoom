@@ -13,17 +13,18 @@ class PrioritizedReplayMemory(ReplayMemory):
         heap_size = 2 ** math.ceil(math.log(capacity, 2)) + capacity
         self.start_pos = 2 ** math.ceil(math.log(capacity, 2))
         self.heap = np.zeros(heap_size, dtype=np.float32)
-        self.alpha = alpha
+        self.max_p = 0.01 # tracks max priority value
+        self.alpha = alpha # controls probability distribution
         self.beta_start = beta_start
         self.beta_end = beta_end
-        self.beta = beta_start
+        self.beta = beta_start # controls importance sampling weights
 
     def update_beta(self, epoch, total_epochs):
         self.beta = ( (self.beta_end - self.beta_start) / total_epochs * epoch
                       + self.beta_start )
 
     # Overrides base ReplayMemory function with prioritization
-    def add_transition(self, s1, action, s2, isterminal, reward, delta):
+    def add_transition(self, s1, action, s2, isterminal, reward):
         # Store transition variables at current position
         self.s1[self.pos, ...] = s1
         self.a[self.pos] = action
@@ -35,15 +36,15 @@ class PrioritizedReplayMemory(ReplayMemory):
         self.isterminal[self.pos] = isterminal
         self.r[self.pos] = reward
         
-        # Create priority following proportional prioritization:
-        # p_i = |Q'(s,a) - Q(s,a)| + ε
-        p = abs(delta) + 0.01
+        # Create initial priority equal to current maximum:
+        # p_t = max_i<t(p_i)
+        p = self.max_p
         self.add_priority(p, self.pos)
-        
+
         # Increment pointer or start over if reached end (sliding window)
         self.pos = (self.pos + 1) % self.capacity
         self.size = min(self.size + 1, self.capacity)
-    
+        
     # Recursive function to update parent of node j
     def _propagate(self, child_id):
         parent_id = child_id // 2
@@ -127,4 +128,17 @@ class PrioritizedReplayMemory(ReplayMemory):
         else:
             s2 = self.s2[t]
 
-        return self.s1[t], self.a[t], s2, self.isterminal[t], self.r[t], w
+        return self.s1[t], self.a[t], s2, self.isterminal[t], self.r[t], w, t
+
+    def update_priority(self, delta, pos):
+        # Update priority to reflect proportional prioritization:
+        # p_i = |Q'(s,a) - Q(s,a)| + ε
+        p = abs(delta) + 0.01
+        try:
+            for _ in range(len(p)): self.add_priority(p, pos)
+        except TypeError: # catches updates of size one
+            self.add_priority(p, pos)
+        
+        # Update maximum priority for initial storage
+        if np.max(p) > self.max_p:
+            self.max_p = np.max(p)
