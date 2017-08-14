@@ -89,7 +89,9 @@ class Network:
         if params_file is not None:
             self.saver.restore(self.sess, params_file)
         else:
-            self.sess.run(tf.global_variables_initializer())
+            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                         scope=self.scope)
+            self.sess.run(tf.variables_initializer(var_list))
 
     def _check_state(self, state):
         if state is not None and state.ndim < 4:
