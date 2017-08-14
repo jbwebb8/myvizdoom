@@ -162,10 +162,12 @@ for epoch in range(epochs):
     for test_episode in range(test_episodes_per_epoch):
         agent.initialize_new_episode()
         while not game.is_episode_finished():
-            agent.make_action()
+            current_screen = game.get_state().screen_buffer
+            agent.update_state(current_screen)
             if save_epoch and trackable:
                 agent.track_action()
                 agent.track_position()
+            agent.make_action()
             print("Game tick %d of max %d in test episode %d of %d." 
                   % (game.get_episode_time() - game.get_episode_start_time(), 
                      game.get_episode_timeout(),
