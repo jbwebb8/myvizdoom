@@ -60,7 +60,7 @@ class ACNetwork(Network):
             var_sum_ = self.sess.run(self.var_sum)
             self.writer.add_summary(var_sum_, global_step)
             if test_batch is not None:
-                s1, a, q_sa, w = test_batch
+                s1, a, q_sa, w, _ = test_batch
                 s1 = self._check_state(s1)
                 a = self._check_actions(a)
                 feed_dict={self.state: s1,
