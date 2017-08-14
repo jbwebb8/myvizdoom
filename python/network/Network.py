@@ -89,7 +89,7 @@ class Network:
         if params_file is not None:
             self.saver.restore(self.sess, params_file)
         else:
-            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+            var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
                                          scope=self.scope)
             self.sess.run(tf.variables_initializer(var_list))
 
