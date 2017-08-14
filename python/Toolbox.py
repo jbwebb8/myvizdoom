@@ -29,7 +29,7 @@ class Toolbox:
         self.phi = phi
         self.channels = channels
         self.actions = actions
-        if data_format != ("NCHW" or "NWHC"):
+        if data_format not in ["NCHW", "NHWC"]:
             raise ValueError("Unknown data format: %s" % data_format)
         self.data_format = data_format
 
@@ -111,7 +111,7 @@ class Toolbox:
         elif self.channels == 1:
             imgs = [np.squeeze(img) for img in imgs]
         return np.asarray(imgs)
-
+        
     def _initialize_feature_display(self, xbounds=[-600, 600], ybounds=[-600, 600]):
         # Set up outermost components
         fig = plt.figure()
@@ -139,7 +139,8 @@ class Toolbox:
             
             # Convolutional layers: grid of feature maps
             if len(self.layer_shapes[j]) == 4:
-                n = int(np.ceil(np.sqrt(self.layer_shapes[j][1])))
+                c_dim = self.data_format.find("C")
+                n = int(np.ceil(np.sqrt(self.layer_shapes[j][c_dim])))
                 grid = gridspec.GridSpecFromSubplotSpec(n, n, subplot_spec=inner[j])
                 n_square = int(n*n)
                 for k in range(n_square):
@@ -240,3 +241,44 @@ class Toolbox:
             plt.draw()
             plt.show(block=False)
             plt.pause(0.001)
+    
+    def make_gif(self, images, filepath, duration=None, fps=30):
+        import moviepy.editor as mpy
+
+        def make_frame(t):
+            # Grab image, accounting for rounding error
+            idx = int(t * fps_)
+            try: 
+                img = images[idx]
+            except IndexError:
+                img = images[-1]
+
+            # Convert to [H, W, C] if not already
+            if img.shape[0] == self.channels:
+                img = np.transpose(img, [1, 2, 0])
+            
+            # If color, ensure channels in RGB order;
+            # if grayscale, trim to [H, W]
+            if self.channels == 3:
+                r = self.color_format.find("R")
+                g = self.color_format.find("G")
+                b = self.color_format.find("B")
+                img = img[..., [r, g, b]]
+            elif self.channels == 1:
+                img = np.squeeze(img)
+
+            return img
+        
+        # Determine duration and/or frames per second
+        if duration is not None:
+            duration_ = duration
+            fps_ = len(images) / duration_
+        else:
+            duration_ = len(images) / fps
+            fps_ = fps
+
+        # Create .gif file
+        clip = mpy.VideoClip(make_frame, duration=duration_)
+        if not filepath.endswith(".gif"):
+            filepath += ".gif"
+        clip.write_gif(filepath, fps=fps_)

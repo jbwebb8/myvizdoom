@@ -40,8 +40,13 @@ parser.add_argument("-l", "--layer-names", default=[], metavar="", nargs='*',
                     help="layer output names to probe")
 parser.add_argument("-m", "--max-samples", type=int, default=1, metavar="",
                     help="# of samples associated with max node activation")
+parser.add_argument("-c", "--color", default="RGB", 
+                    choices=["RGB", "RBG", "GBR", "GRB", "BRG", "BGR"],
+                    metavar="", help="order of color channels (if color img)")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
+parser.add_argument("-g", "--save-gifs", action="store_true", default=False,
+                    help="make gifs of agent test episodes")
 parser.add_argument("-n", "--name", default="train", metavar="", 
                     help="experiment name (for saving files)")
 parser.add_argument("-d", "--description", default="training", metavar="", 
@@ -68,7 +73,9 @@ save_freq = args.save_freq
 if save_freq == 0: save_freq = epochs
 layer_names = args.layer_names
 max_samples = args.max_samples
+color_format = args.color
 trackable = args.track
+save_gifs = args.save_gifs
 exp_name = args.name
 exp_descr = args.description
 
@@ -130,6 +137,19 @@ if trackable:
                agent.action_indices)
 print("Done.")
 
+# Initialize toolbox
+print("Initializing toolbox... ", end=""), sys.stdout.flush()
+layer_shapes = agent.get_layer_shape(layer_names)
+toolbox = Toolbox(layer_shapes=layer_shapes, 
+                  state_shape=agent.state.shape,
+                  phi=agent.phi,
+                  channels=agent.channels,
+                  actions=agent.action_indices,
+                  num_samples=max_samples,
+                  data_format=agent.network.data_format,
+                  color_format=color_format)
+print("Done.")
+
 # Train and test agent for specified number of epochs
 print("Starting the training!")
 test_scores_all = []
@@ -161,12 +181,16 @@ for epoch in range(epochs):
     save_epoch = (epoch + 1 == epochs or (epoch + 1) % save_freq == 0)
     for test_episode in range(test_episodes_per_epoch):
         agent.initialize_new_episode()
+        screen_history = []
         while not game.is_episode_finished():
             current_screen = game.get_state().screen_buffer
             agent.update_state(current_screen)
-            if save_epoch and trackable:
-                agent.track_action()
-                agent.track_position()
+            if save_epoch:
+                if trackable:
+                    agent.track_action()
+                    agent.track_position()
+                if save_gifs:
+                    screen_history.append(current_screen)
             agent.make_action()
             print("Game tick %d of max %d in test episode %d of %d." 
                   % (game.get_episode_time() - game.get_episode_start_time(), 
@@ -174,7 +198,13 @@ for epoch in range(epochs):
                      test_episode+1,
                      test_episodes_per_epoch), 
                   end='\r')
+        
+        # Update score history and save gifs (too much overhead to save all at end)
         agent.update_score_history()
+        if save_epoch and save_gifs:
+            gif_file_path = game_dir + "test_episode%d-%d" \
+                            % (epoch+1, test_episode+1)
+            toolbox.make_gif(screen_history, game_dir)
     
     # Get test results
     test_scores = np.asarray(agent.score_history)

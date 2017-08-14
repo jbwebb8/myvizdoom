@@ -43,6 +43,8 @@ parser.add_argument("-c", "--color", default="RGB",
                     metavar="", help="order of color channels (if color img)")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
+parser.add_argument("-g", "--save-gifs", action="store_true", default=False,
+                    help="make gifs of agent test episodes")
 parser.add_argument("-q", "--view-q-values", action="store_true", default=False,
                     help="view real-time Q values")
 parser.add_argument("-n", "--name", default="test", metavar="", 
@@ -65,6 +67,7 @@ max_samples = args.max_samples
 visualize_network = args.visualize_network
 color_format = args.color
 trackable = args.track
+save_gifs = args.save_gifs
 view_q_values = args.view_q_values
 exp_name = args.name
 exp_descr = args.description
@@ -139,8 +142,10 @@ print("Done.")
 
 # Test agent performance in scenario
 print("Let's watch!")
+screen_history_all = []
 for test_episode in range(test_episodes):
     agent.initialize_new_episode()
+    screen_history = []
     while not game.is_episode_finished():
         # Update current state and position
         current_screen = game.get_state().screen_buffer
@@ -168,7 +173,15 @@ for test_episode in range(test_episodes):
                        # so needed to slow down video
 
         # Make action based on learning algorithm
-        agent.make_action()
+        a = agent.get_action()
+        game.set_action(a)
+        for _ in range(agent.frame_repeat):
+            if save_gifs:
+                screen_history.append(current_screen)
+            game.advance_action()
+            if not game.is_episode_finished():
+                current_screen = game.get_state().screen_buffer
+            
         print("Game tick %d of max %d in test episode %d of %d.        " 
               % (game.get_episode_time() - game.get_episode_start_time(), 
                  game.get_episode_timeout(),
@@ -178,6 +191,8 @@ for test_episode in range(test_episodes):
     
     # Save scores and sleep between episodes
     agent.update_score_history()
+    if save_gifs:
+        screen_history_all.append(screen_history)
     sleep(1.0) 
 
 print("\nSaving results... ", end="")
@@ -212,5 +227,11 @@ if len(layer_names) > 0:
                 max_states[i])
         np.save(max_dir + "max_positions_%s" % abbr_name,
                 max_positions[i])
+
+# Save gifs of agent gameplay
+if save_gifs:
+    for i, sh in enumerate(screen_history_all):
+        gif_file_path = game_dir + "test_episode-%d" % (i+1)
+        toolbox.make_gif(sh, gif_file_path)
 
 print("Done.")
