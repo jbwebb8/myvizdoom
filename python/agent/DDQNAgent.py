@@ -14,7 +14,7 @@ class DDQNAgent(DQNAgent):
                           params_file=params_file, 
                           train_mode=train_mode, 
                           action_set=action_set, 
-                          frame_repeat=frame_repeat, 
+                          frame_repeat=frame_repeat,
                           **kwargs)
 
     # Override DQN update function with Double DQN update
@@ -25,5 +25,5 @@ class DDQNAgent(DQNAgent):
         a_max = np.argmax(self.network.get_q_values(s2), axis=1)
         q2_ = self.target_network.get_q_values(s2)
         q2 = q2_[np.arange(q2_.shape[0]), a_max]
-        target_q = r + self.gamma * (1 - isterminal) * q2
+        target_q = r + (self.gamma ** self.n_step) * (1 - isterminal) * q2
         return target_q
