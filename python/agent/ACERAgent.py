@@ -1,3 +1,10 @@
+###############################################################################
+# In progress: The class was originally intended to be an Actor-Critic with
+# Experience Replay (ACER) Agent but now has become a blend of ACER with
+# asychronous AC methods. The code may run, but the network diverges and is
+# suboptimal. Do not use yet.
+###############################################################################
+
 from agent.Agent import Agent
 from network.ACNetwork import ACNetwork
 from memory.ReplayMemory import ReplayMemory
