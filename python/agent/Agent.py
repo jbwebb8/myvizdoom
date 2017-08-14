@@ -13,10 +13,42 @@ import os, errno
 class Agent:
     """
     Creates an Agent object that oversees network, memory, and learning functions.
+
+    Args:
+    - game: DoomGame instance simulating the environment.
+    - output_directory: Directory in which results will be saved.
+    - agent_file (optional, default: None): JSON file containing agent settings
+        (see README).
+    - params_file (optional, default: None): File containing weights from 
+        previously trained network.
+    - train_mode (optional, default: True): Boolean; True if training agent.
+    - action_set (optional, default: default): List of actions available for 
+        agent. Possible values are:
+        - default: [move_forward], [turn_right], [turn_left], [use],
+            [move_forward, turn_right], [move_forward, turn_left]
+        - basic_four: [move_forward], [turn_right], [turn_left], [use]
+        - basic_three: [move_forward], [turn_right], [turn_left]
+    - frame_repeat (optional, default: 4): Number of frames to repeat action 
+        for each action chosen.
+    - **kwargs (optional): May be used in place of agent file.
+        - agent_name (default: default): Name of agent.
+        - net_file (default: default): JSON file specifying network 
+            architecture.
+        - alpha (default: 0.00025): Learning rate.
+        - gamma (default: 0.99): Discount factor for value iterative methods.
+        - phi (default: 1): Number of previous frames that constitute state of
+            agent.
+        - channels (default: 1): Number of channels in game screen buffer.
     """
 
     NET_JSON_DIR = "../networks/"
     MAIN_SCOPE = "main_network"
+    DEFAULT_AGENT_ARGS = {"agent_name": "default",
+                          "net_file":   "default",
+                          "alpha":      0.00025,
+                          "gamma":      0.99,
+                          "phi":        1,
+                          "channels":   1}
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default", 
@@ -45,19 +77,18 @@ class Agent:
         if agent_file is not None:
             self._load_agent_file(agent_file)
         else:
-            self.agent_name = kwargs.pop("agent_name", "default")
-            self.net_file = kwargs.pop("net_name", "dqn_basic")
-            self.net_type = kwargs.pop("net_type", "dqn")
-            self.alpha = kwargs.pop("alpha", 0.00025)
-            self.gamma = kwargs.pop("gamma", 0.99)
-            self.phi = kwargs.pop("phi", 1)
-            self.channels = kwargs.pop("channels", 1)
-            self.epsilon_start = kwargs.pop("epsilon_start", 1.0)
-            self.epsilon_end = kwargs.pop("epsilon_end", 0.1)
-            self.epsilon_const_rate = kwargs.pop("epsilon_const_rate", 0.1)
-            self.epsilon_decay_rate = kwargs.pop("epsilon_decay_rate", 0.6)
-            self.batch_size = kwargs.pop("batch_size", 64)
-            self.rm_capacity = kwargs.pop("rm_capacity", 10000)
+            self.agent_name = kwargs.pop("agent_name", 
+                                         DEFAULT_AGENT_ARGS["agent_name"])
+            self.net_file   = kwargs.pop("net_name", 
+                                         DEFAULT_AGENT_ARGS["net_file"])
+            self.alpha      = kwargs.pop("alpha", 
+                                         DEFAULT_AGENT_ARGS["alpha"])
+            self.gamma      = kwargs.pop("gamma", 
+                                         DEFAULT_AGENT_ARGS["gamma"])
+            self.phi        = kwargs.pop("phi",
+                                         DEFAULT_AGENT_ARGS["phi"])
+            self.channels   = kwargs.pop("channels",
+                                         DEFAULT_AGENT_ARGS["channels"])
         if self.channels != self.game.get_screen_channels():
             raise ValueError("Number of image channels between agent and "
                              "game instance do not match. Please check config "
@@ -88,6 +119,7 @@ class Agent:
         self.action_history = []
     
     def _make_directory(self, folders):
+        """Makes directories if do not already exist."""
         for f in folders:
             try:
                 os.makedirs(f)
@@ -96,8 +128,17 @@ class Agent:
                     raise
 
     def _set_actions(self, action_set):
-        # For dictionary of buttons and their integer values, see
-        # ViZDoom/include/ViZDoomTypes.h
+        """
+        Sets available actions for agent. For dictionary of buttons and their 
+        integer values, see ViZDoom/include/ViZDoomTypes.h.
+
+        Args:
+        - action_set: Name of pre-defined list of actions. Possible values are:
+            - default: [move_forward], [turn_right], [turn_left], [use],
+                [move_forward, turn_right], [move_forward, turn_left]
+            - basic_four: [move_forward], [turn_right], [turn_left], [use]
+            - basic_three: [move_forward], [turn_right], [turn_left]
+        """
         
         def _check_actions(actual_num_buttons, expected_num_buttons):
             if actual_num_buttons < expected_num_buttons:
@@ -148,6 +189,7 @@ class Agent:
             actions[3, use]                        = 1
 
         elif action_set == "basic_three":
+            # Grab indices corresponding to buttons
             move_forward = np.where(self.action_indices == 13)
             turn_right   = np.where(self.action_indices == 14)
             turn_left    = np.where(self.action_indices == 15)
@@ -175,7 +217,7 @@ class Agent:
         return action_list
 
     def _load_agent_file(self, agent_file):
-        # Grab arguments from agent file
+        """Grabs arguments from agent file"""
         if not agent_file.lower().endswith(".json"): 
             raise Exception("No agent JSON file.")
         agent = json.loads(open(agent_file).read())
@@ -187,28 +229,19 @@ class Agent:
         self.gamma = agent["network_args"]["gamma"]
         self.phi = agent["network_args"]["phi"]
         self.channels = agent["network_args"]["channels"]
-        self.epsilon_start = agent["learning_args"]["epsilon_start"]
-        self.epsilon_end = agent["learning_args"]["epsilon_end"]
-        self.epsilon_const_rate = agent["learning_args"]["epsilon_const_rate"]
-        self.epsilon_decay_rate = agent["learning_args"]["epsilon_decay_rate"]
-        self.batch_size = agent["learning_args"]["batch_size"]
-        self.target_net_freq = agent["learning_args"]["target_network_update_freq"]
-        self.target_net_rate = agent["learning_args"]["target_network_update_rate"]
-        self.rm_type = agent["memory_args"]["type"]
-        self.rm_capacity = agent["memory_args"]["replay_memory_size"]
-        self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
 
     def reset_state(self):
+        """Resets agent state to zeros."""
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
 
     def reset_history(self):
+        """Resets position, action, and score history to empty."""
         self.position_history = []
         self.action_history = []
         self.score_history = []
 
-    # TODO: minimize tranposing axes between NCHW and NHWC formats
-    # Converts and downsamples the input image
     def _preprocess_image(self, img):
+        """Converts and downsamples the input image"""
         # If channels = 1, image shape is [y, x]. Reshape to [channels, y, x]
         if img.ndim == 2:
             new_img = img[..., np.newaxis]
@@ -250,13 +283,26 @@ class Agent:
 
         return new_img
 
-    # Updates current state to previous phi images
     def update_state(self, new_img, replace=True):
+        """
+        Updates current state to previous phi images
+        
+        Args:
+        - new_img: Current screen buffer of DoomGame.
+        - replace (optional, default: True): Boolean. If True, add new_img to 
+            state in FIFO order. If False, append to current state; assumes 
+            that state has less than phi images (used for initializing state).
+        """
+        # Preprocess screen buffer
         new_state = self._preprocess_image(new_img)
+
+        # Set data format to feed into convolutional layers
         if self.network.data_format == "NCHW":
             ax = 0
         else:
             ax = 2
+
+        # Add new image to state. Delete least recent image if replace=True.    
         if replace:
             self.state = np.delete(self.state, np.s_[0:self.channels], axis=ax)
             self.state = np.append(self.state, new_state, axis=ax)
@@ -268,6 +314,7 @@ class Agent:
             self.state[j + [slice(i,i+self.channels)]] = new_state          
 
     def initialize_new_episode(self):
+        """Starts new DoomGame episode and initialize agent state."""
         self.game.new_episode()
         self.reset_state()
         for init_step in range(self.phi):
@@ -275,6 +322,7 @@ class Agent:
             self.update_state(current_screen, replace=False)
 
     def track_position(self):
+        """Adds current position of agent to position history."""
         pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
         pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
         pos_z = self.game.get_game_variable(GameVariable.POSITION_Z)
@@ -282,25 +330,64 @@ class Agent:
         self.position_history.append([timestamp, pos_x, pos_y, pos_z])
     
     def track_action(self):
+        """Adds current action of agent to action history."""
         last_action = self.game.get_last_action()
         timestamp = self.game.get_episode_time()
         self.action_history.append([timestamp] + last_action)
 
     def update_score_history(self):
+        """Adds current score of agent to score history."""
         score = self.game.get_total_reward()
         tracking_score = self.game.get_game_variable(GameVariable.USER1)
         self.score_history.append(score)
 
     def get_layer_output(self, layer_output_names, state=None):
+        """
+        Returns values of layer(s) in network.
+
+        Args:
+        - layer_output_names: List of names of layers in network. These
+            correspond to the names specified in the network file.
+        - state (optional, default: None): State fed into input layer of
+            network. If none, feeds current state of agent.
+        
+        Returns:
+        - List of numpy arrays containing values of each layer specified by
+            layer_output_names.
+        """
         if state is None: 
             state = self.state
         return self.network.get_layer_output(state, layer_output_names)
 
     def get_layer_shape(self, layer_output_names):
+        """
+        Returns shapes of layer(s) in network.
+
+        Args:
+        - layer_output_names: List of names of layers in network. These
+            correspond to the names specified in the network file.
+        
+        Returns:
+        - List of tuples [d1, d2, ..., dn] for n-dimensional layer(s) specified 
+            by layer_output_names.
+        """
         return self.network.get_layer_shape(layer_output_names)
 
     def save_model(self, model_name, global_step=None, save_meta=True,
                    save_summaries=True):
+        """
+        Saves current network parameters and summaries to output directory.
+
+        Args:
+        - model_name: Name of model to use in saved filenames.
+        - global_step (optional, default: None): Global training step; used to
+            append saved filenames ((model_name)-(global_step)).
+        - save_meta (optional, default: True): Boolean. If True, save metagraph
+            of network, which can be later used to restore a trained model.
+        - save_summaries (optional, default: True): Boolean. If True, save 
+            network summaries to display in TensorBoard. See specific network
+            class for which summaries are available.
+        """
         batch = None
         if save_summaries:
             batch = self._get_learning_batch()
