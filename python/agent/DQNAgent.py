@@ -5,6 +5,7 @@ from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
 import tensorflow as tf
 import numpy as np
 from random import randint, random
+import json
 
 class DQNAgent(Agent):
     """
@@ -50,8 +51,8 @@ class DQNAgent(Agent):
                               "epsilon_decay_rate": 0.6,
                               "batch_size": 32,
                               "target_network_update_freq": 4,
-                              "target_network_update_rate": 0.001
-                              "memory_type": "standard",
+                              "target_network_update_rate": 0.001,
+                              "replay_memory_type": "standard",
                               "replay_memory_size": 10000,
                               "replay_memory_start_size": 10000}
 
@@ -68,10 +69,10 @@ class DQNAgent(Agent):
                        action_set=action_set, 
                        frame_repeat=frame_repeat, 
                        **kwargs)
-
-        # Load learning and network parameters
+        
+        # Load DQN-specific learning and network parameters
         if agent_file is not None:
-            self._load_agent_file(agent_file)
+            self._load_DQN_agent_file(agent_file)
         else:
             self.n_step             = kwargs.pop("n_step",
                                                  DEFAULT_DQN_AGENT_ARGS["n_step"])
@@ -89,8 +90,8 @@ class DQNAgent(Agent):
                                                  DEFAULT_DQN_AGENT_ARGS["target_network_update_freq"])
             self.target_net_rate    = kwargs.pop("target_network_update_rate",
                                                  DEFAULT_DQN_AGENT_ARGS["target_network_update_rate"])
-            self.rm_type            = kwargs.pop("memory_type",
-                                                 DEFAULT_DQN_AGENT_ARGS["memory_type"])
+            self.rm_type            = kwargs.pop("replay_memory_type",
+                                                 DEFAULT_DQN_AGENT_ARGS["replay_memory_type"])
             self.rm_capacity        = kwargs.pop("replay_memory_size",
                                                  DEFAULT_DQN_AGENT_ARGS["replay_memory_size"])
             self.rm_start_size      = kwargs.pop("replay_memory_start_size",
@@ -148,7 +149,7 @@ class DQNAgent(Agent):
         self.batch_size = agent["learning_args"]["batch_size"]
         self.target_net_freq = agent["learning_args"]["target_network_update_freq"]
         self.target_net_rate = agent["learning_args"]["target_network_update_rate"]
-        self.rm_type = agent["memory_args"]["memory_type"]
+        self.rm_type = agent["memory_args"]["replay_memory_type"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
         self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
 
@@ -210,7 +211,8 @@ class DQNAgent(Agent):
         Create ops in TensorFlow graph to represent updating target network
         toward primary network, given by:
 
-        w_T = τ * w_T + (1 - τ) * w_M,
+        w_T = τ * w_T + (1 - τ) * w_M
+
         where w_T and w_M are analogous parameters in the target and main 
         networks, respectively.
 
@@ -219,9 +221,10 @@ class DQNAgent(Agent):
 
         Returns:
         - Pointers to ops in TensorFlow graph that update target network.
+        
+        Credit: Adapted from 
+        https://github.com/awjuliani/DeepRL-Agents/blob/master/Double-Dueling-DQN.ipynb
         """
-        # Adapted from 
-        # https://github.com/awjuliani/DeepRL-Agents/blob/master/Double-Dueling-DQN.ipynb
         update_ops = []
         main_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
                                       scope=self.MAIN_SCOPE)
