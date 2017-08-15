@@ -115,6 +115,19 @@ class NetworkBuilder:
                                     + layer["kwargs"]["biases_initializer"] 
                                     + "\" not yet defined.")
         
+        if "normalizer_fn" in layer["kwargs"]:
+            if layer["kwargs"]["normalizer_fn"] == "batch_norm":
+                layer["kwargs"]["normalizer_fn"] = tf.contrib.layers.batch_norm
+                if "normalizer_params" not in layer["kwargs"]:
+                    layer["kwargs"]["normalizer_params"] = {}
+                try:
+                    layer["kwargs"]["normalizer_params"]["is_training"] \
+                        = self._get_object("is_training")
+                except KeyError:
+                    is_training = tf.placeholder(tf.bool, name="is_training")
+                    layer["kwargs"]["normalizer_params"]["is_training"] = train_mode
+                    self.graph_dict["is_training"] = is_training
+
         #######################################################
         # Add new kwargs support here.
         # if "custom_args" in layer["kwargs"]:
@@ -204,16 +217,26 @@ class NetworkBuilder:
 
     # Adds optimizer to graph
     def add_optimizer(self, opt_type, loss, var_list, params=None):
+        """
+        To ensure that, if batch normalization is present in any layer, the
+        moving averages and variances are updated for each training step,
+        we must prepend assignment of train_step with:
+
+            update_ops = tf.GraphKeys.UPDATE_OPS
+            with tf.control_dependencies(update_ops):
+                train_step = ...
+        
+        """
         def modify_gradients(grad, mod_type, *params):
-                if mod_type == "scale":
-                    return params[0] * grad
-                elif mod_type == "clip_by_value":
-                    return tf.clip_by_value(grad, params[0], params[1])
-                elif mod_type == "clip_by_norm":
-                    return tf.clip_by_norm(grad, params[0])
-                else:
-                    raise ValueError("Gradient modification type \"" + mod_type
-                                     + "not yet defined.")
+            if mod_type == "scale":
+                return params[0] * grad
+            elif mod_type == "clip_by_value":
+                return tf.clip_by_value(grad, params[0], params[1])
+            elif mod_type == "clip_by_norm":
+                return tf.clip_by_norm(grad, params[0])
+            else:
+                raise ValueError("Gradient modification type \"" + mod_type
+                                    + "not yet defined.")
 
         if opt_type.lower() == "rmsprop":
             optimizer = tf.train.RMSPropOptimizer(self.network.learning_rate, 
@@ -221,7 +244,10 @@ class NetworkBuilder:
             train_step = []
             for l in loss:
                 gvs = optimizer.compute_gradients(l, var_list=var_list) # list of [grad(var), var]
-                train_step.append(optimizer.apply_gradients(gvs, name="train_step"))
+                update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS,
+                                               scope=self.network.scope)
+                with tf.control_dependencies(update_ops):
+                    train_step.append(optimizer.apply_gradients(gvs, name="train_step"))
             return optimizer, train_step
         elif opt_type.lower() == "rmsprop_clip":
             # params = lists of [layer_name, clip_type]
@@ -241,7 +267,10 @@ class NetworkBuilder:
                         else:
                             mod_gvs = [[modify_gradients(g, clip_type, *par[2:]), v]
                                     if layer_name in v.name else [g, v] for g, v in mod_gvs]
-                train_step.append(optimizer.apply_gradients(mod_gvs, name="train_step"))
+                update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS,
+                                               scope=self.network.scope)
+                with tf.control_dependencies(update_ops):
+                    train_step.append(optimizer.apply_gradients(mod_gvs, name="train_step"))
             return optimizer, train_step
                 
         ###########################################################

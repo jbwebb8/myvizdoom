@@ -47,6 +47,7 @@ class DQNetwork(Network):
             weights = np.ones(a.shape[0])
         feed_dict={self.state: s1, self.actions: a, 
                    self.target_q: target_q, self.IS_weights: weights}
+        feed_dict = self._check_train_mode(feed_dict)
         loss_, train_step_ = self.sess.run([self.loss, self.train_step],
                                            feed_dict=feed_dict)
         return loss_
@@ -54,11 +55,13 @@ class DQNetwork(Network):
     def get_q_values(self, s1_):
         s1_ = self._check_state(s1_)
         feed_dict={self.state: s1_}
+        feed_dict = self._check_train_mode(feed_dict)
         return self.sess.run(self.q, feed_dict=feed_dict)
     
     def get_best_action(self, s1_):
         s1_ = self._check_state(s1_)
         feed_dict={self.state: s1_}
+        feed_dict = self._check_train_mode(feed_dict)
         return self.sess.run(self.best_a, feed_dict=feed_dict)
 
     def save_model(self, model_name, global_step=None, save_meta=True,
@@ -77,6 +80,7 @@ class DQNetwork(Network):
                            self.actions: a, 
                            self.target_q: target_q,
                            self.IS_weights: w}
+                feed_dict = self._check_train_mode(feed_dict)
                 neur_sum_ = self.sess.run(self.neur_sum,
                                           feed_dict=feed_dict)
                 self.writer.add_summary(neur_sum_, global_step)

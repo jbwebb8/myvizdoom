@@ -54,6 +54,7 @@ class Network:
                 self.input_res = self.input_shape[1:]
             else:
                 self.input_res = self.input_shape[:-1]
+            self.is_training = self.graph_dict["is_training"][0]
 
             # Set output directories
             self.out_dir = output_directory
@@ -104,6 +105,11 @@ class Network:
             return np.column_stack([np.arange(actions.shape[0]), actions])
         else:
             return actions
+
+    def _check_train_mode(self, feed_dict):
+        if self.train_mode:
+            feed_dict[self.is_training] = self.train_mode
+        return feed_dict
 
     def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)
