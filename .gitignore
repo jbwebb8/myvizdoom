@@ -26,4 +26,5 @@ experiments/
 # Mutable files
 config/*.cfg
 !template.cfg
+agents/*.json
 test.json
