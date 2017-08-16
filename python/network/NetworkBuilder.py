@@ -125,7 +125,7 @@ class NetworkBuilder:
                         = self._get_object("is_training")
                 except KeyError:
                     is_training = tf.placeholder(tf.bool, name="is_training")
-                    layer["kwargs"]["normalizer_params"]["is_training"] = train_mode
+                    layer["kwargs"]["normalizer_params"]["is_training"] = is_training
                     self.graph_dict["is_training"] = is_training
 
         #######################################################
@@ -140,8 +140,31 @@ class NetworkBuilder:
             return tf.contrib.layers.convolution2d(input_layer, 
                                                     **layer["kwargs"])
         elif layer_type == "flatten":
-            return tf.contrib.layers.flatten(input_layer, 
-                                                **layer["kwargs"])
+            with tf.name_scope(layer["kwargs"].pop("scope", "FLAT")):
+                # Yes, I basically copied tf.contrib.layers.flatten, but
+                # it was a good learning experience!
+                # Grab runtime values to determine number of elements
+                input_shape = tf.shape(input_layer)
+                input_ndims = input_layer.get_shape().ndims
+                batch_size = tf.slice(input_shape, [0], [1])
+                layer_shape = tf.slice(input_shape, [1], [input_ndims-1])
+                num_neurons = tf.expand_dims(tf.reduce_prod(layer_shape), 0)
+                flattened_shape = tf.concat([batch_size, num_neurons], 0)
+                if self.data_format == "NHWC":
+                    input_layer = tf.transpose(input_layer, perm=[0, 3, 1, 2])
+                flat = tf.reshape(input_layer, flattened_shape)
+                
+                # Attempt to set values during graph building
+                input_shape = input_layer.get_shape().as_list()
+                batch_size, layer_shape = input_shape[0], input_shape[1:]
+                if all(layer_shape): # None not present
+                    num_neurons = 1
+                    for dim in layer_shape:
+                        num_neurons *= dim
+                    flat.set_shape([batch_size, num_neurons])
+                else: # None present
+                    flat.set_shape([batch_size, None])
+                return flat
         elif layer_type == "fully_connected" or "fc":
             return tf.contrib.layers.fully_connected(input_layer, 
                                                         **layer["kwargs"])
