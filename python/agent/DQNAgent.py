@@ -201,7 +201,7 @@ class DQNAgent(Agent):
                 _ = self.network.learn(s1, a, target_q, weights=w)
 
                 # Update priority in PER
-                error = target_q - q
+                error = target_q - q[np.arange(q.shape[0]), np.squeeze(a)]
                 self.memory.update_priority(error, idx)
 
             return learn_from_memory
