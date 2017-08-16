@@ -267,6 +267,10 @@ class Toolbox:
             elif self.channels == 1:
                 img = np.squeeze(img)
 
+            # Rescale to [0, 255] if necessary
+            if np.max(img) <= 1.0:
+                img = 255.0 * img
+
             return img
         
         # Determine duration and/or frames per second

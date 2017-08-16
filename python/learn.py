@@ -45,8 +45,9 @@ parser.add_argument("-c", "--color", default="RGB",
                     metavar="", help="order of color channels (if color img)")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
-parser.add_argument("-g", "--save-gifs", action="store_true", default=False,
-                    help="make gifs of agent test episodes")
+parser.add_argument("-g", "--save-gifs", default=None,
+                    choices=[None, "game_screen", "agent_state"],
+                    help="make gifs of agent test episodes with specified images")
 parser.add_argument("-n", "--name", default="train", metavar="", 
                     help="experiment name (for saving files)")
 parser.add_argument("-d", "--description", default="training", metavar="", 
@@ -161,6 +162,7 @@ for epoch in range(epochs):
 
     # Training
     print("Training...")
+    agent.set_train_mode(True)
     agent.initialize_new_episode()
     for learning_step in trange(learning_steps_per_epoch):
         agent.perform_learning_step(epoch, epochs)
@@ -177,6 +179,7 @@ for epoch in range(epochs):
     
     # Testing
     print("\nTesting...")
+    agent.set_train_mode(False)
     agent.reset_history()
     save_epoch = (epoch + 1 == epochs or (epoch + 1) % save_freq == 0)
     for test_episode in range(test_episodes_per_epoch):
@@ -189,7 +192,9 @@ for epoch in range(epochs):
                 if trackable:
                     agent.track_action()
                     agent.track_position()
-                if save_gifs:
+                if save_gifs is not None:
+                    if save_gifs == "agent_state":
+                        current_screen = agent._preprocess_image(current_screen)
                     screen_history.append(current_screen)
             agent.make_action()
             print("Game tick %d of max %d in test episode %d of %d." 
@@ -201,7 +206,7 @@ for epoch in range(epochs):
         
         # Update score history and save gifs (too much overhead to save all at end)
         agent.update_score_history()
-        if save_epoch and save_gifs:
+        if save_epoch and save_gifs is not None:
             gif_file_path = game_dir + "test_episode%d-%d" \
                             % (epoch+1, test_episode+1)
             toolbox.make_gif(screen_history, game_dir)

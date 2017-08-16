@@ -43,8 +43,9 @@ parser.add_argument("-c", "--color", default="RGB",
                     metavar="", help="order of color channels (if color img)")
 parser.add_argument("--track", action="store_true", default=False,
                     help="track agent position and action")
-parser.add_argument("-g", "--save-gifs", action="store_true", default=False,
-                    help="make gifs of agent test episodes")
+parser.add_argument("-g", "--save-gifs", default=None,
+                    choices=[None, "game_screen", "agent_state"],
+                    help="make gifs of agent test episodes with specified images")
 parser.add_argument("-q", "--view-q-values", action="store_true", default=False,
                     help="view real-time Q values")
 parser.add_argument("-n", "--name", default="test", metavar="", 
@@ -176,7 +177,9 @@ for test_episode in range(test_episodes):
         a = agent.get_action()
         game.set_action(a)
         for _ in range(agent.frame_repeat):
-            if save_gifs:
+            if save_gifs is not None:
+                if save_gifs == "agent_state":
+                    current_screen = agent._preprocess_image(current_screen)
                 screen_history.append(current_screen)
             game.advance_action()
             if not game.is_episode_finished():
