@@ -55,7 +55,7 @@ class PrioritizedReplayMemory(ReplayMemory):
     def add_priority(self, p, i):
         # note that while heap is 1-indexed, RM is still 0-indexed
         j = self.start_pos + i 
-
+        
         # Add priority of transition i to heap
         self.heap[j] = p ** self.alpha
 
@@ -109,6 +109,7 @@ class PrioritizedReplayMemory(ReplayMemory):
         w = (1 / self.size + 1 / P) ** self.beta
         w = w / np.max(w) # normalize weights so all <= 1.0
         if (P == 0).any() or self.size == 0:
+            print("m:", m)
             print("t_: ", t_)
             print("heap[t_]: ", self.heap[t_])
             print("heap[1]: ", self.heap[1])
@@ -116,7 +117,7 @@ class PrioritizedReplayMemory(ReplayMemory):
             print("size: ", self.size)
             print("beta: ", self.beta)
             print("w: ", w)
-            np.savetxt("../tmp/tmp_results/heap.txt", self.heap)
+            np.savetxt("./heap.csv", self.heap, delimiter=",")
         
         # Stack overlapping frames from s1 to stored frames of s2 to
         # recreate full s2 state
@@ -135,7 +136,7 @@ class PrioritizedReplayMemory(ReplayMemory):
         # p_i = |Q'(s,a) - Q(s,a)| + ε
         p = abs(delta) + 0.01
         try:
-            for _ in range(len(p)): self.add_priority(p, pos)
+            for i in range(len(p)): self.add_priority(p[i], pos[i])
         except TypeError: # catches updates of size one
             self.add_priority(p, pos)
         
