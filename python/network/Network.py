@@ -54,7 +54,10 @@ class Network:
                 self.input_res = self.input_shape[1:]
             else:
                 self.input_res = self.input_shape[:-1]
-            self.is_training = self.graph_dict["is_training"][0]
+            try:
+                self.is_training = self.graph_dict["is_training"][0]
+            except KeyError:
+                pass
 
             # Set output directories
             self.out_dir = output_directory
@@ -108,7 +111,10 @@ class Network:
 
     def _check_train_mode(self, feed_dict):
         if self.train_mode:
-            feed_dict[self.is_training] = self.train_mode
+            try:
+                feed_dict[self.is_training] = self.train_mode
+            except AttributeError:
+                pass
         return feed_dict
 
     def load_params(self, params_file_path):

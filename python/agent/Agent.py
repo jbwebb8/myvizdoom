@@ -230,6 +230,13 @@ class Agent:
         self.phi = agent["network_args"]["phi"]
         self.channels = agent["network_args"]["channels"]
 
+    def set_train_mode(self, new_mode):
+        """Sets train_mode to new value (True if training; False if testing)"""
+        assert isinstance(new_mode, bool)
+        self.train_mode = new_mode
+        self.network.train_mode = new_mode
+
+
     def reset_state(self):
         """Resets agent state to zeros."""
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
