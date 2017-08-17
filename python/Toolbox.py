@@ -242,15 +242,15 @@ class Toolbox:
             plt.show(block=False)
             plt.pause(0.001)
     
-    def make_gif(self, images, filepath, duration=None, fps=30):
+    def make_gif(self, images, filepath, duration=None, fps=35):
         import moviepy.editor as mpy
 
         def make_frame(t):
             # Grab image, accounting for rounding error
-            idx = int(t * fps_)
+            idx = int(round(t * fps_))
             try: 
                 img = images[idx]
-            except IndexError:
+            except IndexError: # out of bounds
                 img = images[-1]
 
             # Convert to [H, W, C] if not already
@@ -275,12 +275,15 @@ class Toolbox:
         
         # Determine duration and/or frames per second
         if duration is not None:
+            # Make clip of specified duration (not guaranteed to include
+            # all images)
             duration_ = duration
             fps_ = len(images) / duration_
         else:
+            # Make clip of entire sequence to match frame rate
             duration_ = len(images) / fps
             fps_ = fps
-
+        
         # Create .gif file
         clip = mpy.VideoClip(make_frame, duration=duration_)
         if not filepath.endswith(".gif"):
