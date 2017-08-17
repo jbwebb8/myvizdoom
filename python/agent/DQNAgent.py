@@ -125,14 +125,14 @@ class DQNAgent(Agent):
             if (not isinstance(self.n_step, int)) or (self.n_step < 1):
                 raise ValueError("Agent n_step must be a natural number.")
             if self.n_step > 1:
-                self.s1_buffer = np.zeros([n_step] + list(self.state.shape), 
+                self.s1_buffer = np.zeros([self.n_step] + list(self.state.shape), 
                                           dtype=np.float32)
-                self.a_buffer = np.zeros(n_step, dtype=np.int32)
-                self.s2_buffer = np.zeros([n_step] + list(self.state.shape),
+                self.a_buffer = np.zeros(self.n_step, dtype=np.int32)
+                self.s2_buffer = np.zeros([self.n_step] + list(self.state.shape),
                                           dtype=np.float32)
-                self.isterminal_buffer = np.zeros(n_step, dtype=np.float32)
-                self.r_buffer = np.zeros(n_step, dtype=np.float32)
-                self.gamma_buffer = np.asarray([self.gamma ** k for k in range(n_step)])
+                self.isterminal_buffer = np.zeros(self.n_step, dtype=np.float32)
+                self.r_buffer = np.zeros(self.n_step, dtype=np.float32)
+                self.gamma_buffer = np.asarray([self.gamma ** k for k in range(self.n_step)])
                 self.buffer_pos = 0
                 self.episode_step = 0
     
@@ -255,7 +255,7 @@ class DQNAgent(Agent):
                 # γ**k * V(s_t) during learning batch with target network
                 t_start = self.buffer_pos - (self.n_step - 1)
                 discounted_reward = np.dot(self.gamma_buffer, self.r_buffer)
-                self.add_transition_to_memory(self.s1_buffer[t_start],
+                self.memory.add_transition(self.s1_buffer[t_start],
                                               self.a_buffer[t_start],
                                               self.s2_buffer[self.buffer_pos],
                                               self.isterminal_buffer[t_start],
@@ -275,7 +275,7 @@ class DQNAgent(Agent):
             for i in range(m):
                 pos = self.buffer_pos - i
                 running_r = self.r_buffer[pos] + (self.gamma * running_r)
-                self.add_transition_to_memory(self.s1_buffer[pos],
+                self.memory.add_transition(self.s1_buffer[pos],
                                               self.a_buffer[pos],
                                               self.s2_buffer[self.buffer_pos],
                                               self.isterminal_buffer[pos],
