@@ -270,7 +270,7 @@ class DQNAgent(Agent):
         else:
             # If s_T terminal, store last at most n transitions (T-n,...,T-1)
             # recursively as: R_t <-- r_i + γ * R_(t+1)
-            m = max(self.n_step, self.episode_step)
+            m = min(self.n_step, self.episode_step)
             running_r = 0
             for i in range(m):
                 pos = self.buffer_pos - i
