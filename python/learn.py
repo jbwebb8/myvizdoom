@@ -94,20 +94,26 @@ def make_directory(folders):
 
 # Saves txt file of important experimental settings
 # and copies (small) configuration files
-def save_exp_details(folder):
+def save_exp_details(folder, agent):
     f = open(folder + "settings.txt", "w+")
     f.write("Name: " + exp_name + "\n")
     f.write("Description: " + exp_descr + "\n")
     f.write("Agent file: " + agent_file_path + "\n")
+    net_file_path = agent.net_file
+    f.write("Network file: " + net_file_path + "\n")
     f.write("Params file: " + str(params_file_path) + "\n")
     f.write("Config file: " + config_file_path + "\n")
     f.write("Action set: " + action_set + "\n")
     f.write("Epochs: " + str(epochs) + "\n")
     f.write("Learning steps per epoch: " + str(learning_steps_per_epoch) + "\n")
     f.write("Test episodes per epoch: " + str(test_episodes_per_epoch))
-    files_to_copy = [agent_file_path, config_file_path]
+    files_to_copy = [agent_file_path, net_file_path, config_file_path]
     for fp in files_to_copy:
-        copy(fp, folder)
+        new_fp = folder + fp.split("/")[-1]
+        while os.path.exists(new_fp):
+            t = new_fp.split(".")
+            new_fp = '.'.join(['.'.join(t[0:-1]) + '_1', t[-1]])
+        copy(fp, new_fp)
 
 # Initializes DoomGame from config file
 def initialize_vizdoom(config_file):
@@ -118,12 +124,11 @@ def initialize_vizdoom(config_file):
     print("Done.")
     return game  
 
-# Make output directories and save experiment details
+# Make output directories
 details_dir = results_dir + "details/"
 game_dir = results_dir + "game_data/"
 max_dir = results_dir + "max_data/"
 make_directory([results_dir, details_dir, game_dir, max_dir])
-save_exp_details(details_dir)
 
 # Initialize agent and TensorFlow graph
 game = initialize_vizdoom(config_file_path)
@@ -150,6 +155,9 @@ toolbox = Toolbox(layer_shapes=layer_shapes,
                   data_format=agent.network.data_format,
                   color_format=color_format)
 print("Done.")
+
+# Save experimental details
+save_exp_details(details_dir, agent)
 
 # Train and test agent for specified number of epochs
 print("Starting the training!")
