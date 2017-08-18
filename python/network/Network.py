@@ -110,11 +110,10 @@ class Network:
             return actions
 
     def _check_train_mode(self, feed_dict):
-        if self.train_mode:
-            try:
-                feed_dict[self.is_training] = self.train_mode
-            except AttributeError:
-                pass
+        try:
+            feed_dict[self.is_training] = self.train_mode
+        except AttributeError:
+            pass
         return feed_dict
 
     def load_params(self, params_file_path):

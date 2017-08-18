@@ -9,7 +9,7 @@ class NetworkBuilder:
 
     # Returns TensorFlow object with specified name in network file
     def _get_object(self, names):
-        if type(names) == list:
+        if isinstance(names, list):
             obs = []
             for name in names:
                 obs.append(self.graph_dict[name][0])
@@ -80,7 +80,6 @@ class NetworkBuilder:
     def add_layer(self, layer):
         layer_type = layer["type"].lower()
         input_layer = self._get_object(layer["input"])
-
         # Assign custom kwargs
         if "activation_fn" in layer["kwargs"]:
             if layer["kwargs"]["activation_fn"] == "relu":
@@ -126,7 +125,7 @@ class NetworkBuilder:
                 except KeyError:
                     is_training = tf.placeholder(tf.bool, name="is_training")
                     layer["kwargs"]["normalizer_params"]["is_training"] = is_training
-                    self.graph_dict["is_training"] = is_training
+                    self.graph_dict["is_training"] = [is_training, "p"]
 
         #######################################################
         # Add new kwargs support here.
@@ -341,7 +340,7 @@ class NetworkBuilder:
             else:
                 l = self.add_layer(layer)
             self.graph_dict[layer["name"]] = [l, "l"]
-
+        
         # Add ops
         builder_type._add_reserved_ops()
         for op in net["ops"]:
@@ -365,7 +364,7 @@ class NetworkBuilder:
         else:
             if self.network.train_mode and "loss" not in self.graph_dict: 
                 raise ValueError("loss fn not found in network file.")
-
+        
         # Add optimizer
         if "optimizer" in net["global_features"]:
             # TODO: does update op keep separate rms variables for gradient
@@ -390,7 +389,7 @@ class NetworkBuilder:
         else:
             if self.network.train_mode:
                 raise ValueError("optimizer not found in network file.") 
-
+        
         return self.graph_dict, self.data_format           
 
     def add_summaries(self):
