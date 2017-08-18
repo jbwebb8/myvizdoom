@@ -28,8 +28,8 @@ parser.add_argument("config_file_path",
                     help="config file for scenario")
 parser.add_argument("results_directory",
                     help="directory where results will be saved")
-parser.add_argument("-t", "--test-episodes", type=int, default=100, metavar="",
-                    help="episodes to be played (default=100)")
+parser.add_argument("-t", "--test-episodes", type=int, default=10, metavar="",
+                    help="episodes to be played (default=10)")
 parser.add_argument("-a", "--action-set", default="default", metavar="",
                     help="name of action set available to agent")
 parser.add_argument("-l", "--layer-names", default=[], metavar="", nargs='*',
