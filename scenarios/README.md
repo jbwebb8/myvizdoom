@@ -23,7 +23,7 @@ Activate Reward Button: +1.0
 
 Living reward: -0.01* (suggested)
 
-*In MAP01E, the living reward (reward per time step, or game tic) is decreased as the agent approaches the Reward Button; specifically, it is increased by a number [0, 0.01]. Thus if the living reward is set to -0.01, the agent can never receive a positive reward for not activating the Reward Button, which, if it occurred, could lead to unintended behavior.
+*In MAP01E, the living reward (reward per time step, or game tic) is decreased as the agent approaches the Reward Button; specifically, it is increased by a number [0, 0.01]. Thus if the living reward is set to -0.01, the agent can never receive a positive reward for not activating the Reward Button, which, if it occurred, could lead to unintended behavior. To visualize the reward step-by-step yourself, use the `spectator.py` code found in the ViZDoom repo.
 
 ---
 ## W-maze (out of date)
