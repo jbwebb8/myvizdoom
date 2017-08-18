@@ -1,8 +1,9 @@
 {
     "global_features": {
+        "type": "DQN",
         "input_layer": "state",
         "output_layer": "Q",
-        "loss": "squared_error",
+        "loss": ["huber", 1.0],
         "optimizer": "rmsprop"        
     },
     
@@ -11,7 +12,7 @@
             "name": "state",
             "data_type": "float32",
             "kwargs": {
-                "shape": [30, 45],
+                "shape": [84, 84],
                 "name": "state"
             } 
         }
@@ -24,10 +25,13 @@
             "input": "state",
             "kwargs": {
                 "scope": "CONV_1",
-                "num_outputs": 8, 
-                "kernel_size": [6, 6],
-                "stride": [3, 3],
-                "padding": "VALID"
+                "num_outputs": 32, 
+                "kernel_size": [8, 8],
+                "stride": [4, 4],
+                "padding": "VALID",
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
             }
         },
 
@@ -37,10 +41,13 @@
             "input": "CONV_1",
             "kwargs": {
                 "scope": "CONV_2",
-                "num_outputs": 8, 
-                "kernel_size": [6, 6],
-                "stride": [3, 3],
-                "padding": "VALID"
+                "num_outputs": 64, 
+                "kernel_size": [4, 4],
+                "stride": [2, 2],
+                "padding": "VALID",
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
             }
         },
 
@@ -59,7 +66,10 @@
             "input": "CONV_2_FLAT",
             "kwargs": {
                 "scope": "FC_1",        
-                "num_outputs": 128
+                "num_outputs": 128,
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
             }
         },
 
@@ -69,7 +79,10 @@
             "input": "FC_1",
             "kwargs": {
                 "scope": "Q",
-                "num_outputs": 1
+                "num_outputs": 1,
+                "activation_fn": "None",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
             }
         }
     ],

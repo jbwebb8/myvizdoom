@@ -1,25 +1,34 @@
-from agent import *
-from memory import *
 import json
 
 ###############################################################################
 # Methods to return class instances
+# Note: Import statements (and dictionaries) are listed inside methods to avoid
+# circular imports
 ###############################################################################
 
-agent_types = {"agent": Agent.Agent,
-               "dqn": DQNAgent.DQNAgent,
-               "ddqn": DDQNAgent.DDQNAgent,
-               "a3c": A3CAgent.A3CAgent}
-
-memory_types = {"standard": ReplayMemory.ReplayMemory,
-                "prioritized": PrioritizedReplayMemory.PrioritizedReplayMemory}
-
 def create_agent(agent_filename, **kwargs):
+    from agent import Agent, DQNAgent, DDQNAgent, ACERAgent
+    agent_types = {"agent": Agent.Agent,
+                   "dqn": DQNAgent.DQNAgent,
+                   "ddqn": DDQNAgent.DDQNAgent,
+                   "acer": ACERAgent.ACERAgent}
     agent_file = json.loads(open(agent_filename).read())
     agent_type = agent_file["agent_args"]["type"]
     return agent_types[agent_type](agent_file=agent_filename, **kwargs)
 
+def create_network(network_filename, **kwargs):
+    from network import DQNetwork, ACNetwork
+    network_types = {"dqn": DQNetwork.DQNetwork,
+                     "dueling_dqn": DQNetwork.DQNetwork,
+                     "ac": ACNetwork.ACNetwork}
+    net_file = json.loads(open(network_filename).read())
+    net_type = net_file["global_features"]["type"].lower()
+    return network_types[net_type](network_file=network_filename, **kwargs)
+
 def create_memory(memory_type, **kwargs):
+    from memory import ReplayMemory, PrioritizedReplayMemory
+    memory_types = {"standard": ReplayMemory.ReplayMemory,
+                    "prioritized": PrioritizedReplayMemory.PrioritizedReplayMemory}
     return memory_types[memory_type](**kwargs)
 
 ###############################################################################

@@ -1,0 +1,105 @@
+{
+    "global_features": {
+        "type": "ac",
+        "input_layer": "state",
+        "output_layer": ["pi", "V"],
+        "loss": ["standard_ac", 0.01],
+        "optimizer": "rmsprop"        
+    },
+    
+    "placeholders": [
+        {
+            "name": "state",
+            "data_type": "float32",
+            "kwargs": {
+                "shape": [30, 45],
+                "name": "state"
+            } 
+        }
+    ],
+
+    "layers": [
+        {
+            "name": "CONV_1",
+            "type": "conv2d",
+            "input": "state",
+            "kwargs": {
+                "scope": "CONV_1",
+                "num_outputs": 8, 
+                "kernel_size": [6, 6],
+                "stride": [3, 3],
+                "padding": "VALID",
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
+            }
+        },
+
+        {
+            "name": "CONV_2",
+            "type": "conv2d",
+            "input": "CONV_1",
+            "kwargs": {
+                "scope": "CONV_2",
+                "num_outputs": 8, 
+                "kernel_size": [6, 6],
+                "stride": [3, 3],
+                "padding": "VALID",
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
+            }
+        },
+
+        {
+            "name": "CONV_2_FLAT",
+            "type": "flatten",
+            "input": "CONV_2",
+            "kwargs": {
+                "scope": "CONV_2_FLAT"
+            }
+        },
+
+        {
+            "name": "FC_1",
+            "type": "fully_connected",
+            "input": "CONV_2_FLAT",
+            "kwargs": {
+                "scope": "FC_1",        
+                "num_outputs": 128,
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
+            }
+        },
+
+        {
+            "name": "V",
+            "type": "fully_connected",
+            "input": "FC_1",
+            "kwargs": {
+                "scope": "V",
+                "num_outputs": 1,
+                "activation_fn": "None",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
+            }
+        },
+
+        {
+            "name": "pi",
+            "type": "fully_connected",
+            "input": "FC_1",
+            "kwargs": {
+                "scope": "pi",
+                "num_outputs": 1,
+                "activation_fn": "softmax",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
+            }
+        }
+    ],
+
+    "ops": [
+    ]
+}

@@ -25,26 +25,16 @@ class Network:
     - dqn_LC_simple: Modified version of network in [Lample and Chaplot, 2016]
                      with single output layer replacing LSTM and no game
                      variable secondary stream.
-    
-    Reserved names and name scopes:
-    - state
-    - Q
-    - actions
-    - target_q
-    - loss
-    - IS_weights
-    - train_step
-    - best_action
 
     Output directory branched into log directory for FileWriter and params
     directory for Saver.
     """
-    def __init__(self, phi, num_channels, output_shape, output_directory,
+    def __init__(self, phi, num_channels, num_actions, output_directory,
                  session, train_mode=True, learning_rate=None, 
                  network_file=None, params_file=None, scope=""):
         # Set basic network parameters and objects
         self.input_depth = phi * num_channels
-        self.output_shape = output_shape
+        self.num_actions = num_actions
         self.learning_rate = learning_rate
         self.sess = session
         self.train_mode = train_mode
@@ -56,7 +46,7 @@ class Network:
                 raise SyntaxError("File format not supported for network settings. " \
                                     "Please use JSON file.")
             self.name = network_file[0:-5]
-            builder = NetworkBuilder(self)
+            builder = NetworkBuilder(self, network_file)
             self.graph_dict, self.data_format = builder.load_json(network_file)
             self.state = self.graph_dict["state"][0]
             self.input_shape = self.state.get_shape().as_list()[1:]
@@ -64,13 +54,10 @@ class Network:
                 self.input_res = self.input_shape[1:]
             else:
                 self.input_res = self.input_shape[:-1]
-            self.q = self.graph_dict["Q"][0]
-            self.actions = self.graph_dict["actions"][0]
-            self.target_q = self.graph_dict["target_q"][0]
-            self.loss = self.graph_dict["loss"][0]
-            self.IS_weights = self.graph_dict["IS_weights"][0]
-            self.train_step = self.graph_dict["train_step"][0]
-            self.best_a = self.graph_dict["best_action"][0]
+            try:
+                self.is_training = self.graph_dict["is_training"][0]
+            except KeyError:
+                pass
 
             # Set output directories
             self.out_dir = output_directory
@@ -106,7 +93,9 @@ class Network:
         if params_file is not None:
             self.saver.restore(self.sess, params_file)
         else:
-            self.sess.run(tf.global_variables_initializer())
+            var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
+                                         scope=self.scope)
+            self.sess.run(tf.variables_initializer(var_list))
 
     def _check_state(self, state):
         if state is not None and state.ndim < 4:
@@ -120,52 +109,13 @@ class Network:
         else:
             return actions
 
-    def learn(self, s1, a, target_q, weights=None):
-        s1 = self._check_state(s1)
-        a = self._check_actions(a)
-        if weights is None:
-            weights = np.ones(a.shape[0])
-        feed_dict={self.state: s1, self.actions: a, 
-                   self.target_q: target_q, self.IS_weights: weights}
-        loss_, train_step_ = self.sess.run([self.loss, self.train_step],
-                                           feed_dict=feed_dict)
-        return loss_
-    
-    def get_q_values(self, s1_):
-        s1_ = self._check_state(s1_)
-        feed_dict={self.state: s1_}
-        return self.sess.run(self.q, feed_dict=feed_dict)
-    
-    def get_best_action(self, s1_):
-        s1_ = self._check_state(s1_)
-        feed_dict={self.state: s1_}
-        return self.sess.run(self.best_a, feed_dict=feed_dict)
-
-    def save_model(self, model_name, global_step=None, save_meta=True,
-                   save_summaries=True, test_batch=None):
-        self.saver.save(self.sess, self.params_dir + model_name, 
-                        global_step=global_step,
-                        write_meta_graph=save_meta)
-        if save_summaries:
-            var_sum_ = self.sess.run(self.var_sum)
-            self.writer.add_summary(var_sum_, global_step)
-            if test_batch is not None:
-                s1, a, target_q, _ = test_batch
-                s1 = self._check_state(s1)
-                a = self._check_actions(a)
-                feed_dict={self.state: s1,
-                           self.actions: a, 
-                           self.target_q: target_q}
-                neur_sum_ = self.sess.run(self.neur_sum,
-                                          feed_dict=feed_dict)
-                self.writer.add_summary(neur_sum_, global_step)
-                grad_sum_ = self.sess.run(self.grad_sum,
-                                          feed_dict=feed_dict)
-                self.writer.add_summary(grad_sum_, global_step)
-            # TODO: implement event accumulator to save files (esp. histograms)
-            # to CSV files.
-            #self.ea.Reload()
-            #print(self.ea.Tags())
+    def _check_train_mode(self, feed_dict):
+        if self.train_mode:
+            try:
+                feed_dict[self.is_training] = self.train_mode
+            except AttributeError:
+                pass
+        return feed_dict
 
     def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)

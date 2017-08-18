@@ -51,5 +51,8 @@ class ReplayMemory:
                                  axis=self.chdim+1)
         else:
             s2 = self.s2[i]
+        
+        # Return importance sampling weights of one (stochastic distribution)
         w = np.ones(sample_size)
-        return self.s1[i], self.a[i], s2, self.isterminal[i], self.r[i], w
+
+        return self.s1[i], self.a[i], s2, self.isterminal[i], self.r[i], w, i

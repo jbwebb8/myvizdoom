@@ -1,9 +1,11 @@
 {
     "global_features": {
+        "type": "dueling_dqn",
         "input_layer": "state",
-        "output_layer": "Q",
+        "output_layer": ["V", "A"],
         "loss": ["huber", 1.0],
-        "optimizer": "rmsprop"        
+        "optimizer": ["rmsprop_clip", ["all", "clip_by_norm", 0.5],
+                                      ["CONV", "scale", 0.7071]]
     },
     
     "placeholders": [
@@ -13,7 +15,7 @@
             "kwargs": {
                 "shape": [84, 84],
                 "name": "state"
-            } 
+            }
         }
     ],
 
@@ -73,11 +75,37 @@
         },
 
         {
-            "name": "Q",
+            "name": "V",
             "type": "fully_connected",
             "input": "FC_1",
             "kwargs": {
-                "scope": "Q",
+                "scope": "V",        
+                "num_outputs": 1,
+                "activation_fn": "None",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
+            }
+        },
+
+        {
+            "name": "FC_2",
+            "type": "fully_connected",
+            "input": "CONV_2_FLAT",
+            "kwargs": {
+                "scope": "FC_2",        
+                "num_outputs": 128,
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", "0", "0.1"], 
+                "biases_initializer": ["constant", "0.1"]
+            }
+        },
+
+        {
+            "name": "A",
+            "type": "fully_connected",
+            "input": "FC_2",
+            "kwargs": {
+                "scope": "A",        
                 "num_outputs": 1,
                 "activation_fn": "None",
                 "weights_initializer": ["random_normal", "0", "0.1"], 

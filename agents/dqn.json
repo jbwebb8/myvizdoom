@@ -1,10 +1,10 @@
 {
     "agent_args": {
-        "name": "dqn_dm2015_2",
+        "name": "dqn_basic",
         "type": "dqn"
     },
     "network_args": {
-        "name": "dqn_dm2015",
+        "name": "dqn",
         "type": "dqn",
         "alpha": 0.00025,
         "gamma": 0.99,
@@ -22,7 +22,7 @@
     },
     "memory_args": {
         "type": "standard",
-        "replay_memory_size": 100000,
-        "replay_memory_start_size": 20000
+        "replay_memory_size": 10000,
+        "replay_memory_start_size": 10000
     }
 }

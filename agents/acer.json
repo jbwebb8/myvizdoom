@@ -1,15 +1,15 @@
 {
     "agent_args": {
-        "name": "ddqn_dm2015_1",
-        "type": "ddqn"
+        "name": "acer_basic",
+        "type": "acer"
     },
     "network_args": {
-        "name": "dqn_dm2015",
-        "type": "dqn",
+        "name": "ac",
+        "type": "ac",
         "alpha": 0.00025,
         "gamma": 0.99,
         "phi": 4,
-        "channels": 3
+        "channels": 1
     },
     "learning_args": {
         "epsilon_start": 1.0,
@@ -21,8 +21,8 @@
         "target_network_update_rate": 0.001
     },
     "memory_args": {
-        "type": "prioritized",
-        "replay_memory_size": 80000,
-        "replay_memory_start_size": 20000
+        "type": "standard",
+        "replay_memory_size": 10000,
+        "replay_memory_start_size": 10000
     }
 }
