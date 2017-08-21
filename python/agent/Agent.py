@@ -22,6 +22,8 @@ class Agent:
     - params_file (optional, default: None): File containing weights from 
         previously trained network.
     - train_mode (optional, default: True): Boolean; True if training agent.
+        Important if using batch norm in network to flag use of batch vs.
+        population statistics.
     - action_set (optional, default: default): List of actions available for 
         agent. Possible values are:
         - default: [move_forward], [turn_right], [turn_left], [use],
@@ -235,7 +237,6 @@ class Agent:
         assert isinstance(new_mode, bool)
         self.train_mode = new_mode
         self.network.train_mode = new_mode
-
 
     def reset_state(self):
         """Resets agent state to zeros."""
