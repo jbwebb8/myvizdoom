@@ -6,8 +6,11 @@ def create_layer(layer_dict, input_layer):
     #     return create_<layer_name>(input_layer, **layer_dict)
     layer_type = layer_dict["type"]
     if layer_type.lower() == "conv2d":
-        
-    pass
+        return conv2d(input_layer, **layer_dict["kwargs"])
+    elif layer_type.lower() == "fully_connected":
+        return fully_connected(input_layer, **layer_dict["kwargs"])
+    else:
+        raise ValueError("Layer type \"" + layer_type + "\" not supported.")
 
 def _assign_kwargs(layer_kwargs):
     # Format:
