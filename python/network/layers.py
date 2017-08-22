@@ -1,12 +1,16 @@
 import tensorflow as tf
 
-def create_layer(layer_dict, input_layer):
+def create_layer(layer_dict, input_layer, data_format):
     # Format:
     # if layer_name == "name":
     #     return create_<layer_name>(input_layer, **layer_dict)
     layer_type = layer_dict["type"]
     if layer_type.lower() == "conv2d":
+        layer_dict["kwargs"]["data_format"] = data_format
         return conv2d(input_layer, **layer_dict["kwargs"])
+    elif layer_type.lower() == "flatten":
+        layer_dict["kwargs"]["data_format"] = data_format
+        return flatten(input_layer, **layer_dict["kwargs"])
     elif layer_type.lower() == "fully_connected":
         return fully_connected(input_layer, **layer_dict["kwargs"])
     else:
@@ -24,9 +28,9 @@ def _check_list(arg):
         try:
             return arg[0], arg[1:]
         except IndexError:
-            return arg[0]
+            return arg[0], [None]
     else:
-        return arg, None
+        return arg, [None]
 
 def _get_variable_initializer(init_type, var_shape, *args):
     if init_type == "random_normal":
@@ -63,10 +67,12 @@ def conv2d(input_layer,
         # Create weights
         W_init_type, W_init_params = _check_list(weights_initializer)
         if data_format == "NCHW":
-            input_channels = input_layer.get_shape().as_list[1]
+            input_channels = input_layer.get_shape().as_list()[1]
         elif data_format == "NHWC":
-            input_channels = input_layer.get_shape().as_list[3]
+            input_channels = input_layer.get_shape().as_list()[3]
+        print(data_format)
         W_shape = kernel_size + [input_channels, num_outputs]
+        print(W_shape)
         W_init = _get_variable_initializer(W_init_type,
                                             W_shape,
                                             *W_init_params)
@@ -79,6 +85,7 @@ def conv2d(input_layer,
         # Convolute input
         stride_h, stride_w = _check_list(stride)
         if stride_w is None: stride_w = stride_h
+        elif isinstance(stride_w, list): stride_w = stride_w[0]
         if data_format == "NHWC":
             strides = [1, stride_h, stride_w, 1]
         elif data_format == "NCHW":
@@ -114,6 +121,35 @@ def conv2d(input_layer,
         
         return out
 
+def flatten(input_layer, 
+            data_format="NCHW",
+            scope="FLAT"):
+    with tf.name_scope(scope):
+        # Yes, I basically copied tf.contrib.layers.flatten, but
+        # it was a good learning experience!
+        # Grab runtime values to determine number of elements
+        input_shape = tf.shape(input_layer)
+        input_ndims = input_layer.get_shape().ndims
+        batch_size = tf.slice(input_shape, [0], [1])
+        layer_shape = tf.slice(input_shape, [1], [input_ndims-1])
+        num_neurons = tf.expand_dims(tf.reduce_prod(layer_shape), 0)
+        flattened_shape = tf.concat([batch_size, num_neurons], 0)
+        if data_format == "NHWC":
+            input_layer = tf.transpose(input_layer, perm=[0, 3, 1, 2])
+        flat = tf.reshape(input_layer, flattened_shape)
+        
+        # Attempt to set values during graph building
+        input_shape = input_layer.get_shape().as_list()
+        batch_size, layer_shape = input_shape[0], input_shape[1:]
+        if all(layer_shape): # None not present
+            num_neurons = 1
+            for dim in layer_shape:
+                num_neurons *= dim
+            flat.set_shape([batch_size, num_neurons])
+        else: # None present
+            flat.set_shape([batch_size, None])
+        return flat
+
 def fully_connected(input_layer,
                     num_outputs,
                     normalizer_fn=None,
@@ -125,7 +161,7 @@ def fully_connected(input_layer,
     with tf.name_scope(scope):
         # Create weights
         W_init_type, W_init_params = _check_list(weights_initializer)
-        W_shape = [input_layer.get_shape().as_list[1], num_outputs]
+        W_shape = [input_layer.get_shape().as_list()[1], num_outputs]
         W_init = _get_variable_initializer(W_init_type,
                                            W_shape,
                                            *W_init_params)
