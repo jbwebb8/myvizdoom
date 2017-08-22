@@ -132,7 +132,9 @@ class Network:
             layers.append(self._get_layer(layer_name))
         if state.ndim < 4:
             state = state.reshape([1] + list(state.shape))
-        return self.sess.run(layers, feed_dict={self.state: state})
+        feed_dict = {self.state: state}
+        feed_dict = self._check_train_mode(feed_dict)
+        return self.sess.run(layers, feed_dict=feed_dict)
     
     def get_layer_shape(self, layer_output_names):
         layer_shapes = []
