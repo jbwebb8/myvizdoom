@@ -30,8 +30,8 @@
                 "stride": [4, 4],
                 "padding": "VALID",
                 "activation_fn": "relu",
-                "weights_initializer": ["random_normal", "0", "0.1"], 
-                "biases_initializer": ["constant", "0.1"]
+                "weights_initializer": ["random_normal", 0, 0.1], 
+                "biases_initializer": ["constant", 0.1]
             }
         },
 
@@ -46,8 +46,8 @@
                 "stride": [2, 2],
                 "padding": "VALID",
                 "activation_fn": "relu",
-                "weights_initializer": ["random_normal", "0", "0.1"], 
-                "biases_initializer": ["constant", "0.1"]
+                "weights_initializer": ["random_normal", 0, 0.1], 
+                "biases_initializer": ["constant", 0.1]
             }
         },
 
@@ -68,8 +68,8 @@
                 "scope": "FC_1",        
                 "num_outputs": 128,
                 "activation_fn": "relu",
-                "weights_initializer": ["random_normal", "0", "0.1"], 
-                "biases_initializer": ["constant", "0.1"]
+                "weights_initializer": ["random_normal", 0, 0.1], 
+                "biases_initializer": ["constant", 0.1]
             }
         },
 
@@ -81,8 +81,8 @@
                 "scope": "Q",
                 "num_outputs": 1,
                 "activation_fn": "None",
-                "weights_initializer": ["random_normal", "0", "0.1"], 
-                "biases_initializer": ["constant", "0.1"]
+                "weights_initializer": ["random_normal", 0, 0.1], 
+                "biases_initializer": ["constant", 0.1]
             }
         }
     ],
