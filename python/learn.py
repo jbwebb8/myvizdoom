@@ -171,6 +171,7 @@ for epoch in range(epochs):
     # Training
     print("Training...")
     agent.set_train_mode(True)
+    agent.reset_history()
     agent.initialize_new_episode()
     for learning_step in trange(learning_steps_per_epoch):
         agent.perform_learning_step(epoch, epochs)
