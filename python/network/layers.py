@@ -1,9 +1,6 @@
 import tensorflow as tf
 
-def create_layer(layer_dict, input_layer, data_format):
-    # Format:
-    # if layer_name == "name":
-    #     return create_<layer_name>(input_layer, **layer_dict)
+def create_layer(layer_dict, input_layer, data_format, is_training):
     layer_type = layer_dict["type"]
     if layer_type.lower() == "conv2d":
         layer_dict["kwargs"]["data_format"] = data_format
@@ -43,7 +40,7 @@ def _get_variable_initializer(init_type, var_shape, *args):
 
 def _apply_normalization(norm_type, x, *args):
     if norm_type == "batch_norm":
-        pass
+        return batch_norm(x, )
 
 def _apply_activation(activation_type, x, *args):
     if activation_type.lower() == "relu":
@@ -70,9 +67,7 @@ def conv2d(input_layer,
             input_channels = input_layer.get_shape().as_list()[1]
         elif data_format == "NHWC":
             input_channels = input_layer.get_shape().as_list()[3]
-        print(data_format)
         W_shape = kernel_size + [input_channels, num_outputs]
-        print(W_shape)
         W_init = _get_variable_initializer(W_init_type,
                                             W_shape,
                                             *W_init_params)
@@ -99,7 +94,8 @@ def conv2d(input_layer,
         
         # Apply normalization
         if normalizer_fn is not None:
-            pass
+            norm_type, norm_params = _check_list(normalizer_fn)
+            out = _apply_normalization(norm_type, out, *norm_params)
 
         # Add biases
         elif biases_initializer is not None:
@@ -195,4 +191,39 @@ def fully_connected(input_layer,
             act_type, act_params = _check_list(activation_fn)
             out = _apply_activation(act_type, out, *act_params)
 
+        return out
+
+def batch_norm(self,
+                x,
+                is_training,
+                decay=0.999,
+                epsilon=0.001,
+                scope="BatchNorm"):
+    with tf.name_scope(scope):
+        # Create trainable variables γ and β, and running population stats
+        gamma = tf.Variable(tf.ones(1))
+        beta = tf.Variable(tf.zeros(1))
+        pop_mean = tf.Variable(tf.zeros(1), trainable=False)
+        pop_var = tf.Variable(tf.ones(1), trainable=False)
+
+        # Apply batch normalizing transform to x:
+        # x_hat = (x - μ)/(σ^2 + ε)^0.5
+        # y_hat = γ * x_hat + β
+
+        # If training, use batch statistics for transformation and update
+        # population statistics via moving average and variance.
+        # Assume shape [batch_size, ...]
+        batch_mean, batch_var = tf.nn.moments(x, 0, name="moments")
+        x_hat_train = (x - batch_mean) / (tf.sqrt(batch_var + epsilon))
+        new_pop_mean = (1 - decay) * batch_mean + decay * pop_mean
+        new_pop_var = (1 - decay) * batch_var + decay * pop_var
+        update_pop_mean = tf.assign(pop_mean, new_pop_mean)
+        update_pop_var = tf.assign(pop_var, new_pop_var)
+        
+        # If testing, use population statistics for transformation
+        x_hat_test = (x - pop_mean) / (tf.sqrt(pop_var + epsilon))
+        
+        # Apply learned linear transformation to transformed input
+        x_hat = tf.cond(is_training, x_hat_train, x_hat_test)
+        out = gamma * x_hat + beta
         return out
