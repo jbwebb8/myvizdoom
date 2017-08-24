@@ -110,6 +110,7 @@ class Agent:
                                       params_file=self.params_file,
                                       output_directory=self.main_net_dir,
                                       session=self.sess,
+                                      train_mode=self.train_mode,
                                       scope=self.MAIN_SCOPE)
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
 

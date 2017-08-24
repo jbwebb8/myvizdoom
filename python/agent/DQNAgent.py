@@ -109,6 +109,7 @@ class DQNAgent(Agent):
                                             network_file=self.net_file,
                                             output_directory=self.target_net_dir,
                                             session=self.sess,
+                                            train_mode=self.train_mode,
                                             scope=self.TARGET_SCOPE)
             target_init_ops = self._get_target_update_ops(1.0)
             self.sess.run(target_init_ops) # copy main network initialized params
