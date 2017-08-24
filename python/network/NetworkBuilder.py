@@ -119,6 +119,7 @@ class NetworkBuilder:
                 layer["kwargs"]["normalizer_fn"] = tf.contrib.layers.batch_norm
                 if "normalizer_params" not in layer["kwargs"]:
                     layer["kwargs"]["normalizer_params"] = {}
+                layer["kwargs"]["normalizer_params"]["data_format"] = self.data_format
                 try:
                     layer["kwargs"]["normalizer_params"]["is_training"] \
                         = self._get_object("is_training")
