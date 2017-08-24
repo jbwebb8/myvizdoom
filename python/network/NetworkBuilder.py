@@ -81,7 +81,9 @@ class NetworkBuilder:
     def add_layer(self, layer):
         layer_type = layer["type"].lower()
         input_layer = self._get_object(layer["input"])
-        return create_layer(layer, input_layer, self.data_format)
+        return create_layer(input_layer,
+                            layer,
+                            data_format=self.data_format)
     
     # Adds operation to graph
     def add_op(self, op):

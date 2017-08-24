@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def create_layer(layer_dict, input_layer, data_format, is_training):
+def create_layer(input_layer, layer_dict, data_format="NHWC"):
     layer_type = layer_dict["type"]
     if layer_type.lower() == "conv2d":
         layer_dict["kwargs"]["data_format"] = data_format
@@ -38,9 +38,9 @@ def _get_variable_initializer(init_type, var_shape, *args):
         c = args[0]
         return tf.constant(c, dtype=tf.float32, shape=var_shape)
 
-def _apply_normalization(norm_type, x, *args):
+def _apply_normalization(norm_type, x, *args, **kwargs):
     if norm_type == "batch_norm":
-        return batch_norm(x, )
+        return batch_norm(x, *args, **kwargs)
 
 def _apply_activation(activation_type, x, *args):
     if activation_type.lower() == "relu":
@@ -95,7 +95,10 @@ def conv2d(input_layer,
         # Apply normalization
         if normalizer_fn is not None:
             norm_type, norm_params = _check_list(normalizer_fn)
-            out = _apply_normalization(norm_type, out, *norm_params)
+            out = _apply_normalization(norm_type, 
+                                       out, 
+                                       *norm_params,
+                                       data_format=data_format)
 
         # Add biases
         elif biases_initializer is not None:
@@ -193,12 +196,17 @@ def fully_connected(input_layer,
 
         return out
 
-def batch_norm(self,
-                x,
-                is_training,
-                decay=0.999,
-                epsilon=0.001,
-                scope="BatchNorm"):
+def batch_norm(x,
+               decay=0.999,
+               epsilon=0.001,
+               data_format=None,
+               norm_dim="global",
+               scope="BatchNorm"):
+    """
+    norm_dim: Breadth of normalization to perform.
+    - global: Normalize channel-by-channel over batch size, height, and width
+    - simple: Normalize neuron-by-neuron over batch size
+    """
     with tf.name_scope(scope):
         # Create trainable variables γ and β, and running population stats
         gamma = tf.Variable(tf.ones(1))
@@ -206,14 +214,17 @@ def batch_norm(self,
         pop_mean = tf.Variable(tf.zeros(1), trainable=False)
         pop_var = tf.Variable(tf.ones(1), trainable=False)
 
+        # Get shape of input; assume shape [batch_size, ...]
+        if data_format is None:
+            mom_axes = [0] # simple batch normalization
+
         # Apply batch normalizing transform to x:
         # x_hat = (x - μ)/(σ^2 + ε)^0.5
         # y_hat = γ * x_hat + β
 
         # If training, use batch statistics for transformation and update
         # population statistics via moving average and variance.
-        # Assume shape [batch_size, ...]
-        batch_mean, batch_var = tf.nn.moments(x, 0, name="moments")
+        batch_mean, batch_var = tf.nn.moments(x, mom_axes, name="moments")
         x_hat_train = (x - batch_mean) / (tf.sqrt(batch_var + epsilon))
         new_pop_mean = (1 - decay) * batch_mean + decay * pop_mean
         new_pop_var = (1 - decay) * batch_var + decay * pop_var
@@ -223,7 +234,9 @@ def batch_norm(self,
         # If testing, use population statistics for transformation
         x_hat_test = (x - pop_mean) / (tf.sqrt(pop_var + epsilon))
         
-        # Apply learned linear transformation to transformed input
+        # Apply learned linear transformation to transformed input based
+        # on phase
+        is_training = tf.placeholder(tf.bool, name="is_training")
         x_hat = tf.cond(is_training, x_hat_train, x_hat_test)
         out = gamma * x_hat + beta
         return out
