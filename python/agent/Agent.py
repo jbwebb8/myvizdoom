@@ -39,6 +39,9 @@ class Agent:
         - phi (default: 1): Number of previous frames that constitute state of
             agent.
         - channels (default: 1): Number of channels in game screen buffer.
+        - position_timeout (default: None): Number of times any given action can
+            be repeated before another action is chosen randomly (prevents
+            infinite looping for actions that do not change state).
     """
 
     NET_JSON_DIR = "../networks/"
@@ -48,7 +51,8 @@ class Agent:
                           "alpha":      0.00025,
                           "gamma":      0.99,
                           "phi":        1,
-                          "channels":   1}
+                          "channels":   1,
+                          "position_timeout": None}
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default", 
@@ -72,6 +76,7 @@ class Agent:
         self.num_actions = len(self.actions)
         # FIXME: how not to hard code frame_repeat?
         self.frame_repeat = frame_repeat
+        self.position_repeat = 0
         
         # Load learning and network parameters
         if agent_file is not None:
@@ -89,6 +94,8 @@ class Agent:
                                          DEFAULT_AGENT_ARGS["phi"])
             self.channels   = kwargs.pop("channels",
                                          DEFAULT_AGENT_ARGS["channels"])
+            self.position_timeout = kwargs.pop("position_timeout",
+                                             DEFAULT_AGENT_ARGS["position_timeout"])
         if self.channels != self.game.get_screen_channels():
             raise ValueError("Number of image channels between agent and "
                              "game instance do not match. Please check config "
@@ -128,13 +135,15 @@ class Agent:
                 if exception.errno != errno.EEXIST:
                     raise
 
-    def _set_actions(self, action_set):
+    def _set_actions(self, action_set=None):
         """
         Sets available actions for agent. For dictionary of buttons and their 
         integer values, see ViZDoom/include/ViZDoomTypes.h.
 
         Args:
-        - action_set: Name of pre-defined list of actions. Possible values are:
+        - action_set (optional, default: None): Name of pre-defined list of 
+            actions. Possible values are:
+            - None: all combinations of available buttons are generated.
             - default: [move_forward], [turn_right], [turn_left], [use],
                 [move_forward, turn_right], [move_forward, turn_left]
             - basic_four: [move_forward], [turn_right], [turn_left], [use]
@@ -149,6 +158,22 @@ class Agent:
                 warnings.warn("Some available game buttons may be unused.")
             else:
                 pass
+
+        # If action set is None, create all combinations of available buttons
+        if action_set is None:
+            num_buttons = self.game.get_available_buttons_size()
+            actions = []
+            for i in range(2 ** num_buttons):
+                a = [0] * num_buttons
+                j = num_buttons - 1
+                while i > 0:
+                    if i >= 2 ** j:
+                        a[j] = 1
+                        i = i - 2 ** j
+                    else:
+                        j = j - 1
+                actions.append(a)
+            return actions
 
         # Default action set
         if action_set == "default":
@@ -222,6 +247,7 @@ class Agent:
         if not agent_file.lower().endswith(".json"): 
             raise Exception("No agent JSON file.")
         agent = json.loads(open(agent_file).read())
+        # TODO: implement get method to catch KeyError
         self.agent_name = agent["agent_args"]["name"]
         self.agent_type = agent["agent_args"]["type"]
         self.net_file = agent["network_args"]["name"]
@@ -230,13 +256,14 @@ class Agent:
         self.gamma = agent["network_args"]["gamma"]
         self.phi = agent["network_args"]["phi"]
         self.channels = agent["network_args"]["channels"]
+        self.position_timeout = agent["learning_args"].get("position_timeout", 
+                                                           self.DEFAULT_AGENT_ARGS["position_timeout"])
 
     def set_train_mode(self, new_mode):
         """Sets train_mode to new value (True if training; False if testing)"""
         assert isinstance(new_mode, bool)
         self.train_mode = new_mode
         self.network.train_mode = new_mode
-
 
     def reset_state(self):
         """Resets agent state to zeros."""
@@ -325,11 +352,39 @@ class Agent:
         """Starts new DoomGame episode and initialize agent state."""
         self.game.new_episode()
         self.reset_state()
+        self.position_history, self.action_history = [], []
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
             self.update_state(current_screen, replace=False)
+ 
+    def make_action(self, action=None, state=None):
+        if state is None: 
+            state = self.state
+        if action is None:
+            # Check position timeout
+            pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
+            pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
+            pos_z = self.game.get_game_variable(GameVariable.POSITION_Z)
+            if [pos_x, pos_y, pos_z] == self.position_history[-1]:
+                self.position_repeat += 1
+            else:
+                self.position_repeat = 0
+            if self.position_repeat >= self.position_timeout:
+                # Get random action other than previous one
+                a = randint(0, self.num_actions - 1)
+                action = self.actions[a]
+                while action == self.action_history[-1]:
+                    a = randint(0, self.num_actions - 1)
+                    action = self.actions[a]
+            else:
+                # Get action from network
+                action = self.get_action(state)
 
-    def track_position(self):
+        self.game.make_action(action, self.frame_repeat)
+        self._track_position()
+        self._track_action()
+
+    def _track_position(self):
         """Adds current position of agent to position history."""
         pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
         pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
@@ -337,16 +392,16 @@ class Agent:
         timestamp = self.game.get_episode_time()
         self.position_history.append([timestamp, pos_x, pos_y, pos_z])
     
-    def track_action(self):
+    def _track_action(self):
         """Adds current action of agent to action history."""
         last_action = self.game.get_last_action()
         timestamp = self.game.get_episode_time()
-        self.action_history.append([timestamp] + last_action)
+        self.action_history.append([timestamp] + last_action) 
 
     def update_score_history(self):
         """Adds current score of agent to score history."""
         score = self.game.get_total_reward()
-        tracking_score = self.game.get_game_variable(GameVariable.USER1)
+        #tracking_score = self.game.get_game_variable(GameVariable.USER1)
         self.score_history.append(score)
 
     def get_layer_output(self, layer_output_names, state=None):
