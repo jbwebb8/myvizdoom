@@ -1,0 +1,33 @@
+{
+    "global_features": {
+        "type": "",
+        "input_layer": "",
+        "output_layer": "",
+        "loss": "",
+        "optimizer": ""
+    },
+    
+    "placeholders": [
+        {
+            "name": "",
+            "data_type": "",
+            "kwargs": {
+                "shape": [],
+                "name": ""
+            }
+        }
+    ],
+
+    "layers": [
+        {
+            "name": "",
+            "type": "",
+            "input": "",
+            "kwargs": {
+            }
+        }
+    ],
+
+    "ops": [
+    ]
+}

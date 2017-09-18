@@ -27,5 +27,7 @@ experiments/
 config/*.cfg
 !template.cfg
 agents/*.json
+!template.json
 networks/*.json
+!template.json
 test.json

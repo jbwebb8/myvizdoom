@@ -1,0 +1,30 @@
+{
+    "agent_args": {
+        "name": "",
+        "type": ""
+    },
+    "network_args": {
+        "name": "",
+        "type": "",
+        "alpha": ,
+        "gamma": ,
+        "phi": ,
+        "channels": 
+    },
+    "learning_args": {
+        "n_step": ,
+        "epsilon_start": ,
+        "epsilon_end": ,
+        "epsilon_const_rate": ,
+        "epsilon_decay_rate": ,
+        "batch_size": ,
+        "target_network_update_freq": ,
+        "target_network_update_rate": ,
+        "position_timeout": 
+    },
+    "memory_args": {
+        "replay_memory_type": "",
+        "replay_memory_size": ,
+        "replay_memory_start_size": 
+    }
+}
