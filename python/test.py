@@ -153,17 +153,15 @@ save_exp_details(details_dir, agent)
 
 # Test agent performance in scenario
 print("Let's watch!")
-screen_history_all = []
+screen_history_all, score_history = [], []
 for test_episode in range(test_episodes):
     agent.initialize_new_episode()
-    screen_history = []
+    screen_history, position_history, action_history = [[]] * 3
     while not game.is_episode_finished():
-        # Update current state and position
+        # Update current state
         current_screen = game.get_state().screen_buffer
         agent.update_state(current_screen)
-        agent.track_action()
-        agent.track_position()
-
+        
         # Store and show specified features
         output = None
         if max_samples > 0:
@@ -185,6 +183,8 @@ for test_episode in range(test_episodes):
 
         # Make action based on learning algorithm
         a = agent.get_action()
+        a = agent.check_position_timeout(a)
+        agent.track_position()
         game.set_action(a)
         for _ in range(agent.frame_repeat):
             if save_gifs is not None:
@@ -194,7 +194,7 @@ for test_episode in range(test_episodes):
             game.advance_action()
             if not game.is_episode_finished():
                 current_screen = game.get_state().screen_buffer
-            
+        agent.track_action()
         print("Game tick %d of max %d in test episode %d of %d.        " 
               % (game.get_episode_time() - game.get_episode_start_time(), 
                  game.get_episode_timeout(),
@@ -202,8 +202,11 @@ for test_episode in range(test_episodes):
                  test_episodes), 
               end='\r')
     
-    # Save scores and sleep between episodes
-    agent.update_score_history()
+    # Save episode stats and sleep between episodes
+    score_history.append(agent.get_score())
+    if trackable:
+        position_history.append(agent.position_history)
+        action_history.append(agent.action_history)
     if save_gifs:
         screen_history_all.append(screen_history)
     sleep(1.0) 
@@ -211,20 +214,19 @@ for test_episode in range(test_episodes):
 print("\nSaving results... ", end="")
 
 # Save test scores
-scores = np.asarray(agent.score_history)
 np.savetxt(game_dir + "test_scores.csv", 
-           scores,
+           np.asarray(score_history),
            delimiter=",",
            fmt="%.3f")
 
 # Save game traces if tracking specified
 if trackable:
     np.savetxt(game_dir + "positions.csv",
-               np.asarray(agent.position_history),
+               np.asarray(position_history),
                delimiter=",",
                fmt="%.3f")
     np.savetxt(game_dir + "actions.csv",
-               np.asarray(agent.action_history),
+               np.asarray(action_history),
                delimiter=",",
                fmt="%d")
 

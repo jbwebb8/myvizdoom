@@ -95,7 +95,7 @@ class Agent:
             self.channels   = kwargs.pop("channels",
                                          DEFAULT_AGENT_ARGS["channels"])
             self.position_timeout = kwargs.pop("position_timeout",
-                                             DEFAULT_AGENT_ARGS["position_timeout"])
+                                               DEFAULT_AGENT_ARGS["position_timeout"])
         if self.channels != self.game.get_screen_channels():
             raise ValueError("Number of image channels between agent and "
                              "game instance do not match. Please check config "
@@ -122,7 +122,6 @@ class Agent:
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
 
         # Create tracking lists
-        self.score_history = []
         self.position_history = []
         self.action_history = []
     
@@ -270,10 +269,9 @@ class Agent:
         self.state = np.zeros(self.network.input_shape, dtype=np.float32)
 
     def reset_history(self):
-        """Resets position, action, and score history to empty."""
+        """Resets position and action history to empty."""
         self.position_history = []
         self.action_history = []
-        self.score_history = []
 
     def _preprocess_image(self, img):
         """Converts and downsamples the input image"""
@@ -352,39 +350,55 @@ class Agent:
         """Starts new DoomGame episode and initialize agent state."""
         self.game.new_episode()
         self.reset_state()
-        self.position_history, self.action_history = [], []
+        self.reset_history()
+        self.position_repeat = 0
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
             self.update_state(current_screen, replace=False)
- 
-    def make_action(self, action=None, state=None):
-        if state is None: 
-            state = self.state
-        if action is None:
-            # Check position timeout
-            pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
-            pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
-            pos_z = self.game.get_game_variable(GameVariable.POSITION_Z)
-            if [pos_x, pos_y, pos_z] == self.position_history[-1]:
+        self.track_position()
+
+    def check_position_timeout(self, action):
+        # Get current position
+        pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
+        pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
+        pos_z = self.game.get_game_variable(GameVariable.POSITION_Z)
+        
+        # If position unchanged, increment counter; otherwise, (re)set to zero
+        try:
+            if [pos_x, pos_y, pos_z] == self.position_history[-1][1:]:
                 self.position_repeat += 1
             else:
                 self.position_repeat = 0
-            if self.position_repeat >= self.position_timeout:
-                # Get random action other than previous one
+        except IndexError:
+            self.position_repeat = 0
+
+        # Get random action other than previous one if timeout exceeded
+        if self.position_repeat >= self.position_timeout:
+            a = randint(0, self.num_actions - 1)
+            action = self.actions[a]
+            while action == self.action_history[-1]:
                 a = randint(0, self.num_actions - 1)
                 action = self.actions[a]
-                while action == self.action_history[-1]:
-                    a = randint(0, self.num_actions - 1)
-                    action = self.actions[a]
-            else:
-                # Get action from network
-                action = self.get_action(state)
+        
+        return action
+ 
+    def make_action(self, action=None, state=None, timeout=True):
+        if action is None:
+            # Get action from network
+            if state is None: 
+                state = self.state
+            action = self.get_action(state)
+        if timeout and self.position_timeout is not None:
+            # Check position timeout
+            action = self.check_position_timeout(action)
+        
+        # Make action, track agent, and return reward
+        self.track_position()
+        r = self.game.make_action(action, self.frame_repeat)
+        self.track_action()
+        return r
 
-        self.game.make_action(action, self.frame_repeat)
-        self._track_position()
-        self._track_action()
-
-    def _track_position(self):
+    def track_position(self):
         """Adds current position of agent to position history."""
         pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
         pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
@@ -392,17 +406,33 @@ class Agent:
         timestamp = self.game.get_episode_time()
         self.position_history.append([timestamp, pos_x, pos_y, pos_z])
     
-    def _track_action(self):
+    def track_action(self):
         """Adds current action of agent to action history."""
         last_action = self.game.get_last_action()
         timestamp = self.game.get_episode_time()
         self.action_history.append([timestamp] + last_action) 
 
-    def update_score_history(self):
-        """Adds current score of agent to score history."""
-        score = self.game.get_total_reward()
-        #tracking_score = self.game.get_game_variable(GameVariable.USER1)
-        self.score_history.append(score)
+    def get_score(self, var_list=None):
+        """
+        Returns current score of agent in episode.
+        
+        Args:
+        - var_list (optional, default: None): List of DoomGame USER variables 
+            that represent the score(s) to return. Format should be
+            [GameVariable.USERXX, ...], where XX is between 1 and 60. If None,
+            defaults to USER0 (which is reward visible to agent).
+        
+        Returns:
+        - Current episode score as defined by USER variables. If argument
+            contains multiple variables, then a list of scores is returned.
+        """
+        if var_list is None:
+            return self.game.get_total_reward()
+        else:
+            scores = []
+            for v in var_list:
+                scores.append(self.game.get_game_variable(v))
+            return scores 
 
     def get_layer_output(self, layer_output_names, state=None):
         """
