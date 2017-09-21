@@ -18,6 +18,12 @@ MAP01D: Similar to MAP01A, but with spawning in all of track.
 
 MAP01E: Extends MAP01. The Reward Button is fixed on the opposite end as before, but rather than a binary reward structure of {living reward, end reward}, the agent receives a living reward boost proportional to the distance from the Reward Button, given that the agent is in the sector representing the nearest third of the track to the Reward. In other words, if the agent is in the closest third of the track to the Reward Button, for every time step, its living reward is increased (made less negative).
 
+MAP02, MAP02A-E: Analogous to MAP01 series, except the Reward Button is flagged with `BUMPSPECIAL` instead of `USESPECIAL`. The agent need only navigate to the vicinity of the Reward Button to receive the reward, rather than activating it with `USE`. Thus the `USE` button is not necessary for performance.
+
+MAP03: An alternating linear track. Reward Buttons are located on opposite ends of the track, but only one can be activated at any given time. The agent must navigate to activatable reward and press `USE` in its vicinity to receive a reward (as before). The agent must then navigate to the other end and activate that Reward Button. The back-and-forth task continues indefinitely.
+
+MAP04: Analogous to MAP03, except the Reward Button is flagged with `BUMPSPECIAL` instead of `USESPECIAL` (see above).
+
 ### Rewards
 Activate Reward Button: +1.0
 
