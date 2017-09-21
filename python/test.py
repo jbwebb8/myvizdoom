@@ -81,6 +81,26 @@ def make_directory(folders):
             if exception.errno != errno.EEXIST:
                 raise
 
+# Saves txt file of important experimental settings
+# and copies (small) configuration files
+def save_exp_details(folder, agent):
+    f = open(folder + "settings.txt", "w+")
+    f.write("Name: " + exp_name + "\n")
+    f.write("Description: " + exp_descr + "\n")
+    f.write("Agent file: " + agent_file_path + "\n")
+    net_file_path = agent.net_file
+    f.write("Network file: " + net_file_path + "\n")
+    f.write("Params file: " + str(params_file_path) + "\n")
+    f.write("Config file: " + config_file_path + "\n")
+    f.write("Action set: " + action_set + "\n")
+    files_to_copy = [agent_file_path, net_file_path, config_file_path]
+    for fp in files_to_copy:
+        new_fp = folder + fp.split("/")[-1]
+        while os.path.exists(new_fp):
+            t = new_fp.split(".")
+            new_fp = '.'.join(['.'.join(t[0:-1]) + '_1', t[-1]])
+        copy(fp, new_fp)
+
 # Creates and initializes ViZDoom environment.
 def initialize_vizdoom(config_file_path):
     print("Initializing doom... ", end=""), sys.stdout.flush()
@@ -96,19 +116,6 @@ details_dir = results_dir + "details/"
 game_dir = results_dir + "game_data/"
 max_dir = results_dir + "max_data/"
 make_directory([results_dir, details_dir, game_dir, max_dir])
-
-# Save txt file of important experimental settings
-# and copy (small) configuration files
-f = open(details_dir + "settings.txt", "w+")
-f.write("Name: " + exp_name + "\n")
-f.write("Description: " + exp_descr + "\n")
-f.write("Agent file: " + agent_file_path + "\n")
-f.write("Params file: " + params_file_path + "\n")
-f.write("Config file: " + config_file_path + "\n")
-f.write("Action set: " + action_set)
-files_to_copy = [agent_file_path, config_file_path]
-for fp in files_to_copy:
-    copy(fp, details_dir)
 
 # Initialize DoomGame
 game = initialize_vizdoom(config_file_path)
@@ -141,19 +148,20 @@ toolbox = Toolbox(layer_shapes=layer_shapes,
                   color_format=color_format)
 print("Done.")
 
+# Save experimental details
+save_exp_details(details_dir, agent)
+
 # Test agent performance in scenario
 print("Let's watch!")
-screen_history_all = []
+screen_history_all, score_history = [], []
 for test_episode in range(test_episodes):
     agent.initialize_new_episode()
-    screen_history = []
+    screen_history, position_history, action_history = [[]] * 3
     while not game.is_episode_finished():
-        # Update current state and position
+        # Update current state
         current_screen = game.get_state().screen_buffer
         agent.update_state(current_screen)
-        agent.track_action()
-        agent.track_position()
-
+        
         # Store and show specified features
         output = None
         if max_samples > 0:
@@ -175,6 +183,8 @@ for test_episode in range(test_episodes):
 
         # Make action based on learning algorithm
         a = agent.get_action()
+        a = agent.check_position_timeout(a)
+        agent.track_position()
         game.set_action(a)
         for _ in range(agent.frame_repeat):
             if save_gifs is not None:
@@ -184,7 +194,7 @@ for test_episode in range(test_episodes):
             game.advance_action()
             if not game.is_episode_finished():
                 current_screen = game.get_state().screen_buffer
-            
+        agent.track_action()
         print("Game tick %d of max %d in test episode %d of %d.        " 
               % (game.get_episode_time() - game.get_episode_start_time(), 
                  game.get_episode_timeout(),
@@ -192,8 +202,11 @@ for test_episode in range(test_episodes):
                  test_episodes), 
               end='\r')
     
-    # Save scores and sleep between episodes
-    agent.update_score_history()
+    # Save episode stats and sleep between episodes
+    score_history.append(agent.get_score())
+    if trackable:
+        position_history.append(agent.position_history)
+        action_history.append(agent.action_history)
     if save_gifs:
         screen_history_all.append(screen_history)
     sleep(1.0) 
@@ -201,20 +214,19 @@ for test_episode in range(test_episodes):
 print("\nSaving results... ", end="")
 
 # Save test scores
-scores = np.asarray(agent.score_history)
 np.savetxt(game_dir + "test_scores.csv", 
-           scores,
+           np.asarray(score_history),
            delimiter=",",
            fmt="%.3f")
 
 # Save game traces if tracking specified
 if trackable:
     np.savetxt(game_dir + "positions.csv",
-               np.asarray(agent.position_history),
+               np.asarray(position_history),
                delimiter=",",
                fmt="%.3f")
     np.savetxt(game_dir + "actions.csv",
-               np.asarray(agent.action_history),
+               np.asarray(action_history),
                delimiter=",",
                fmt="%d")
 

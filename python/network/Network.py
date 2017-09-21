@@ -110,11 +110,10 @@ class Network:
             return actions
 
     def _check_train_mode(self, feed_dict):
-        if self.train_mode:
-            try:
-                feed_dict[self.is_training] = self.train_mode
-            except AttributeError:
-                pass
+        try:
+            feed_dict[self.is_training] = self.train_mode
+        except AttributeError:
+            pass
         return feed_dict
 
     def load_params(self, params_file_path):
@@ -133,7 +132,9 @@ class Network:
             layers.append(self._get_layer(layer_name))
         if state.ndim < 4:
             state = state.reshape([1] + list(state.shape))
-        return self.sess.run(layers, feed_dict={self.state: state})
+        feed_dict = {self.state: state}
+        feed_dict = self._check_train_mode(feed_dict)
+        return self.sess.run(layers, feed_dict=feed_dict)
     
     def get_layer_shape(self, layer_output_names):
         layer_shapes = []

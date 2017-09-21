@@ -94,20 +94,26 @@ def make_directory(folders):
 
 # Saves txt file of important experimental settings
 # and copies (small) configuration files
-def save_exp_details(folder):
+def save_exp_details(folder, agent):
     f = open(folder + "settings.txt", "w+")
     f.write("Name: " + exp_name + "\n")
     f.write("Description: " + exp_descr + "\n")
     f.write("Agent file: " + agent_file_path + "\n")
+    net_file_path = agent.net_file
+    f.write("Network file: " + net_file_path + "\n")
     f.write("Params file: " + str(params_file_path) + "\n")
     f.write("Config file: " + config_file_path + "\n")
     f.write("Action set: " + action_set + "\n")
     f.write("Epochs: " + str(epochs) + "\n")
     f.write("Learning steps per epoch: " + str(learning_steps_per_epoch) + "\n")
     f.write("Test episodes per epoch: " + str(test_episodes_per_epoch))
-    files_to_copy = [agent_file_path, config_file_path]
+    files_to_copy = [agent_file_path, net_file_path, config_file_path]
     for fp in files_to_copy:
-        copy(fp, folder)
+        new_fp = folder + fp.split("/")[-1]
+        while os.path.exists(new_fp):
+            t = new_fp.split(".")
+            new_fp = '.'.join(['.'.join(t[0:-1]) + '_1', t[-1]])
+        copy(fp, new_fp)
 
 # Initializes DoomGame from config file
 def initialize_vizdoom(config_file):
@@ -118,12 +124,11 @@ def initialize_vizdoom(config_file):
     print("Done.")
     return game  
 
-# Make output directories and save experiment details
+# Make output directories
 details_dir = results_dir + "details/"
 game_dir = results_dir + "game_data/"
 max_dir = results_dir + "max_data/"
 make_directory([results_dir, details_dir, game_dir, max_dir])
-save_exp_details(details_dir)
 
 # Initialize agent and TensorFlow graph
 game = initialize_vizdoom(config_file_path)
@@ -151,6 +156,9 @@ toolbox = Toolbox(layer_shapes=layer_shapes,
                   color_format=color_format)
 print("Done.")
 
+# Save experimental details
+save_exp_details(details_dir, agent)
+
 # Train and test agent for specified number of epochs
 print("Starting the training!")
 test_scores_all = []
@@ -163,15 +171,16 @@ for epoch in range(epochs):
     # Training
     print("Training...")
     agent.set_train_mode(True)
+    score_history = []
     agent.initialize_new_episode()
     for learning_step in trange(learning_steps_per_epoch):
         agent.perform_learning_step(epoch, epochs)
         if game.is_episode_finished():
-            agent.update_score_history()
+            score_history.append(agent.get_score())
             agent.initialize_new_episode()
             train_episodes_finished += 1
     print("%d training episodes played." % train_episodes_finished)
-    train_scores = np.asarray(agent.score_history)
+    train_scores = np.asarray(score_history)
     train_scores_all.append([np.mean(train_scores, axis=0), 
                              np.std(train_scores, axis=0)])
     print("Results: mean: %.1f±%.1f," % (train_scores.mean(), train_scores.std()), \
@@ -180,39 +189,39 @@ for epoch in range(epochs):
     # Testing
     print("\nTesting...")
     agent.set_train_mode(False)
-    agent.reset_history()
+    score_history = []
     save_epoch = (epoch + 1 == epochs or (epoch + 1) % save_freq == 0)
     for test_episode in range(test_episodes_per_epoch):
         agent.initialize_new_episode()
-        screen_history = []
+        screen_history, position_history, action_history = [[]] * 3
         while not game.is_episode_finished():
             current_screen = game.get_state().screen_buffer
             agent.update_state(current_screen)
-            if save_epoch:
-                if trackable:
-                    agent.track_action()
-                    agent.track_position()
-                if save_gifs is not None:
-                    if save_gifs == "agent_state":
-                        current_screen = agent._preprocess_image(current_screen)
-                    screen_history.append(current_screen)
+            if save_epoch and save_gifs is not None:
+                if save_gifs == "agent_state":
+                    current_screen = agent._preprocess_image(current_screen)
+                screen_history.append(current_screen)
             agent.make_action()
-            print("Game tick %d of max %d in test episode %d of %d." 
+            print("Game tick %d of max %d in test episode %d of %d.        " 
                   % (game.get_episode_time() - game.get_episode_start_time(), 
                      game.get_episode_timeout(),
                      test_episode+1,
                      test_episodes_per_epoch), 
                   end='\r')
         
-        # Update score history and save gifs (too much overhead to save all at end)
-        agent.update_score_history()
-        if save_epoch and save_gifs is not None:
-            gif_file_path = game_dir + "test_episode%d-%d" \
-                            % (epoch+1, test_episode+1)
-            toolbox.make_gif(screen_history, game_dir)
+        # Update score history and save episode history
+        score_history.append(agent.get_score())
+        if save_epoch:
+            if save_gifs is not None:
+                gif_file_path = game_dir + "test_episode%d-%d" \
+                                % (epoch+1, test_episode+1)
+                toolbox.make_gif(screen_history, game_dir)
+            if trackable:
+                position_history.append(agent.position_history)
+                action_history.append(agent.action_history)
     
     # Get test results
-    test_scores = np.asarray(agent.score_history)
+    test_scores = np.asarray(score_history)
     test_scores_all.append([np.mean(test_scores, axis=0), 
                             np.std(test_scores, axis=0)])                      
     print("\r\x1b[K" + "Results: mean: %.1f±%.1f," 
@@ -229,11 +238,11 @@ for epoch in range(epochs):
         if trackable:
             sfx = str(epoch+1) + ".csv"
             np.savetxt(game_dir + "positions-" + sfx,
-                       np.asarray(agent.position_history),
+                       np.asarray(position_history),
                        delimiter=",",
                        fmt="%.3f")
             np.savetxt(game_dir + "actions-" + sfx,
-                       np.asarray(agent.action_history),
+                       np.asarray(action_history),
                        delimiter=",",
                        fmt="%d")
     else:
