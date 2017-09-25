@@ -180,9 +180,15 @@ for epoch in range(epochs):
             agent.initialize_new_episode()
             train_episodes_finished += 1
     print("%d training episodes played." % train_episodes_finished)
+    
+    # Save training scores
     train_scores = np.asarray(score_history)
     train_scores_all.append([np.mean(train_scores, axis=0), 
                              np.std(train_scores, axis=0)])
+    np.savetxt(game_dir + "train_scores.csv", 
+               np.asarray(train_scores_all),
+               delimiter=",",
+               fmt="%.3f")
     print("Results: mean: %.1f±%.1f," % (train_scores.mean(), train_scores.std()), \
           "min: %.1f," % train_scores.min(), "max: %.1f," % train_scores.max())
     
@@ -220,10 +226,14 @@ for epoch in range(epochs):
                 position_history.append(agent.position_history)
                 action_history.append(agent.action_history)
     
-    # Get test results
+    # Save test scores
     test_scores = np.asarray(score_history)
     test_scores_all.append([np.mean(test_scores, axis=0), 
-                            np.std(test_scores, axis=0)])                      
+                            np.std(test_scores, axis=0)])
+    np.savetxt(game_dir + "test_scores.csv", 
+            np.asarray(test_scores_all),
+            delimiter=",",
+            fmt="%.3f")                      
     print("\r\x1b[K" + "Results: mean: %.1f±%.1f," 
           % (test_scores.mean(), test_scores.std()),
           "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max())
@@ -254,14 +264,6 @@ for epoch in range(epochs):
     print("Done.")
     print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))
 
-# Close game and save all scores per epoch
+# Close game
 game.close()
-np.savetxt(game_dir + "train_scores.csv", 
-           np.asarray(train_scores_all),
-           delimiter=",",
-           fmt="%.3f")
-np.savetxt(game_dir + "test_scores.csv", 
-           np.asarray(test_scores_all),
-           delimiter=",",
-           fmt="%.3f")
 print("======================================")
