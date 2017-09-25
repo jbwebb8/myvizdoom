@@ -46,17 +46,18 @@ class Agent:
 
     NET_JSON_DIR = "../networks/"
     MAIN_SCOPE = "main_network"
-    DEFAULT_AGENT_ARGS = {"agent_name": "default",
-                          "net_file":   "default",
-                          "alpha":      0.00025,
-                          "gamma":      0.99,
-                          "phi":        1,
-                          "channels":   1,
+    DEFAULT_AGENT_ARGS = {"agent_name":       "default",
+                          "net_file":         "default",
+                          "alpha":            0.00025,
+                          "gamma":            0.99,
+                          "phi":              1,
+                          "channels":         1,
+                          "frame_repeat":     4,
                           "position_timeout": None}
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default", 
-                 frame_repeat=4, **kwargs):
+                 **kwargs):
         # Initialize game
         self.game = game
         self.sess = tf.Session()
@@ -73,9 +74,7 @@ class Agent:
         # Initialize action space
         self.action_indices = np.asarray(self.game.get_available_buttons())
         self.actions = self._set_actions(action_set)
-        self.num_actions = len(self.actions)
-        # FIXME: how not to hard code frame_repeat?
-        self.frame_repeat = frame_repeat
+        self.num_actions = len(self.actions)        
         self.position_repeat = 0
         
         # Load learning and network parameters
@@ -94,8 +93,11 @@ class Agent:
                                          DEFAULT_AGENT_ARGS["phi"])
             self.channels   = kwargs.pop("channels",
                                          DEFAULT_AGENT_ARGS["channels"])
+            self.frame_repeat     = kwargs.pop("frame_repeat",
+                                               DEFAULT_AGENT_ARGS["frame_repeat"])
             self.position_timeout = kwargs.pop("position_timeout",
                                                DEFAULT_AGENT_ARGS["position_timeout"])
+            
         if self.channels != self.game.get_screen_channels():
             raise ValueError("Number of image channels between agent and "
                              "game instance do not match. Please check config "
@@ -255,8 +257,10 @@ class Agent:
         self.gamma = agent["network_args"]["gamma"]
         self.phi = agent["network_args"]["phi"]
         self.channels = agent["network_args"]["channels"]
-        self.position_timeout = agent["learning_args"].get("position_timeout", 
-                                                           self.DEFAULT_AGENT_ARGS["position_timeout"])
+        self.frame_repeat = agent["agent_args"].get("frame_repeat",
+                                                    self.DEFAULT_AGENT_ARGS["frame_repeat"])
+        self.position_timeout = agent["agent_args"].get("position_timeout", 
+                                                        self.DEFAULT_AGENT_ARGS["position_timeout"])
 
     def set_train_mode(self, new_mode):
         """Sets train_mode to new value (True if training; False if testing)"""
