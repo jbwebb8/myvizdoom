@@ -42,18 +42,25 @@ class Agent:
         - position_timeout (default: None): Number of times any given action can
             be repeated before another action is chosen randomly (prevents
             infinite looping for actions that do not change state).
+        - reward_scale (default: 1.0): Scales rewards built into scenarios by a
+            constant.
+        - use_shaping_reward (default: False): If True, the reward received
+            after the agent makes an action includes a shaping reward encoded
+            in the scenario script (under USER1).
     """
 
     NET_JSON_DIR = "../networks/"
     MAIN_SCOPE = "main_network"
-    DEFAULT_AGENT_ARGS = {"agent_name":       "default",
-                          "net_file":         "default",
-                          "alpha":            0.00025,
-                          "gamma":            0.99,
-                          "phi":              1,
-                          "channels":         1,
-                          "frame_repeat":     4,
-                          "position_timeout": None}
+    DEFAULT_AGENT_ARGS = {"agent_name":         "default",
+                          "net_file":           "default",
+                          "alpha":              0.00025,
+                          "gamma":              0.99,
+                          "phi":                1,
+                          "channels":           1,
+                          "frame_repeat":       4,
+                          "position_timeout":   None,
+                          "reward_scale":       1.0,
+                          "use_shaping_reward": False}
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default", 
@@ -71,32 +78,37 @@ class Agent:
         self.main_net_dir = self.net_dir + "main_net/"
         self._make_directory([self.net_dir, self.main_net_dir])
 
-        # Initialize action space
+        # Initialize action space and gameplay
         self.action_indices = np.asarray(self.game.get_available_buttons())
         self.actions = self._set_actions(action_set)
         self.num_actions = len(self.actions)        
         self.position_repeat = 0
+        self.last_total_shaping_reward = 0.0
         
         # Load learning and network parameters
         if agent_file is not None:
             self._load_agent_file(agent_file)
         else:
-            self.agent_name = kwargs.pop("agent_name", 
-                                         DEFAULT_AGENT_ARGS["agent_name"])
-            self.net_file   = kwargs.pop("net_name", 
-                                         DEFAULT_AGENT_ARGS["net_file"])
-            self.alpha      = kwargs.pop("alpha", 
-                                         DEFAULT_AGENT_ARGS["alpha"])
-            self.gamma      = kwargs.pop("gamma", 
-                                         DEFAULT_AGENT_ARGS["gamma"])
-            self.phi        = kwargs.pop("phi",
-                                         DEFAULT_AGENT_ARGS["phi"])
-            self.channels   = kwargs.pop("channels",
-                                         DEFAULT_AGENT_ARGS["channels"])
-            self.frame_repeat     = kwargs.pop("frame_repeat",
-                                               DEFAULT_AGENT_ARGS["frame_repeat"])
-            self.position_timeout = kwargs.pop("position_timeout",
-                                               DEFAULT_AGENT_ARGS["position_timeout"])
+            self.agent_name         = kwargs.pop("agent_name", 
+                                                 DEFAULT_AGENT_ARGS["agent_name"])
+            self.frame_repeat       = kwargs.pop("frame_repeat",
+                                                 DEFAULT_AGENT_ARGS["frame_repeat"])
+            self.position_timeout   = kwargs.pop("position_timeout",
+                                                 DEFAULT_AGENT_ARGS["position_timeout"])
+            self.net_file           = kwargs.pop("net_name", 
+                                                 DEFAULT_AGENT_ARGS["net_file"])
+            self.alpha              = kwargs.pop("alpha", 
+                                                 DEFAULT_AGENT_ARGS["alpha"])
+            self.gamma              = kwargs.pop("gamma", 
+                                                 DEFAULT_AGENT_ARGS["gamma"])
+            self.phi                = kwargs.pop("phi",
+                                                 DEFAULT_AGENT_ARGS["phi"])
+            self.channels           = kwargs.pop("channels",
+                                                 DEFAULT_AGENT_ARGS["channels"])
+            self.reward_scale       = kwargs.pop("reward_scale",
+                                                 DEFAULT_AGENT_ARGS["reward_scale"])
+            self.use_shaping_reward = kwargs.pop("use_shaping_reward",
+                                                 DEFAULT_AGENT_ARGS["use_shaping_reward"])
             
         if self.channels != self.game.get_screen_channels():
             raise ValueError("Number of image channels between agent and "
@@ -251,16 +263,20 @@ class Agent:
         # TODO: implement get method to catch KeyError
         self.agent_name = agent["agent_args"]["name"]
         self.agent_type = agent["agent_args"]["type"]
+        self.frame_repeat = agent["agent_args"].get(
+            "frame_repeat", self.DEFAULT_AGENT_ARGS["frame_repeat"])
+        self.position_timeout = agent["agent_args"].get(
+            "position_timeout", self.DEFAULT_AGENT_ARGS["position_timeout"])
         self.net_file = agent["network_args"]["name"]
         self.net_type = agent["network_args"]["type"]
         self.alpha = agent["network_args"]["alpha"]
         self.gamma = agent["network_args"]["gamma"]
         self.phi = agent["network_args"]["phi"]
         self.channels = agent["network_args"]["channels"]
-        self.frame_repeat = agent["agent_args"].get("frame_repeat",
-                                                    self.DEFAULT_AGENT_ARGS["frame_repeat"])
-        self.position_timeout = agent["agent_args"].get("position_timeout", 
-                                                        self.DEFAULT_AGENT_ARGS["position_timeout"])
+        self.reward_scale = agent["learning_args"].get(
+            "reward_scale", self.DEFAULT_AGENT_ARGS["reward_scale"])
+        self.use_shaping_reward = agent["learning_args"].get(
+            "use_shaping_reward", DEFAULT_AGENT_ARGS["use_shaping_reward"])
 
     def set_train_mode(self, new_mode):
         """Sets train_mode to new value (True if training; False if testing)"""
@@ -356,6 +372,7 @@ class Agent:
         self.reset_state()
         self.reset_history()
         self.position_repeat = 0
+        self.last_total_shaping_reward = 0.0
         for init_step in range(self.phi):
             current_screen = self.game.get_state().screen_buffer
             self.update_state(current_screen, replace=False)
@@ -398,8 +415,15 @@ class Agent:
         
         # Make action, track agent, and return reward
         self.track_position()
-        r = self.game.make_action(action, self.frame_repeat)
+        r = reward_scale * self.game.make_action(action, self.frame_repeat)
         self.track_action()
+        if use_shaping_reward:
+            # Credit: shaping.py @ github.com/mwydmuch/ViZDoom
+            fixed_shaping_reward = game.get_game_variable(GameVariable.USER1)
+            shaping_reward = doom_fixed_to_double(fixed_shaping_reward)
+            shaping_reward = shaping_reward - self.last_total_shaping_reward
+            r += shaping_reward
+            self.last_total_shaping_reward += shaping_reward
         return r
 
     def track_position(self):
