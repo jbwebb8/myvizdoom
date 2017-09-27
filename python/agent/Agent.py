@@ -90,25 +90,25 @@ class Agent:
             self._load_agent_file(agent_file)
         else:
             self.agent_name         = kwargs.pop("agent_name", 
-                                                 DEFAULT_AGENT_ARGS["agent_name"])
+                                                 self.DEFAULT_AGENT_ARGS["agent_name"])
             self.frame_repeat       = kwargs.pop("frame_repeat",
-                                                 DEFAULT_AGENT_ARGS["frame_repeat"])
+                                                 self.DEFAULT_AGENT_ARGS["frame_repeat"])
             self.position_timeout   = kwargs.pop("position_timeout",
-                                                 DEFAULT_AGENT_ARGS["position_timeout"])
+                                                 self.DEFAULT_AGENT_ARGS["position_timeout"])
             self.net_file           = kwargs.pop("net_name", 
-                                                 DEFAULT_AGENT_ARGS["net_file"])
+                                                 self.DEFAULT_AGENT_ARGS["net_file"])
             self.alpha              = kwargs.pop("alpha", 
-                                                 DEFAULT_AGENT_ARGS["alpha"])
+                                                 self.DEFAULT_AGENT_ARGS["alpha"])
             self.gamma              = kwargs.pop("gamma", 
-                                                 DEFAULT_AGENT_ARGS["gamma"])
+                                                 self.DEFAULT_AGENT_ARGS["gamma"])
             self.phi                = kwargs.pop("phi",
-                                                 DEFAULT_AGENT_ARGS["phi"])
+                                                 self.DEFAULT_AGENT_ARGS["phi"])
             self.channels           = kwargs.pop("channels",
-                                                 DEFAULT_AGENT_ARGS["channels"])
+                                                 self.DEFAULT_AGENT_ARGS["channels"])
             self.reward_scale       = kwargs.pop("reward_scale",
-                                                 DEFAULT_AGENT_ARGS["reward_scale"])
+                                                 self.DEFAULT_AGENT_ARGS["reward_scale"])
             self.use_shaping_reward = kwargs.pop("use_shaping_reward",
-                                                 DEFAULT_AGENT_ARGS["use_shaping_reward"])
+                                                 self.DEFAULT_AGENT_ARGS["use_shaping_reward"])
             
         if self.channels != self.game.get_screen_channels():
             raise ValueError("Number of image channels between agent and "
@@ -276,7 +276,7 @@ class Agent:
         self.reward_scale = agent["learning_args"].get(
             "reward_scale", self.DEFAULT_AGENT_ARGS["reward_scale"])
         self.use_shaping_reward = agent["learning_args"].get(
-            "use_shaping_reward", DEFAULT_AGENT_ARGS["use_shaping_reward"])
+            "use_shaping_reward", self.DEFAULT_AGENT_ARGS["use_shaping_reward"])
 
     def set_train_mode(self, new_mode):
         """Sets train_mode to new value (True if training; False if testing)"""
@@ -415,9 +415,9 @@ class Agent:
         
         # Make action, track agent, and return reward
         self.track_position()
-        r = reward_scale * self.game.make_action(action, self.frame_repeat)
+        r = self.reward_scale * self.game.make_action(action, self.frame_repeat)
         self.track_action()
-        if use_shaping_reward:
+        if self.use_shaping_reward:
             # Credit: shaping.py @ github.com/mwydmuch/ViZDoom
             fixed_shaping_reward = game.get_game_variable(GameVariable.USER1)
             shaping_reward = doom_fixed_to_double(fixed_shaping_reward)
