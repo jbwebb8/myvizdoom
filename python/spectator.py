@@ -19,6 +19,7 @@ def initialize_vizdoom(config_file_path):
     return game
 
 # Initialize DoomGame
+parser = argparse.ArgumentParser(description="Test a scenario.")
 parser.add_argument("config_file_path", 
                     help="config file for scenario")
 parser.add_argument("-t", "--test-episodes", type=int, default=10, metavar="",
