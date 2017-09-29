@@ -84,6 +84,8 @@ class NetworkBuilder:
         if "activation_fn" in layer["kwargs"]:
             if layer["kwargs"]["activation_fn"] == "relu":
                 layer["kwargs"]["activation_fn"] = tf.nn.relu
+            elif layer["kwargs"]["activation_fn"] == "leaky_relu":
+                layer["kwargs"]["activation_fn"] = lambda x: tf.maximum(0.2 * x, x)
             elif layer["kwargs"]["activation_fn"] == "softmax":
                 layer["kwargs"]["activation_fn"] = tf.nn.softmax
             elif layer["kwargs"]["activation_fn"] == "None":
@@ -137,8 +139,7 @@ class NetworkBuilder:
         # Assign custom layer builds    
         if layer_type == "conv2d":
             layer["kwargs"]["data_format"] = self.data_format
-            return tf.contrib.layers.convolution2d(input_layer, 
-                                                    **layer["kwargs"])
+            return tf.contrib.layers.convolution2d(input_layer, **layer["kwargs"])
         elif layer_type == "flatten":
             with tf.name_scope(layer["kwargs"].pop("scope", "FLAT")):
                 # Yes, I basically copied tf.contrib.layers.flatten, but
@@ -165,9 +166,16 @@ class NetworkBuilder:
                 else: # None present
                     flat.set_shape([batch_size, None])
                 return flat
-        elif layer_type == "fully_connected" or "fc":
-            return tf.contrib.layers.fully_connected(input_layer, 
-                                                        **layer["kwargs"])
+        elif layer_type == ("fully_connected" or "fc"):
+            return tf.contrib.layers.fully_connected(input_layer, **layer["kwargs"])
+        elif layer_type == "dropout":
+            try:
+                layer["kwargs"]["is_training"] = self._get_object("is_training")
+            except KeyError:
+                is_training = tf.placeholder(tf.bool, name="is_training")
+                layer["kwargs"]["is_training"] = is_training
+                self.graph_dict["is_training"] = [is_training, "p"]
+            return tf.contrib.layers.dropout(input_layer, **layer["kwargs"])
         
         ###########################################################
         # Add new layer support here.

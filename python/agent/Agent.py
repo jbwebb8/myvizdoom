@@ -173,6 +173,7 @@ class Agent:
                 pass
 
         # If action set is None, create all combinations of available buttons
+        # Create choice of simple_combo or all_combo for combination of available buttons in config file
         if action_set is None:
             num_buttons = self.game.get_available_buttons_size()
             actions = []

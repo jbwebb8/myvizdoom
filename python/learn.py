@@ -243,8 +243,11 @@ for epoch in range(epochs):
     if save_epoch:
         model_filename = exp_name + "_model"
         print("Saving network... ", end="")
-        agent.save_model(model_filename, global_step=epoch+1, 
-                         save_meta=(epoch == 0), save_summaries=True)
+        agent.save_model(model_filename, 
+                         global_step=epoch+1, 
+                         save_meta=(epoch == 0), 
+                         save_summaries=True, 
+                         save_target=True)
         if trackable:
             sfx = str(epoch+1) + ".csv"
             np.savetxt(game_dir + "positions-" + sfx,
