@@ -400,6 +400,10 @@ class Agent:
         self.track_position()
 
     def check_position_timeout(self, action):
+        # Check if position timeout exists
+        if self.position_timeout is None:
+            return action
+
         # Get current position
         pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
         pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
