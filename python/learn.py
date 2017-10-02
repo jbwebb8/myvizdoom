@@ -26,7 +26,7 @@ parser.add_argument("results_directory",
 parser.add_argument("-p", "--params-file", default=None, metavar="", 
                     help="TF filename (no extension) containing network \
                           parameters")
-parser.add_argument("-a", "--action-set", default="default", metavar="", 
+parser.add_argument("-a", "--action-set", default=None, metavar="", 
                     help="name of action set available to agent")
 parser.add_argument("-e", "--epochs", type=int, default=100, metavar="", 
                     help="number of epochs to train")
@@ -103,7 +103,7 @@ def save_exp_details(folder, agent):
     f.write("Network file: " + net_file_path + "\n")
     f.write("Params file: " + str(params_file_path) + "\n")
     f.write("Config file: " + config_file_path + "\n")
-    f.write("Action set: " + action_set + "\n")
+    f.write("Action set: " + str(action_set) + "\n")
     f.write("Epochs: " + str(epochs) + "\n")
     f.write("Learning steps per epoch: " + str(learning_steps_per_epoch) + "\n")
     f.write("Test episodes per epoch: " + str(test_episodes_per_epoch))
