@@ -26,7 +26,7 @@ parser.add_argument("results_directory",
 parser.add_argument("-p", "--params-file", default=None, metavar="", 
                     help="TF filename (no extension) containing network \
                           parameters")
-parser.add_argument("-a", "--action-set", default="default", metavar="", 
+parser.add_argument("-a", "--action-set", default=None, metavar="", 
                     help="name of action set available to agent")
 parser.add_argument("-e", "--epochs", type=int, default=100, metavar="", 
                     help="number of epochs to train")
@@ -103,7 +103,7 @@ def save_exp_details(folder, agent):
     f.write("Network file: " + net_file_path + "\n")
     f.write("Params file: " + str(params_file_path) + "\n")
     f.write("Config file: " + config_file_path + "\n")
-    f.write("Action set: " + action_set + "\n")
+    f.write("Action set: " + str(action_set) + "\n")
     f.write("Epochs: " + str(epochs) + "\n")
     f.write("Learning steps per epoch: " + str(learning_steps_per_epoch) + "\n")
     f.write("Test episodes per epoch: " + str(test_episodes_per_epoch))
@@ -180,9 +180,15 @@ for epoch in range(epochs):
             agent.initialize_new_episode()
             train_episodes_finished += 1
     print("%d training episodes played." % train_episodes_finished)
+    
+    # Save training scores
     train_scores = np.asarray(score_history)
     train_scores_all.append([np.mean(train_scores, axis=0), 
                              np.std(train_scores, axis=0)])
+    np.savetxt(game_dir + "train_scores.csv", 
+               np.asarray(train_scores_all),
+               delimiter=",",
+               fmt="%.3f")
     print("Results: mean: %.1f±%.1f," % (train_scores.mean(), train_scores.std()), \
           "min: %.1f," % train_scores.min(), "max: %.1f," % train_scores.max())
     
@@ -220,10 +226,14 @@ for epoch in range(epochs):
                 position_history.append(agent.position_history)
                 action_history.append(agent.action_history)
     
-    # Get test results
+    # Save test scores
     test_scores = np.asarray(score_history)
     test_scores_all.append([np.mean(test_scores, axis=0), 
-                            np.std(test_scores, axis=0)])                      
+                            np.std(test_scores, axis=0)])
+    np.savetxt(game_dir + "test_scores.csv", 
+            np.asarray(test_scores_all),
+            delimiter=",",
+            fmt="%.3f")                      
     print("\r\x1b[K" + "Results: mean: %.1f±%.1f," 
           % (test_scores.mean(), test_scores.std()),
           "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max())
@@ -233,8 +243,11 @@ for epoch in range(epochs):
     if save_epoch:
         model_filename = exp_name + "_model"
         print("Saving network... ", end="")
-        agent.save_model(model_filename, global_step=epoch+1, 
-                         save_meta=(epoch == 0), save_summaries=True)
+        agent.save_model(model_filename, 
+                         global_step=epoch+1, 
+                         save_meta=(epoch == 0), 
+                         save_summaries=True, 
+                         save_target=True)
         if trackable:
             sfx = str(epoch+1) + ".csv"
             np.savetxt(game_dir + "positions-" + sfx,
@@ -254,14 +267,6 @@ for epoch in range(epochs):
     print("Done.")
     print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))
 
-# Close game and save all scores per epoch
+# Close game
 game.close()
-np.savetxt(game_dir + "train_scores.csv", 
-           np.asarray(train_scores_all),
-           delimiter=",",
-           fmt="%.3f")
-np.savetxt(game_dir + "test_scores.csv", 
-           np.asarray(test_scores_all),
-           delimiter=",",
-           fmt="%.3f")
 print("======================================")

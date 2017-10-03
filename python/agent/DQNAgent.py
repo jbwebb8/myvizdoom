@@ -368,7 +368,7 @@ class DQNAgent(Agent):
         return self.actions[a_best]
 
     def save_model(self, model_name, global_step=None, save_meta=True,
-                   save_summaries=True):
+                   save_summaries=True, save_target=False):
         batch = None
         if save_summaries:
             batch = self._get_learning_batch()
@@ -377,7 +377,7 @@ class DQNAgent(Agent):
                                 save_meta=save_meta,
                                 save_summaries=save_summaries,
                                 test_batch=batch)
-        if self.train_mode:
+        if save_target:
             self.target_network.save_model(model_name,
                                     global_step=global_step,
                                     save_meta=save_meta,
