@@ -25,9 +25,9 @@ def _check_list(arg):
         try:
             return arg[0], arg[1:]
         except IndexError:
-            return arg[0], [None]
+            return arg[0], []
     else:
-        return arg, [None]
+        return arg, []
 
 def _get_variable_initializer(init_type, var_shape, *args):
     if init_type == "random_normal":
@@ -79,8 +79,11 @@ def conv2d(input_layer,
 
         # Convolute input
         stride_h, stride_w = _check_list(stride)
-        if stride_w is None: stride_w = stride_h
-        elif isinstance(stride_w, list): stride_w = stride_w[0]
+        if isinstance(stride_w, list):
+            if len(stride_w) == 0:
+                stride_w = stride_h
+            else:
+                stride_w = stride_w[0]
         if data_format == "NHWC":
             strides = [1, stride_h, stride_w, 1]
         elif data_format == "NCHW":
@@ -174,7 +177,11 @@ def fully_connected(input_layer,
 
         # Apply normalization
         if normalizer_fn is not None:
-            pass
+            norm_type, norm_params = _check_list(normalizer_fn)
+            out = _apply_normalization(norm_type, 
+                                       out, 
+                                       *norm_params,
+                                       data_format=None)
 
         # Add biases
         elif biases_initializer is not None:
@@ -208,15 +215,28 @@ def batch_norm(x,
     - simple: Normalize neuron-by-neuron over batch size
     """
     with tf.name_scope(scope):
-        # Create trainable variables γ and β, and running population stats
-        gamma = tf.Variable(tf.ones(1))
-        beta = tf.Variable(tf.zeros(1))
-        pop_mean = tf.Variable(tf.zeros(1), trainable=False)
-        pop_var = tf.Variable(tf.ones(1), trainable=False)
-
         # Get shape of input; assume shape [batch_size, ...]
-        if data_format is None:
+        if data_format is None or norm_dim == "simple":
             mom_axes = [0] # simple batch normalization
+            param_shape = [1, -1]
+            num_channels = x.get_shape().as_list()[1:]
+        elif data_format == "NCHW":
+            mom_axes = [0, 2, 3]
+            param_shape = [1, -1, 1, 1]
+            num_channels = x.get_shape().as_list()[1]
+        elif data_format == "NHWC":
+            mom_axes = [0, 1, 2]
+            param_shape = [1, 1, 1, -1]
+            num_channels = x.get_shape().as_list()[3]
+        else:
+            raise SyntaxError("Unknown data format:", data_format)
+
+        # Create trainable variables γ and β, and running population stats
+        gamma = tf.Variable(tf.ones(num_channels), name="gamma")
+        beta = tf.Variable(tf.zeros(num_channels), name="beta")
+        pop_mean = tf.Variable(tf.zeros(num_channels), trainable=False, name="pop_mean")
+        pop_var = tf.Variable(tf.ones(num_channels), trainable=False, name="pop_var")
+        is_training = tf.placeholder(tf.bool, name="is_training")
 
         # Apply batch normalizing transform to x:
         # x_hat = (x - μ)/(σ^2 + ε)^0.5
@@ -225,18 +245,33 @@ def batch_norm(x,
         # If training, use batch statistics for transformation and update
         # population statistics via moving average and variance.
         batch_mean, batch_var = tf.nn.moments(x, mom_axes, name="moments")
-        x_hat_train = (x - batch_mean) / (tf.sqrt(batch_var + epsilon))
-        new_pop_mean = (1 - decay) * batch_mean + decay * pop_mean
-        new_pop_var = (1 - decay) * batch_var + decay * pop_var
-        update_pop_mean = tf.assign(pop_mean, new_pop_mean)
-        update_pop_var = tf.assign(pop_var, new_pop_var)
+        with tf.name_scope("update_pop_mean"):
+            new_pop_mean = (1.0 - decay) * batch_mean + decay * pop_mean
+            update_pop_mean = tf.assign(pop_mean, new_pop_mean)
+        with tf.name_scope("update_pop_var"):
+            new_pop_var = (1.0 - decay) * batch_var + decay * pop_var
+            update_pop_var = tf.assign(pop_var, new_pop_var)
+        def x_hat_train():
+            with tf.control_dependencies([update_pop_mean, update_pop_var]):
+                with tf.name_scope("batch_stats"):
+                    batch_mean_rs = tf.reshape(batch_mean, param_shape)
+                    batch_var_rs = tf.reshape(batch_var, param_shape)
+                    return (x - batch_mean_rs) / (tf.sqrt(batch_var_rs + epsilon))
         
         # If testing, use population statistics for transformation
-        x_hat_test = (x - pop_mean) / (tf.sqrt(pop_var + epsilon))
-        
+        def x_hat_test():
+            with tf.name_scope("pop_stats"):
+                pop_mean_rs = tf.reshape(pop_mean, param_shape)
+                pop_var_rs = tf.reshape(pop_var, param_shape)
+                return (x - pop_mean_rs) / (tf.sqrt(pop_var_rs + epsilon))
+
         # Apply learned linear transformation to transformed input based
         # on phase
-        is_training = tf.placeholder(tf.bool, name="is_training")
-        x_hat = tf.cond(is_training, x_hat_train, x_hat_test)
-        out = gamma * x_hat + beta
+        x_hat = tf.cond(is_training, 
+                        x_hat_train, 
+                        x_hat_test)
+        gamma_rs = tf.reshape(gamma, param_shape)
+        beta_rs = tf.reshape(beta, param_shape)
+        out = gamma_rs * x_hat + beta_rs
+
         return out
