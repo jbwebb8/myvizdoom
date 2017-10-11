@@ -3,14 +3,14 @@ import numpy as np
 
 class ACNetwork(Network):
 
-    def __init__(self, phi, num_channels, num_actions, output_directory,
+    def __init__(self, phi, num_channels, num_outputs, output_directory,
                  session, train_mode=True, learning_rate=None, 
                  network_file=None, params_file=None, scope=""):
         # Create base network
         Network.__init__(self,
                          phi=phi,
                          num_channels=num_channels,
-                         num_actions=num_actions,
+                         num_outputs=num_outputs,
                          output_directory=output_directory,
                          session=session,
                          train_mode=train_mode,

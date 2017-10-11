@@ -328,6 +328,8 @@ class NetworkBuilder:
             builder_type = _AC(self)
         elif net_type == "dueling_dqn":
             builder_type = _DuelingDQN(self)
+        elif net_type == "position":
+            builder_type = _PositionEncoder(self)
         elif net_type == "custom":
             builder_type = _Custom(self)
         else:
@@ -465,7 +467,7 @@ class _DQN:
 
     def _add_output_layer(self, layer):
         layer["name"] = "Q"
-        layer["kwargs"]["num_outputs"] = self.nb.network.num_actions
+        layer["kwargs"]["num_outputs"] = self.nb.network.num_outputs
         return self.nb.add_layer(layer)                
 
     def _add_reserved_ops(self):
@@ -500,7 +502,7 @@ class _DuelingDQN(_DQN):
             layer["kwargs"]["num_outputs"] = 1
         elif layer["name"].lower() == "a":
             layer["name"] = "A"
-            layer["kwargs"]["num_outputs"] = self.nb.network.num_actions
+            layer["kwargs"]["num_outputs"] = self.nb.network.num_outputs
         return self.nb.add_layer(layer) 
 
     # Override DQN function
@@ -547,7 +549,7 @@ class _AC:
             layer["kwargs"]["num_outputs"] = 1
         elif layer["name"].lower() == "pi":
             layer["name"] = "pi"
-            layer["kwargs"]["num_outputs"] = self.nb.network.num_actions
+            layer["kwargs"]["num_outputs"] = self.nb.network.num_outputs
         return self.nb.add_layer(layer)                
 
     def _add_reserved_ops(self):
@@ -584,6 +586,36 @@ class _AC:
         self.nb.graph_dict["IS_weights"] = [w, "p"]
         self.nb.graph_dict["loss_pi"] = [pi_loss_fn, "o"]
         self.nb.graph_dict["loss_v"] = [v_loss_fn, "o"]
+
+class _PositionEncoder:
+
+    def __init__(self, network_builder):
+        self.nb = network_builder
+
+    def _add_reserved_placeholders(self):
+        self.nb.graph_dict["position"] = [tf.placeholder(tf.float32, 
+                                                        shape=[None, 2],
+                                                        name="position"), "p"]
+        self.nb.graph_dict["IS_weights"] = [tf.placeholder(tf.float32, 
+                                                       shape=[None, 2], 
+                                                       name="IS_weights"), "p"]
+    
+    def _add_output_layer(self, layer):
+        layer["name"] = "POS"
+        layer["kwargs"]["num_outputs"] = 2
+        return self.nb.add_layer(layer)
+    
+    def _add_reserved_ops(self):
+        pass
+    
+    def _add_loss_fn(self, loss_type, loss_params):
+        target = self.nb.graph_dict["position"][0]
+        prediction = self.nb.graph_dict["POS"][0]
+        w = self.nb.graph_dict["IS_weights"][0]
+        loss_fn = self.nb.add_loss_fn(loss_type, target, prediction, 
+                            weights=w, params=loss_params)
+        self.nb.graph_dict["IS_weights"] = [w, "p"]
+        self.nb.graph_dict["loss"] = [loss_fn, "o"]
 
 class _Custom:
 

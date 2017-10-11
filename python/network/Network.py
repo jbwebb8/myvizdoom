@@ -29,12 +29,12 @@ class Network:
     Output directory branched into log directory for FileWriter and params
     directory for Saver.
     """
-    def __init__(self, phi, num_channels, num_actions, output_directory,
+    def __init__(self, phi, num_channels, num_outputs, output_directory,
                  session, train_mode=True, learning_rate=None, 
                  network_file=None, params_file=None, scope=""):
         # Set basic network parameters and objects
         self.input_depth = phi * num_channels
-        self.num_actions = num_actions
+        self.num_outputs = num_outputs
         self.learning_rate = learning_rate
         self.sess = session
         self.train_mode = train_mode

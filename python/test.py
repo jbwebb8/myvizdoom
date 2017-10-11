@@ -30,7 +30,7 @@ parser.add_argument("results_directory",
                     help="directory where results will be saved")
 parser.add_argument("-t", "--test-episodes", type=int, default=10, metavar="",
                     help="episodes to be played (default=10)")
-parser.add_argument("-a", "--action-set", default="default", metavar="",
+parser.add_argument("-a", "--action-set", default=None, metavar="",
                     help="name of action set available to agent")
 parser.add_argument("-l", "--layer-names", default=[], metavar="", nargs='*',
                     help="layer output names to probe")
@@ -92,7 +92,7 @@ def save_exp_details(folder, agent):
     f.write("Network file: " + net_file_path + "\n")
     f.write("Params file: " + str(params_file_path) + "\n")
     f.write("Config file: " + config_file_path + "\n")
-    f.write("Action set: " + action_set + "\n")
+    f.write("Action set: " + str(action_set) + "\n")
     files_to_copy = [agent_file_path, net_file_path, config_file_path]
     for fp in files_to_copy:
         new_fp = folder + fp.split("/")[-1]
