@@ -157,6 +157,10 @@ class PositionEncoder(Agent):
         s1, p, w, idx = self.memory.get_sample(self.batch_size)
         return s1, p, w, idx
 
+    def get_action(self, state=None):
+        a = randint(0, self.num_actions - 1)
+        return self.actions[a]
+
     def save_model(self, model_name, global_step=None, save_meta=True,
                    save_summaries=True, save_target=False):
         batch = None

@@ -165,14 +165,17 @@ class Toolbox:
  
         return fig, axes
 
-    def visualize_features(self, state, position, layer_values):
+    def visualize_features(self, state, position, layer_values, 
+                           pred_position=None):
         # Display state
         images = self.preprocess_state(state)
         for i in range(self.phi):
             img = self.ax_f[0][i].imshow(images[i])
         
-        # Display position
-        self.ax_f[0][self.phi].plot(position[1], position[2], color="black",
+        # Display position and, if provided, predicted position
+        self.ax_f[0][self.phi].plot(position[0], position[1], color="black",
+                                    marker='.', scalex=False, scaley=False)
+        self.ax_f[0][self.phi].plot(pred_position[0], pred_position[1], color="red",
                                     marker='.', scalex=False, scaley=False)
 
         # Display layers

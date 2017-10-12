@@ -52,6 +52,8 @@ parser.add_argument("-n", "--name", default="test", metavar="",
                     help="experiment name (for saving files)")
 parser.add_argument("-d", "--description", default="testing", metavar="", 
                     help="description of experiment")
+parser.add_argument("--predict-position", action="store_true", default=False, 
+                    help="display predicted position")
 args = parser.parse_args()
 
 # Grab arguments from agent file and command line args
@@ -72,6 +74,7 @@ save_gifs = args.save_gifs
 view_q_values = args.view_q_values
 exp_name = args.name
 exp_descr = args.description
+pred_pos = args.predict_position
 
 def make_directory(folders):
     for f in folders:
@@ -172,9 +175,14 @@ for test_episode in range(test_episodes):
         if visualize_network:
             if output == None:
                 output = agent.get_layer_output(layer_names)
+            if pred_pos:
+                pred_position = np.squeeze(agent.get_layer_output(["POS"])[0])
+            else:
+                pred_position = None
             toolbox.visualize_features(state=agent.state, 
-                                       position=agent.position_history[-1],
-                                       layer_values=output)
+                                       position=agent.position_history[-1][1:],
+                                       layer_values=output,
+                                       pred_position=pred_position)
         if view_q_values:
             q = agent.get_layer_output("Q")[0] # shape [1, 4] --> [4,]
             toolbox.display_q_values(q)   
