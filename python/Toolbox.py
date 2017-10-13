@@ -50,6 +50,7 @@ class Toolbox:
         self.fig_f, self.ax_f = self._initialize_feature_display()
         self.fig_q, self.ax_q, self.idx_q, self.bars_q, self.labels_q \
             = self._initialize_q_display(self.actions)
+        self.all_objects = []
         self.color_format = color_format
         self.prev_action = 0
         plt.ion()         
@@ -171,12 +172,16 @@ class Toolbox:
         images = self.preprocess_state(state)
         for i in range(self.phi):
             img = self.ax_f[0][i].imshow(images[i])
+            self.all_objects.append(img)
         
         # Display position and, if provided, predicted position
-        self.ax_f[0][self.phi].plot(position[0], position[1], color="black",
-                                    marker='.', scalex=False, scaley=False)
-        self.ax_f[0][self.phi].plot(pred_position[0], pred_position[1], color="red",
-                                    marker='.', scalex=False, scaley=False)
+        pts = self.ax_f[0][self.phi].plot(position[0], position[1], color="black",
+                                          marker='.', scalex=False, scaley=False)
+        self.all_objects.append(pts)
+        if pred_position is not None:
+            pts = self.ax_f[0][self.phi].plot(pred_position[0], pred_position[1], color="red",
+                                              marker='.', scalex=False, scaley=False)
+            self.all_objects.append(pts)
 
         # Display layers
         for i in range(self.num_layers):
@@ -186,12 +191,14 @@ class Toolbox:
                     # Layer shape = [1, features, [kernel]]
                     for j in range(layer_values[i].shape[1]):
                         mod_output = np.squeeze(layer_values[i][:, j, ...])
-                        self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
+                        img = self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
+                        self.all_objects.append(img)
                 elif self.data_format == "NHWC":
                     # Layer shape = [1, [kernel], features]
                     for j in range(layer_values[i].shape[3]):
                         mod_output = np.squeeze(layer_values[i][..., j])
-                        self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
+                        img = self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
+                        self.all_objects.append(img)
             
             # Fully connected layers: display activations of neurons reshaped
             # into grid
@@ -200,7 +207,8 @@ class Toolbox:
                 pad = np.ones(n ** 2 - layer_values[i].size)
                 mod_output = np.append(np.squeeze(layer_values[i]), pad)
                 mod_output = np.reshape(mod_output, [n, -1])
-                self.ax_f[1][i].imshow(mod_output, cmap="gray")
+                img = self.ax_f[1][i].imshow(mod_output, cmap="gray")
+                self.all_objects.append(img)
         
         # Refresh image
         with warnings.catch_warnings():
@@ -208,6 +216,8 @@ class Toolbox:
             plt.draw()
             plt.show(block=False)
             plt.pause(0.001)
+        
+        return self.fig_f
         
     def _initialize_q_display(self, actions, ybounds=[-10, 50]):
         fig, ax = plt.subplots()
@@ -244,7 +254,21 @@ class Toolbox:
             plt.draw()
             plt.show(block=False)
             plt.pause(0.001)
+        
+        return self.fig_q
     
+    def clear_displays(self):
+        for obj in self.all_objects:
+            try: # AxesImage
+                obj.remove()
+            except TypeError: # Line2D object
+                try:
+                    for ob in obj: ob.remove()
+                except TypeError:
+                    pass
+        self.all_objects = []
+        self.prev_action = 0 
+            
     def make_gif(self, images, filepath, duration=None, fps=35):
         import moviepy.editor as mpy
 
