@@ -339,7 +339,7 @@ class Agent:
 
     def _preprocess_image(self, img):
         """Converts and downsamples the input image"""
-        # If channels = 1, image shape is [y, x]. Reshape to [channels, y, x]
+        # If channels = 1, image shape is [y, x]. Reshape to [y, x, channels]
         if img.ndim == 2:
             new_img = img[..., np.newaxis]
         
