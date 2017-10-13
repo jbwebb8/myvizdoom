@@ -78,7 +78,7 @@ class Network:
                     
             # Create summaries for TensorBoard visualization
             with tf.name_scope("summaries"):
-               var_sum, neur_sum, grad_sum = builder.add_summaries()
+               var_sum, neur_sum, grad_sum, loss_sum = builder.add_summaries()
             
             # Create objects for saving
             self.saver = tf.train.Saver(max_to_keep=None)        
@@ -86,6 +86,7 @@ class Network:
             self.var_sum = tf.summary.merge(var_sum)
             self.neur_sum = tf.summary.merge(neur_sum)
             self.grad_sum = tf.summary.merge(grad_sum)
+            self.loss_sum = tf.summary.merge(loss_sum)
             self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
             self.ea = event_accumulator.EventAccumulator(self.log_dir)
 

@@ -65,6 +65,9 @@ class PositionEncoder(Network):
                 grad_sum_ = self.sess.run(self.grad_sum,
                                             feed_dict=feed_dict)
                 self.writer.add_summary(grad_sum_, global_step)
+                loss_sum_ = self.sess.run(self.loss_sum,
+                                          feed_dict=feed_dict)
+                self.writer.add_summary(loss_sum_, global_step)
             # TODO: implement event accumulator to save files (esp. histograms)
             # to CSV files.
             #self.ea.Reload()

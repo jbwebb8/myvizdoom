@@ -446,8 +446,16 @@ class NetworkBuilder:
                     with tf.name_scope(v.name[:-2]):
                         if g is not None:
                             grad_sum.append(tf.summary.histogram("grads_%d" % i, g))
-            
-        return var_sum, neur_sum, grad_sum
+
+        # Create summaries for losses
+        loss_sum = []
+        with tf.name_scope("losses"):
+            loss = tf.get_collection(tf.GraphKeys.LOSSES,
+                                         scope=self.network.scope)
+            for l in loss:
+                loss_sum.append(tf.summary.scalar(l.name[:-2], l)) 
+
+        return var_sum, neur_sum, grad_sum, loss_sum
 
 class _DQN:
     def __init__(self, network_builder):
