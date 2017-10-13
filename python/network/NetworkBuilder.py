@@ -451,9 +451,10 @@ class NetworkBuilder:
         loss_sum = []
         with tf.name_scope("losses"):
             loss = tf.get_collection(tf.GraphKeys.LOSSES,
-                                         scope=self.network.scope)
+                                     scope=self.network.scope)
             for l in loss:
-                loss_sum.append(tf.summary.scalar(l.name[:-2], l)) 
+                mean_loss = tf.reduce_mean(l)
+                loss_sum.append(tf.summary.scalar(l.name[:-2], mean_loss)) 
 
         return var_sum, neur_sum, grad_sum, loss_sum
 

@@ -37,7 +37,7 @@ class PositionEncoder(Network):
     def learn(self, s1, position, weights=None):
         s1 = self._check_state(s1)
         if weights is None:
-            weights = np.ones(position.shape[0])
+            weights = np.ones([position.shape[0], 2])
         feed_dict = {self.state: s1, self.position: position, 
                         self.IS_weights: weights}
         feed_dict = self._check_train_mode(feed_dict)
@@ -54,7 +54,7 @@ class PositionEncoder(Network):
             var_sum_ = self.sess.run(self.var_sum)
             self.writer.add_summary(var_sum_, global_step)
             if test_batch is not None:
-                s1, position, w, idx = test_batch
+                s1, position, w = test_batch
                 s1 = self._check_state(s1)
                 feed_dict = {self.state: s1, self.position: position, 
                                 self.IS_weights: w}
@@ -68,6 +68,7 @@ class PositionEncoder(Network):
                 loss_sum_ = self.sess.run(self.loss_sum,
                                           feed_dict=feed_dict)
                 self.writer.add_summary(loss_sum_, global_step)
+            self.writer.flush()
             # TODO: implement event accumulator to save files (esp. histograms)
             # to CSV files.
             #self.ea.Reload()

@@ -6,8 +6,10 @@ from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
 from memory.PositionReplayMemory import PositionReplayMemory
 import tensorflow as tf
 import numpy as np
+import skimage.color, skimage.transform
 from random import randint, random
 import json
+import warnings
 
 class PositionEncoder(Agent):
     """
@@ -157,17 +159,41 @@ class PositionEncoder(Agent):
         s1, p, w, idx = self.memory.get_sample(self.batch_size)
         return s1, p, w, idx
 
+    def preprocess_batch(self, *args):
+        # Extract screen buffer and position batches
+        for arg in args:
+            if arg.ndim == 2:
+                positions = arg
+            else:
+                images = arg
+        
+        # Preprocess images to match agent state. Unfortunately,
+        # this must be done as a loop since skimage does not support
+        # batch processing.
+        batch_size = images.shape[0]
+        new_image = self._preprocess_image(images[0])
+        new_images = np.zeros([batch_size] + list(new_image.shape))
+        new_images[0] = new_image
+        for i in range(1, batch_size):
+            new_images[i] = self._preprocess_image(images[i])
+        
+        return [new_images, positions]
+
+    def learn_from_batch(self, states, positions, weights=None):
+        _ = self.network.learn(states, positions, weights)
+
     def get_action(self, state=None):
         a = randint(0, self.num_actions - 1)
         return self.actions[a]
 
     def save_model(self, model_name, global_step=None, save_meta=True,
-                   save_summaries=True, save_target=False):
-        batch = None
-        if save_summaries:
-            batch = self._get_learning_batch()
+                   save_summaries=True, test_batch=None, save_target=False):
+        if save_summaries and test_batch is None:
+            test_batch = self._get_learning_batch()
+        if len(test_batch) == 2:
+            test_batch.append(np.ones([test_batch[0].shape[0], 2]))
         self.network.save_model(model_name,
                                 global_step=global_step,
                                 save_meta=save_meta,
                                 save_summaries=save_summaries,
-                                test_batch=batch)
+                                test_batch=test_batch)
