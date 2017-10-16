@@ -41,11 +41,11 @@ for i in range(episodes):
         reward = game.get_last_reward()
 
         # Print results
-        print("State #" + str(state.number))
-        print("Game variables: ", state.game_variables)
-        print("Action:", last_action)
-        print("Reward:", reward)
-        print("=====================")
+        #print("State #" + str(state.number))
+        #print("Game variables: ", state.game_variables)
+        #print("Action:", last_action)
+        #print("Reward:", reward)
+        #print("=====================")
 
     print("Episode finished!")
     print("Total reward:", game.get_total_reward())

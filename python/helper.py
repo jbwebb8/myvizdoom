@@ -7,28 +7,31 @@ import json
 ###############################################################################
 
 def create_agent(agent_filename, **kwargs):
-    from agent import Agent, DQNAgent, DDQNAgent, ACERAgent
+    from agent import Agent, DQNAgent, DDQNAgent, ACERAgent, PositionEncoder
     agent_types = {"agent": Agent.Agent,
                    "dqn": DQNAgent.DQNAgent,
                    "ddqn": DDQNAgent.DDQNAgent,
-                   "acer": ACERAgent.ACERAgent}
+                   "acer": ACERAgent.ACERAgent,
+                   "position": PositionEncoder.PositionEncoder}
     agent_file = json.loads(open(agent_filename).read())
     agent_type = agent_file["agent_args"]["type"]
     return agent_types[agent_type](agent_file=agent_filename, **kwargs)
 
 def create_network(network_filename, **kwargs):
-    from network import DQNetwork, ACNetwork
+    from network import DQNetwork, ACNetwork, PositionEncoder
     network_types = {"dqn": DQNetwork.DQNetwork,
                      "dueling_dqn": DQNetwork.DQNetwork,
-                     "ac": ACNetwork.ACNetwork}
+                     "ac": ACNetwork.ACNetwork,
+                     "position": PositionEncoder.PositionEncoder}
     net_file = json.loads(open(network_filename).read())
     net_type = net_file["global_features"]["type"].lower()
     return network_types[net_type](network_file=network_filename, **kwargs)
 
 def create_memory(memory_type, **kwargs):
-    from memory import ReplayMemory, PrioritizedReplayMemory
+    from memory import ReplayMemory, PrioritizedReplayMemory, PositionReplayMemory
     memory_types = {"standard": ReplayMemory.ReplayMemory,
-                    "prioritized": PrioritizedReplayMemory.PrioritizedReplayMemory}
+                    "prioritized": PrioritizedReplayMemory.PrioritizedReplayMemory,
+                    "position": PositionReplayMemory.PositionReplayMemory}
     return memory_types[memory_type](**kwargs)
 
 ###############################################################################

@@ -59,11 +59,12 @@ class Agent:
                           "channels":           1,
                           "frame_repeat":       4,
                           "position_timeout":   None,
+                          "no_op":              False,
                           "reward_scale":       1.0,
                           "use_shaping_reward": False}
 
     def __init__(self, game, output_directory, agent_file=None,
-                 params_file=None, train_mode=True, action_set="default", 
+                 params_file=None, train_mode=True, action_set="default",
                  **kwargs):
         # Initialize game
         self.game = game
@@ -95,6 +96,8 @@ class Agent:
                                                  self.DEFAULT_AGENT_ARGS["frame_repeat"])
             self.position_timeout   = kwargs.pop("position_timeout",
                                                  self.DEFAULT_AGENT_ARGS["position_timeout"])
+            self.no_op              = kwargs.pop("no_op",
+                                                 self.DEFAULT_AGENT_ARGS["no_op"])
             self.net_file           = kwargs.pop("net_name", 
                                                  self.DEFAULT_AGENT_ARGS["net_file"])
             self.alpha              = kwargs.pop("alpha", 
@@ -126,7 +129,7 @@ class Agent:
         self.network = create_network(self.net_file,
                                       phi=self.phi, 
                                       num_channels=self.channels, 
-                                      num_actions=self.num_actions,
+                                      num_outputs=self.num_actions,
                                       learning_rate=self.alpha,
                                       params_file=self.params_file,
                                       output_directory=self.main_net_dir,
@@ -148,7 +151,7 @@ class Agent:
                 if exception.errno != errno.EEXIST:
                     raise
 
-    def _set_actions(self, action_set=None):
+    def _set_actions(self, action_set=None, no_op=True):
         """
         Sets available actions for agent. For dictionary of buttons and their 
         integer values, see ViZDoom/include/ViZDoomTypes.h.
@@ -187,6 +190,8 @@ class Agent:
                     else:
                         j = j - 1
                 actions.append(a)
+            if not no_op:
+                actions.pop(0) # remove no op
             return actions
 
         # Default action set
@@ -244,6 +249,22 @@ class Agent:
             actions[1, turn_right]                 = 1
             actions[2, turn_left]                  = 1
 
+        elif action_set == "explorer":
+            # Grab indices corresponding to buttons
+            move_forward = np.where(self.action_indices == 13)
+            turn_right   = np.where(self.action_indices == 14)
+            turn_left    = np.where(self.action_indices == 15)
+            actual_num = (np.size(move_forward) + np.size(turn_right) 
+                          + np.size(turn_left))
+            expected_num = 3
+            _check_actions(actual_num, expected_num)
+
+            # Set actions array with particular button combinations
+            actions = np.zeros([3,3], dtype=np.int8)
+            actions[:, move_forward]               = 1
+            actions[1, turn_right]                 = 1
+            actions[2, turn_left]                  = 1
+
         # Raise error if name not defined
         else:
             raise NameError("Name " + str(action_set) + " not found.")
@@ -288,6 +309,8 @@ class Agent:
             "frame_repeat", self.DEFAULT_AGENT_ARGS["frame_repeat"])
         self.position_timeout = agent["agent_args"].get(
             "position_timeout", self.DEFAULT_AGENT_ARGS["position_timeout"])
+        self.no_op = agent["agent_args"].get(
+            "no_op", self.DEFAULT_AGENT_ARGS["no_op"])
         self.net_file = agent["network_args"]["name"]
         self.net_type = agent["network_args"]["type"]
         self.alpha = agent["network_args"]["alpha"]
@@ -316,7 +339,7 @@ class Agent:
 
     def _preprocess_image(self, img):
         """Converts and downsamples the input image"""
-        # If channels = 1, image shape is [y, x]. Reshape to [channels, y, x]
+        # If channels = 1, image shape is [y, x]. Reshape to [y, x, channels]
         if img.ndim == 2:
             new_img = img[..., np.newaxis]
         
