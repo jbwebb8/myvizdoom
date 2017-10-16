@@ -467,7 +467,7 @@ class Agent:
         self.track_action()
         if self.use_shaping_reward:
             # Credit: shaping.py @ github.com/mwydmuch/ViZDoom
-            fixed_shaping_reward = game.get_game_variable(GameVariable.USER1)
+            fixed_shaping_reward = self.game.get_game_variable(GameVariable.USER1)
             shaping_reward = doom_fixed_to_double(fixed_shaping_reward)
             shaping_reward = shaping_reward - self.last_total_shaping_reward
             r += shaping_reward

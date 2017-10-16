@@ -104,7 +104,7 @@ class DQNAgent(Agent):
             self._make_directory([self.target_net_dir])
             self.target_network = DQNetwork(phi=self.phi, 
                                             num_channels=self.channels, 
-                                            num_actions=self.num_actions,
+                                            num_outputs=self.num_actions,
                                             learning_rate=self.alpha,
                                             network_file=self.net_file,
                                             output_directory=self.target_net_dir,
