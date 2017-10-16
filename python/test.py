@@ -150,7 +150,9 @@ toolbox = Toolbox(layer_shapes=layer_shapes,
                   actions=agent.action_indices,
                   num_samples=max_samples,
                   data_format=agent.network.data_format,
-                  color_format=color_format)
+                  color_format=color_format,
+                  view_features=visualize_network,
+                  view_Q_values=view_q_values)
 print("Done.")
 
 # Save experimental details
@@ -158,11 +160,12 @@ save_exp_details(details_dir, agent)
 
 # Test agent performance in scenario
 print("Let's watch!")
-screen_history_all, feature_history_all, score_history, pred_position_history = [], [], [], []
+screen_history_all, feature_history_all, pred_position_history_all, \
+    position_history_all, action_history_all, score_history = [], [], [], [], [], []
 for test_episode in range(test_episodes):
     agent.initialize_new_episode()
     toolbox.clear_displays()
-    screen_history, feature_history, position_history, action_history = [], [], [], []
+    screen_history, feature_history, pred_position_history = [], [], []
     while not game.is_episode_finished():
         # Update current state
         current_screen = game.get_state().screen_buffer
@@ -229,13 +232,15 @@ for test_episode in range(test_episodes):
     # Save episode stats and sleep between episodes
     score_history.append(agent.get_score())
     if trackable:
-        position_history.append(agent.position_history)
-        action_history.append(agent.action_history)
+        position_history_all.append(agent.position_history)
+        action_history_all.append(agent.action_history)
+    if pred_pos:
+        pred_position_history_all.append(pred_position_history)
     if [i for i in ["agent_state", "game_screen"] if i in save_gifs]:
         screen_history_all.append(screen_history)
     if "features" in save_gifs:
         feature_history_all.append(feature_history)
-    sleep(1.0) 
+    sleep(1.0)
 
 print("\nSaving results... ", end="")
 
@@ -247,19 +252,21 @@ np.savetxt(game_dir + "test_scores.csv",
 
 # Save game traces if tracking specified
 if trackable:
-    np.savetxt(game_dir + "positions.csv",
-               np.asarray(position_history),
-               delimiter=",",
-               fmt="%.3f")
-    np.savetxt(game_dir + "actions.csv",
-               np.asarray(action_history),
-               delimiter=",",
-               fmt="%d")
+    for i, [ph, ah] in enumerate(zip(position_history_all, action_history_all)):
+        np.savetxt(game_dir + "positions-%d.csv" % (i+1),
+                   np.asarray(ph),
+                   delimiter=",",
+                   fmt="%.3f")
+        np.savetxt(game_dir + "actions-%d.csv" % (i+1),
+                   np.asarray(ah),
+                   delimiter=",",
+                   fmt="%d")
 if pred_pos:
-    np.savetxt(game_dir + "pred_positions.csv",
-               np.asarray(pred_position_history),
-               delimiter=",",
-               fmt="%.3f")
+    for i, pph in enumerate(pred_position_history_all):
+        np.savetxt(game_dir + "pred_positions-%d.csv" % (i+1),
+                   np.asarray(pred_position_history),
+                   delimiter=",",
+                   fmt="%.3f")
 
 # Save max data of layers if specified
 if len(layer_names) > 0:
@@ -278,7 +285,6 @@ if len(layer_names) > 0:
 if "game_screen" in save_gifs:
     for i, sh in enumerate(screen_history_all):
         gif_file_path = game_dir + "test_episode-%d-screen" % (i+1)
-        print(sh[10].shape)
         toolbox.make_gif(sh, gif_file_path)
 if "agent_state" in save_gifs:
     for i, sh in enumerate(screen_history_all):

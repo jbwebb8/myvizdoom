@@ -80,9 +80,6 @@ save_gifs = args.save_gifs
 exp_name = args.name
 exp_descr = args.description
 
-# Other parameters
-#frame_repeat = 12       # frames to repeat action before choosing again 
-
 # Makes directory if does not already exist
 def make_directory(folders):
     for f in folders:
@@ -161,8 +158,7 @@ save_exp_details(details_dir, agent)
 
 # Train and test agent for specified number of epochs
 print("Starting the training!")
-test_scores_all = []
-train_scores_all = []
+test_scores_all, train_scores_all = [], []
 time_start = time()
 for epoch in range(epochs):
     print("\nEpoch %d\n-------" % (epoch + 1))
@@ -199,7 +195,7 @@ for epoch in range(epochs):
     save_epoch = (epoch + 1 == epochs or (epoch + 1) % save_freq == 0)
     for test_episode in range(test_episodes_per_epoch):
         agent.initialize_new_episode()
-        screen_history, position_history, action_history = [[]] * 3
+        screen_history, position_history, action_history = [], [], []
         while not game.is_episode_finished():
             current_screen = game.get_state().screen_buffer
             agent.update_state(current_screen)
