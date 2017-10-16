@@ -14,14 +14,14 @@ class DQNetwork(Network):
     - train_step
     - best_action
     """
-    def __init__(self, phi, num_channels, num_actions, output_directory, 
+    def __init__(self, phi, num_channels, num_outputs, output_directory, 
                  session, train_mode=True, learning_rate=None, 
                  network_file=None, params_file=None, scope=""):
         # Initialize basic network settings
         Network.__init__(self,
                          phi=phi,
                          num_channels=num_channels,
-                         num_actions=num_actions,
+                         num_outputs=num_outputs,
                          output_directory=output_directory,
                          session=session,
                          train_mode=train_mode,
@@ -87,6 +87,9 @@ class DQNetwork(Network):
                 grad_sum_ = self.sess.run(self.grad_sum,
                                           feed_dict=feed_dict)
                 self.writer.add_summary(grad_sum_, global_step)
+                loss_sum_ = self.sess.run(self.loss_sum,
+                                          feed_dict=feed_dict)
+                self.writer.add_summary(loss_sum_, global_step)
             # TODO: implement event accumulator to save files (esp. histograms)
             # to CSV files.
             #self.ea.Reload()
