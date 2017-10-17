@@ -113,7 +113,13 @@ class Agent:
                                       output_directory=self.main_net_dir,
                                       session=self.sess,
                                       scope=self.MAIN_SCOPE)
-        self.state = np.zeros(self.network.input_shape, dtype=np.float32)
+        
+        # Create state = [screen_state, game_variables]
+        self.state = []
+        self.state.append(np.zeros(self.network.input_shape, dtype=np.float32))
+        for gv in self.game.get_available_game_variables():
+            self.state.append(np.zeros([1], dtype=np.float32))
+        self.num_game_var = len(self.state) - 1
 
         # Create tracking lists
         self.score_history = []
@@ -240,7 +246,9 @@ class Agent:
 
     def reset_state(self):
         """Resets agent state to zeros."""
-        self.state = np.zeros(self.network.input_shape, dtype=np.float32)
+        self.state[0] = np.zeros(self.network.input_shape, dtype=np.float32)
+        if self.num_game_var > 0:
+            self.state[1:] = [np.zeros([1], dtype=np.float32)] * self.num_game_var
 
     def reset_history(self):
         """Resets position, action, and score history to empty."""
@@ -291,7 +299,7 @@ class Agent:
 
         return new_img
 
-    def update_state(self, new_img, replace=True):
+    def update_state(self, new_screen=None, new_game_var=None, replace=True):
         """
         Updates current state to previous phi images
         
@@ -301,8 +309,14 @@ class Agent:
             state in FIFO order. If False, append to current state; assumes 
             that state has less than phi images (used for initializing state).
         """
+        # Get current game variables if not specified
+        if new_screen is None:
+            new_screen = self.game.get_state().screen_buffer
+        if new_game_var is None:
+            new_game_var = self.game.get_state().game_variables
+
         # Preprocess screen buffer
-        new_state = self._preprocess_image(new_img)
+        new_screen = self._preprocess_image(new_screen)
 
         # Set data format to feed into convolutional layers
         if self.network.data_format == "NCHW":
@@ -312,22 +326,30 @@ class Agent:
 
         # Add new image to state. Delete least recent image if replace=True.    
         if replace:
-            self.state = np.delete(self.state, np.s_[0:self.channels], axis=ax)
-            self.state = np.append(self.state, new_state, axis=ax)
+            print(self.state[0].shape, new_screen.shape)
+            self.state[0] = np.delete(self.state[0], np.s_[0:self.channels], axis=ax)
+            print(self.state[0].shape, new_screen.shape)
+            self.state[0] = np.append(self.state[0], new_screen, axis=ax)
+            print(self.state[0].shape, new_screen.shape)
+                
         else:
             i = 0
             j = [slice(None,)] * ax
-            while np.count_nonzero(self.state[j + [slice(i, i+1)]]) != 0:
+            while np.count_nonzero(self.state[0][j + [slice(i, i+1)]]) != 0:
                 i += 1
-            self.state[j + [slice(i,i+self.channels)]] = new_state          
+            self.state[0][j + [slice(i,i+self.channels)]] = new_screen
+
+        # Update game variables in state.
+        if self.num_game_var > 0:
+            for i in range(self.num_game_var):
+                self.state[i+1][:] = new_game_var[i]
 
     def initialize_new_episode(self):
         """Starts new DoomGame episode and initialize agent state."""
         self.game.new_episode()
         self.reset_state()
         for init_step in range(self.phi):
-            current_screen = self.game.get_state().screen_buffer
-            self.update_state(current_screen, replace=False)
+            self.update_state(replace=False)
 
     def track_position(self):
         """Adds current position of agent to position history."""
@@ -346,7 +368,7 @@ class Agent:
     def update_score_history(self):
         """Adds current score of agent to score history."""
         score = self.game.get_total_reward()
-        tracking_score = self.game.get_game_variable(GameVariable.USER1)
+        #tracking_score = self.game.get_game_variable(GameVariable.USER1)
         self.score_history.append(score)
 
     def get_layer_output(self, layer_output_names, state=None):

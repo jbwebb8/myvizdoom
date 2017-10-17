@@ -48,8 +48,8 @@ class Network:
             self.name = network_file[0:-5]
             builder = NetworkBuilder(self, network_file)
             self.graph_dict, self.data_format = builder.load_json(network_file)
-            self.state = self.graph_dict["state"][0]
-            self.input_shape = self.state.get_shape().as_list()[1:]
+            self.state = self.graph_dict["state"]
+            self.input_shape = self.state[0].get_shape().as_list()[1:]
             if self.data_format == "NCHW":
                 self.input_res = self.input_shape[1:]
             else:
@@ -98,8 +98,13 @@ class Network:
             self.sess.run(tf.variables_initializer(var_list))
 
     def _check_state(self, state):
-        if state is not None and state.ndim < 4:
-            return state.reshape([1] + list(state.shape))
+        if state is not None:
+            for i in range(len(state)):
+                if state[i].ndim == 3:
+                    state[i] = state[i][np.newaxis, :]
+                elif state[i].ndim == 1:
+                    state[i] = state[i][:, np.newaxis]
+            return state
         else:
             return state
     
@@ -130,9 +135,9 @@ class Network:
         layers = []
         for layer_name in layer_output_names:
             layers.append(self._get_layer(layer_name))
-        if state.ndim < 4:
-            state = state.reshape([1] + list(state.shape))
-        return self.sess.run(layers, feed_dict={self.state: state})
+        state = _check_state(state)
+        feed_dict={s_: s for s_, s in zip(self.state, state)} 
+        return self.sess.run(layers, feed_dict=feed_dict)
     
     def get_layer_shape(self, layer_output_names):
         layer_shapes = []

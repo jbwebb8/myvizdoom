@@ -147,7 +147,7 @@ print("Done.")
 print("Initializing toolbox... ", end=""), sys.stdout.flush()
 layer_shapes = agent.get_layer_shape(layer_names)
 toolbox = Toolbox(layer_shapes=layer_shapes, 
-                  state_shape=agent.state.shape,
+                  state_shape=agent.state[0].shape,
                   phi=agent.phi,
                   channels=agent.channels,
                   actions=agent.action_indices,
@@ -195,7 +195,7 @@ for epoch in range(epochs):
         screen_history = []
         while not game.is_episode_finished():
             current_screen = game.get_state().screen_buffer
-            agent.update_state(current_screen)
+            agent.update_state(new_screen=current_screen)
             if save_epoch:
                 if trackable:
                     agent.track_action()

@@ -40,11 +40,15 @@ class NetworkBuilder:
 
     # Adds input layer to graph
     def add_input_layer(self, ph):
-        ph["name"] = "state"
         t = ph["kwargs"]["shape"] # for aesthetics
-        
+
+        # GameVariable input
+        if len(t) == 1:
+            ph["kwargs"]["shape"] = [None, t[0]]
+
+        # Screen input
         # User specifies [H, W]
-        if len(t) == 2:
+        elif len(t) == 2:
             if self.data_format == "NHWC":
                 ph["kwargs"]["shape"] = [None, t[0], t[1], self.network.input_depth]
             elif self.data_format == "NCHW":
@@ -234,9 +238,11 @@ class NetworkBuilder:
 
         # Add placeholders
         builder_type._add_reserved_placeholders()
+        self.graph_dict["state"] = []
         for ph in net["placeholders"]:
-            if net["global_features"]["input_layer"] == ph["name"]:
-                node = self.add_input_layer(ph) 
+            if ph["name"] in net["global_features"]["input_layer"]:
+                node = self.add_input_layer(ph)
+                self.graph_dict["state"].append(node)
             else:
                 node = self.add_placeholder(ph)
             self.graph_dict[ph["name"]] = [node, "p"]
