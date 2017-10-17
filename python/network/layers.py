@@ -10,6 +10,8 @@ def create_layer(input_layer, layer_dict, data_format="NHWC"):
         return flatten(input_layer, **layer_dict["kwargs"])
     elif layer_type.lower() == "fully_connected":
         return fully_connected(input_layer, **layer_dict["kwargs"])
+    elif layer_type.lower() == "multi_input_fully_connected":
+        return multi_input_fully_connected(input_layers, **layer_dict["kwargs"])
     else:
         raise ValueError("Layer type \"" + layer_type + "\" not supported.")
 
@@ -174,6 +176,55 @@ def fully_connected(input_layer,
         
         # Multiply inputs by weights
         out = tf.matmul(input_layer, W)
+
+        # Apply normalization
+        if normalizer_fn is not None:
+            norm_type, norm_params = _check_list(normalizer_fn)
+            out = _apply_normalization(norm_type, 
+                                       out, 
+                                       *norm_params,
+                                       data_format=None)
+
+        # Add biases
+        elif biases_initializer is not None:
+            b_init_type, b_init_params = _check_list(biases_initializer)
+            b_shape = [num_outputs]
+            b_init = _get_variable_initializer(b_init_type,
+                                               b_shape,
+                                               *b_init_params)
+            b = tf.Variable(b_init,
+                            dtype=tf.float32,
+                            trainable=trainable,
+                            name="biases")
+            out = tf.add(out, b, name="BiasAdd")
+        
+        # Apply activation
+        if activation_fn is not None:
+            act_type, act_params = _check_list(activation_fn)
+            out = _apply_activation(act_type, out, *act_params)
+
+        return out
+
+def multi_input_fully_connected(input_layers,
+                                num_outputs,
+                                normalizer_fn=None,
+                                activation_fn=None,
+                                weights_initializer="random_normal",
+                                biases_initializer=None,
+                                trainable=True,
+                                scope="FC"):
+    with tf.name_scope(scope):
+        affine = []
+        for idx, layer in enumerate(input_layers):
+            affine.append(fully_connected(input_layer,
+                                          num_outputs,
+                                          normalizer_fn=None,
+                                          activation_fn=None,
+                                          weights_initializer=weights_initializer,
+                                          biases_initializer=None,
+                                          trainable=trainable,
+                                          scope=scope + "_" + str(idx)))
+        out = tf.add_n(affine, name="matmul_total")
 
         # Apply normalization
         if normalizer_fn is not None:
