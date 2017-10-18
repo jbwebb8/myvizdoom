@@ -99,12 +99,23 @@ class Network:
 
     def _check_state(self, state):
         if state is not None:
-            for i in range(len(state)):
-                if state[i].ndim == 3:
-                    state[i] = state[i][np.newaxis, :]
-                elif state[i].ndim == 1:
-                    state[i] = state[i][:, np.newaxis]
-            return state
+            feed_state = [] # avoids mutating agent state by reference
+            
+            # Check screen shape; add sample size dimension if needed
+            if state[0].ndim == 3:
+                feed_state.append(state[0].reshape([1] + list(state[0].shape)))
+            else:
+                feed_state.append(state[0])
+            
+            # Check game variables (if present); make column vector if needed
+            for i in range(1, len(state)):
+                if state[i].ndim == 1:
+                    feed_state.append(state[i].reshape(list(state[i].shape) + [1]))
+                else:
+                    feed_state.append(state[i])
+            
+            return feed_state
+        
         else:
             return state
     

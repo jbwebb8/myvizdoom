@@ -121,6 +121,20 @@ class Agent:
             self.state.append(np.zeros([1], dtype=np.float32))
         self.num_game_var = len(self.state) - 1
 
+        # Cross check agent state with network input states
+        print("\nMapping of agent states --> network states:")
+        print("screen -->", self.network.state[0])
+        gvs = self.game.get_available_game_variables()
+        [print(gv, "-->", s) for gv, s in zip(gvs, self.network.state[1:])]
+        if len(gvs) < len(self.network.state) - 1:
+            raise SyntaxError("Number of inputs in network exceeds number of \
+                              components in agent state.")
+        elif len(gvs) > len(self.network.state) - 1:
+            extra_gvs = gvs[(len(self.network.state) - 1):]
+            msg = "The following game variables were not used: %s" % ", ".join(map(str, extra_gvs))
+            warnings.formatwarning(msg, UserWarning, "", 121)
+            warnings.warn(msg)
+
         # Create tracking lists
         self.score_history = []
         self.position_history = []
@@ -326,11 +340,8 @@ class Agent:
 
         # Add new image to state. Delete least recent image if replace=True.    
         if replace:
-            print(self.state[0].shape, new_screen.shape)
             self.state[0] = np.delete(self.state[0], np.s_[0:self.channels], axis=ax)
-            print(self.state[0].shape, new_screen.shape)
             self.state[0] = np.append(self.state[0], new_screen, axis=ax)
-            print(self.state[0].shape, new_screen.shape)
                 
         else:
             i = 0
