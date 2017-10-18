@@ -55,6 +55,8 @@ def _apply_activation(activation_type, x, *args):
         return tf.maximum(x, 0.1 * x, name="Leaky_Relu")
     elif activation_type.lower() == "softmax":
         return tf.nn.softmax(x)
+    elif activation_type.lower() == "none":
+        return x
     else:
         raise ValueError("Activation type \"" + activation_type + "\" not supported.")
 
