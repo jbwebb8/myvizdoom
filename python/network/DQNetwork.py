@@ -78,10 +78,10 @@ class DQNetwork(Network):
                 s1, a, target_q, w, _ = test_batch
                 s1 = self._check_state(s1)
                 a = self._check_actions(a)
-                feed_dict=({s_: s for s_, s in zip(self.state, s1)} 
-                           + {self.actions: a, 
-                              self.target_q: target_q, 
-                              self.IS_weights: weights})
+                feed_dict={s_: s for s_, s in zip(self.state, s1)}
+                feed_dict.update({self.actions: a, 
+                                  self.target_q: target_q,
+                                  self.IS_weights: w})
                 feed_dict = self._check_train_mode(feed_dict)
                 neur_sum_ = self.sess.run(self.neur_sum,
                                           feed_dict=feed_dict)

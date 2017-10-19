@@ -187,7 +187,7 @@ def fully_connected(input_layer,
                     scope="FC"):
     with tf.name_scope(scope):
         input_shape = input_layer.get_shape().as_list()
-
+        
         # Create weights
         W_init_type, W_init_params = _check_list(weights_initializer)
         with tf.name_scope(W_init_type + "_initializer"):
