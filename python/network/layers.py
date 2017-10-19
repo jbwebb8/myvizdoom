@@ -39,6 +39,9 @@ def _get_variable_initializer(init_type, var_shape, *args):
     elif init_type == "constant":
         c = args[0]
         return tf.constant(c, dtype=tf.float32, shape=var_shape)
+    elif init_type == "xavier":
+        n_in = tf.cast(args[0], tf.float32)
+        return tf.div(tf.random_normal(var_shape), tf.sqrt(n_in))
     else:
         raise ValueError("Variable initializer \"" + init_type + "\" not supported.")
 
@@ -73,16 +76,23 @@ def conv2d(input_layer,
            trainable=True,
            scope="CONV"):
     with tf.name_scope(scope):
+        input_shape = input_layer.get_shape().as_list()
+        
         # Create weights
         W_init_type, W_init_params = _check_list(weights_initializer)
-        if data_format == "NHWC":
-            input_channels = input_layer.get_shape().as_list()[3]
-        elif data_format == "NCHW":
-            input_channels = input_layer.get_shape().as_list()[1]
-        W_shape = kernel_size + [input_channels, num_outputs]
-        W_init = _get_variable_initializer(W_init_type,
-                                            W_shape,
-                                            *W_init_params)
+        with tf.name_scope(W_init_type + "_initializer"):
+            if data_format == "NHWC":
+                input_channels = input_shape[3]
+            elif data_format == "NCHW":
+                input_channels = input_shape[1]
+            W_shape = kernel_size + [input_channels, num_outputs]
+            if W_init_type == "xavier":
+                layer_shape = input_shape[1:]
+                n_in = tf.reduce_prod(layer_shape)
+                W_init_params = [n_in] 
+            W_init = _get_variable_initializer(W_init_type,
+                                                W_shape,
+                                                *W_init_params)
         W = tf.Variable(W_init, 
                         dtype=tf.float32, 
                         trainable=trainable, 
@@ -176,12 +186,19 @@ def fully_connected(input_layer,
                     trainable=True,
                     scope="FC"):
     with tf.name_scope(scope):
+        input_shape = input_layer.get_shape().as_list()
+
         # Create weights
         W_init_type, W_init_params = _check_list(weights_initializer)
-        W_shape = [input_layer.get_shape().as_list()[1], num_outputs]
-        W_init = _get_variable_initializer(W_init_type,
-                                           W_shape,
-                                           *W_init_params)
+        with tf.name_scope(W_init_type + "_initializer"):
+            W_shape = [input_shape[1], num_outputs]
+            if W_init_type == "xavier":
+                layer_shape = input_shape[1]
+                n_in = tf.reduce_prod(layer_shape)
+                W_init_params = [n_in]
+            W_init = _get_variable_initializer(W_init_type,
+                                            W_shape,
+                                            *W_init_params)
         W = tf.Variable(W_init,
                         dtype=tf.float32, 
                         trainable=trainable, 
