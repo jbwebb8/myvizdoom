@@ -15,8 +15,17 @@ class Toolbox:
     - num_samples: Store top k samples that best activated nodes.
     """
 
-    def __init__(self, layer_shapes, state_shape, phi, channels, actions,
-                 num_samples=4, data_format="NCHW", color_format="RGB"):
+    def __init__(self, 
+                 layer_shapes, 
+                 state_shape, 
+                 phi, 
+                 channels, 
+                 actions,
+                 num_samples=4, 
+                 data_format="NCHW", 
+                 color_format="RGB",
+                 view_features=True,
+                 view_Q_values=False):
         # Set toolbox parameters
         self.layer_shapes = layer_shapes
         layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
@@ -34,25 +43,29 @@ class Toolbox:
         self.data_format = data_format
 
         # Initialize max data arrays
-        self.max_values, self.max_states, self.max_positions = [], [], []
-        # NOTE: must keep separate arrays for each layer because layer sizes
-        # differ
-        for i in range(self.num_layers):
-            self.max_values.append(np.zeros([layer_sizes[i], num_samples],
-                                            dtype=np.float64))
-            self.max_states.append(np.zeros([layer_sizes[i], num_samples] 
-                                            + list(state_shape), 
-                                            dtype=np.float32))
-            self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4],
-                                               dtype=np.float32)) 
+        if num_samples > 0:
+            self.max_values, self.max_states, self.max_positions = [], [], []
+            # NOTE: must keep separate arrays for each layer because layer sizes
+            # differ
+            for i in range(self.num_layers):
+                self.max_values.append(np.zeros([layer_sizes[i], num_samples],
+                                                dtype=np.float64))
+                self.max_states.append(np.zeros([layer_sizes[i], num_samples] 
+                                                + list(state_shape), 
+                                                dtype=np.float32))
+                self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4],
+                                                dtype=np.float32)) 
 
         # Initialize visualization tools                                      
-        self.fig_f, self.ax_f = self._initialize_feature_display()
-        self.fig_q, self.ax_q, self.idx_q, self.bars_q, self.labels_q \
-            = self._initialize_q_display(self.actions)
+        plt.ion()
+        if view_features:
+            self.fig_f, self.ax_f = self._initialize_feature_display()
+        if view_Q_values:
+            self.fig_q, self.ax_q, self.idx_q, self.bars_q, self.labels_q \
+                = self._initialize_q_display(self.actions)
+        self.all_objects = []
         self.color_format = color_format
         self.prev_action = 0
-        plt.ion()         
 
     def update_max_data(self, state, position, layer_values):
         for i in range(self.num_layers):
@@ -165,15 +178,22 @@ class Toolbox:
  
         return fig, axes
 
-    def visualize_features(self, state, position, layer_values):
+    def visualize_features(self, state, position, layer_values, 
+                           pred_position=None):
         # Display state
         images = self.preprocess_state(state)
         for i in range(self.phi):
             img = self.ax_f[0][i].imshow(images[i])
+            self.all_objects.append(img)
         
-        # Display position
-        self.ax_f[0][self.phi].plot(position[1], position[2], color="black",
-                                    marker='.', scalex=False, scaley=False)
+        # Display position and, if provided, predicted position
+        pts = self.ax_f[0][self.phi].plot(position[0], position[1], color="black",
+                                          marker='.', scalex=False, scaley=False)
+        self.all_objects.append(pts)
+        if pred_position is not None:
+            pts = self.ax_f[0][self.phi].plot(pred_position[0], pred_position[1], color="red",
+                                              marker='.', scalex=False, scaley=False)
+            self.all_objects.append(pts)
 
         # Display layers
         for i in range(self.num_layers):
@@ -183,12 +203,14 @@ class Toolbox:
                     # Layer shape = [1, features, [kernel]]
                     for j in range(layer_values[i].shape[1]):
                         mod_output = np.squeeze(layer_values[i][:, j, ...])
-                        self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
+                        img = self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
+                        self.all_objects.append(img)
                 elif self.data_format == "NHWC":
                     # Layer shape = [1, [kernel], features]
                     for j in range(layer_values[i].shape[3]):
                         mod_output = np.squeeze(layer_values[i][..., j])
-                        self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
+                        img = self.ax_f[1][i][j].imshow(mod_output, cmap="gray")
+                        self.all_objects.append(img)
             
             # Fully connected layers: display activations of neurons reshaped
             # into grid
@@ -197,14 +219,17 @@ class Toolbox:
                 pad = np.ones(n ** 2 - layer_values[i].size)
                 mod_output = np.append(np.squeeze(layer_values[i]), pad)
                 mod_output = np.reshape(mod_output, [n, -1])
-                self.ax_f[1][i].imshow(mod_output, cmap="gray")
+                img = self.ax_f[1][i].imshow(mod_output, cmap="gray")
+                self.all_objects.append(img)
         
         # Refresh image
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             plt.draw()
-            plt.show(block=False)
+            self.fig_f.show()
             plt.pause(0.001)
+        
+        return self.fig_f
         
     def _initialize_q_display(self, actions, ybounds=[-10, 50]):
         fig, ax = plt.subplots()
@@ -239,9 +264,23 @@ class Toolbox:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             plt.draw()
-            plt.show(block=False)
+            self.fig_q.show(block=False)
             plt.pause(0.001)
+        
+        return self.fig_q
     
+    def clear_displays(self):
+        for obj in self.all_objects:
+            try: # AxesImage
+                obj.remove()
+            except TypeError: # Line2D object
+                try:
+                    for ob in obj: ob.remove()
+                except TypeError:
+                    pass
+        self.all_objects = []
+        self.prev_action = 0 
+            
     def make_gif(self, images, filepath, duration=None, fps=35):
         import moviepy.editor as mpy
 

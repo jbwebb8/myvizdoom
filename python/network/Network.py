@@ -29,12 +29,12 @@ class Network:
     Output directory branched into log directory for FileWriter and params
     directory for Saver.
     """
-    def __init__(self, phi, num_channels, num_actions, output_directory,
+    def __init__(self, phi, num_channels, num_outputs, output_directory,
                  session, train_mode=True, learning_rate=None, 
                  network_file=None, params_file=None, scope=""):
         # Set basic network parameters and objects
         self.input_depth = phi * num_channels
-        self.num_actions = num_actions
+        self.num_outputs = num_outputs
         self.learning_rate = learning_rate
         self.sess = session
         self.train_mode = train_mode
@@ -78,7 +78,7 @@ class Network:
                     
             # Create summaries for TensorBoard visualization
             with tf.name_scope("summaries"):
-               var_sum, neur_sum, grad_sum = builder.add_summaries()
+               var_sum, neur_sum, grad_sum, loss_sum = builder.add_summaries()
             
             # Create objects for saving
             self.saver = tf.train.Saver(max_to_keep=None)        
@@ -86,6 +86,7 @@ class Network:
             self.var_sum = tf.summary.merge(var_sum)
             self.neur_sum = tf.summary.merge(neur_sum)
             self.grad_sum = tf.summary.merge(grad_sum)
+            self.loss_sum = tf.summary.merge(loss_sum)
             self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
             self.ea = event_accumulator.EventAccumulator(self.log_dir)
 
@@ -147,7 +148,8 @@ class Network:
         for layer_name in layer_output_names:
             layers.append(self._get_layer(layer_name))
         state = _check_state(state)
-        feed_dict={s_: s for s_, s in zip(self.state, state)} 
+        feed_dict={s_: s for s_, s in zip(self.state, state)}
+        feed_dict = self._check_train_mode(feed_dict)
         return self.sess.run(layers, feed_dict=feed_dict)
     
     def get_layer_shape(self, layer_output_names):

@@ -105,11 +105,12 @@ class DQNAgent(Agent):
             self._make_directory([self.target_net_dir])
             self.target_network = DQNetwork(phi=self.phi, 
                                             num_channels=self.channels, 
-                                            num_actions=self.num_actions,
+                                            num_outputs=self.num_actions,
                                             learning_rate=self.alpha,
                                             network_file=self.net_file,
                                             output_directory=self.target_net_dir,
                                             session=self.sess,
+                                            train_mode=self.train_mode,
                                             scope=self.TARGET_SCOPE)
             target_init_ops = self._get_target_update_ops(1.0)
             self.sess.run(target_init_ops) # copy main network initialized params
@@ -322,7 +323,7 @@ class DQNAgent(Agent):
             a = self.network.get_best_action(s1).item()
         
         # Receive reward from environment.
-        r = self.game.make_action(self.actions[a], self.frame_repeat)
+        r = self.make_action(action=self.actions[a])
         
         # Get new state if not terminal.
         isterminal = self.game.is_episode_finished()
@@ -369,23 +370,9 @@ class DQNAgent(Agent):
             state = self.state
         a_best = self.network.get_best_action(state)[0]
         return self.actions[a_best]
-    
-    def make_action(self, state=None):
-        if state is None: 
-            state = self.state
-        a_best = self.network.get_best_action(state).item()
-        self.game.make_action(self.actions[a_best], self.frame_repeat)
-        #if self.train_mode:
-        #    # Easier to use built-in feature
-        #    self.game.make_action(self.actions[a_best], self.frame_repeat)
-        #else:
-        #    # Better for smooth animation if viewing
-        #    self.game.set_action(self.actions[a_best])
-        #    for _ in range(self.frame_repeat):
-        #        self.game.advance_action()
 
     def save_model(self, model_name, global_step=None, save_meta=True,
-                   save_summaries=True):
+                   save_summaries=True, save_target=False):
         batch = None
         if save_summaries:
             batch = self._get_learning_batch()
@@ -394,7 +381,7 @@ class DQNAgent(Agent):
                                 save_meta=save_meta,
                                 save_summaries=save_summaries,
                                 test_batch=batch)
-        if self.train_mode:
+        if save_target:
             self.target_network.save_model(model_name,
                                     global_step=global_step,
                                     save_meta=save_meta,

@@ -41,20 +41,33 @@ class Agent:
         - phi (default: 1): Number of previous frames that constitute state of
             agent.
         - channels (default: 1): Number of channels in game screen buffer.
+        - position_timeout (default: None): Number of times any given action can
+            be repeated before another action is chosen randomly (prevents
+            infinite looping for actions that do not change state).
+        - reward_scale (default: 1.0): Scales rewards built into scenarios by a
+            constant.
+        - use_shaping_reward (default: False): If True, the reward received
+            after the agent makes an action includes a shaping reward encoded
+            in the scenario script (under USER1).
     """
 
     NET_JSON_DIR = "../networks/"
     MAIN_SCOPE = "main_network"
-    DEFAULT_AGENT_ARGS = {"agent_name": "default",
-                          "net_file":   "default",
-                          "alpha":      0.00025,
-                          "gamma":      0.99,
-                          "phi":        1,
-                          "channels":   1}
+    DEFAULT_AGENT_ARGS = {"agent_name":         "default",
+                          "net_file":           "default",
+                          "alpha":              0.00025,
+                          "gamma":              0.99,
+                          "phi":                1,
+                          "channels":           1,
+                          "frame_repeat":       4,
+                          "position_timeout":   None,
+                          "no_op":              False,
+                          "reward_scale":       1.0,
+                          "use_shaping_reward": False}
 
     def __init__(self, game, output_directory, agent_file=None,
-                 params_file=None, train_mode=True, action_set="default", 
-                 frame_repeat=4, **kwargs):
+                 params_file=None, train_mode=True, action_set="default",
+                 **kwargs):
         # Initialize game
         self.game = game
         self.sess = tf.Session()
@@ -68,29 +81,40 @@ class Agent:
         self.main_net_dir = self.net_dir + "main_net/"
         self._make_directory([self.net_dir, self.main_net_dir])
 
-        # Initialize action space
+        # Initialize action space and gameplay
         self.action_indices = np.asarray(self.game.get_available_buttons())
         self.actions = self._set_actions(action_set)
-        self.num_actions = len(self.actions)
-        # FIXME: how not to hard code frame_repeat?
-        self.frame_repeat = frame_repeat
+        self.num_actions = len(self.actions)        
+        self.position_repeat = 0
+        self.last_total_shaping_reward = 0.0
         
         # Load learning and network parameters
         if agent_file is not None:
             self._load_agent_file(agent_file)
         else:
-            self.agent_name = kwargs.pop("agent_name", 
-                                         DEFAULT_AGENT_ARGS["agent_name"])
-            self.net_file   = kwargs.pop("net_name", 
-                                         DEFAULT_AGENT_ARGS["net_file"])
-            self.alpha      = kwargs.pop("alpha", 
-                                         DEFAULT_AGENT_ARGS["alpha"])
-            self.gamma      = kwargs.pop("gamma", 
-                                         DEFAULT_AGENT_ARGS["gamma"])
-            self.phi        = kwargs.pop("phi",
-                                         DEFAULT_AGENT_ARGS["phi"])
-            self.channels   = kwargs.pop("channels",
-                                         DEFAULT_AGENT_ARGS["channels"])
+            self.agent_name         = kwargs.pop("agent_name", 
+                                                 self.DEFAULT_AGENT_ARGS["agent_name"])
+            self.frame_repeat       = kwargs.pop("frame_repeat",
+                                                 self.DEFAULT_AGENT_ARGS["frame_repeat"])
+            self.position_timeout   = kwargs.pop("position_timeout",
+                                                 self.DEFAULT_AGENT_ARGS["position_timeout"])
+            self.no_op              = kwargs.pop("no_op",
+                                                 self.DEFAULT_AGENT_ARGS["no_op"])
+            self.net_file           = kwargs.pop("net_name", 
+                                                 self.DEFAULT_AGENT_ARGS["net_file"])
+            self.alpha              = kwargs.pop("alpha", 
+                                                 self.DEFAULT_AGENT_ARGS["alpha"])
+            self.gamma              = kwargs.pop("gamma", 
+                                                 self.DEFAULT_AGENT_ARGS["gamma"])
+            self.phi                = kwargs.pop("phi",
+                                                 self.DEFAULT_AGENT_ARGS["phi"])
+            self.channels           = kwargs.pop("channels",
+                                                 self.DEFAULT_AGENT_ARGS["channels"])
+            self.reward_scale       = kwargs.pop("reward_scale",
+                                                 self.DEFAULT_AGENT_ARGS["reward_scale"])
+            self.use_shaping_reward = kwargs.pop("use_shaping_reward",
+                                                 self.DEFAULT_AGENT_ARGS["use_shaping_reward"])
+            
         if self.channels != self.game.get_screen_channels():
             raise ValueError("Number of image channels between agent and "
                              "game instance do not match. Please check config "
@@ -107,11 +131,12 @@ class Agent:
         self.network = create_network(self.net_file,
                                       phi=self.phi, 
                                       num_channels=self.channels, 
-                                      num_actions=self.num_actions,
+                                      num_outputs=self.num_actions,
                                       learning_rate=self.alpha,
                                       params_file=self.params_file,
                                       output_directory=self.main_net_dir,
                                       session=self.sess,
+                                      train_mode=self.train_mode,
                                       scope=self.MAIN_SCOPE)
         
         # Create state = [screen_state, game_variables]
@@ -136,7 +161,6 @@ class Agent:
             warnings.warn(msg)
 
         # Create tracking lists
-        self.score_history = []
         self.position_history = []
         self.action_history = []
     
@@ -149,13 +173,15 @@ class Agent:
                 if exception.errno != errno.EEXIST:
                     raise
 
-    def _set_actions(self, action_set):
+    def _set_actions(self, action_set=None, no_op=True):
         """
         Sets available actions for agent. For dictionary of buttons and their 
         integer values, see ViZDoom/include/ViZDoomTypes.h.
 
         Args:
-        - action_set: Name of pre-defined list of actions. Possible values are:
+        - action_set (optional, default: None): Name of pre-defined list of 
+            actions. Possible values are:
+            - None: all combinations of available buttons are generated.
             - default: [move_forward], [turn_right], [turn_left], [use],
                 [move_forward, turn_right], [move_forward, turn_left]
             - basic_four: [move_forward], [turn_right], [turn_left], [use]
@@ -170,6 +196,25 @@ class Agent:
                 warnings.warn("Some available game buttons may be unused.")
             else:
                 pass
+
+        # If action set is None, create all combinations of available buttons
+        # Create choice of simple_combo or all_combo for combination of available buttons in config file
+        if action_set is None:
+            num_buttons = self.game.get_available_buttons_size()
+            actions = []
+            for i in range(2 ** num_buttons):
+                a = [0] * num_buttons
+                j = num_buttons - 1
+                while i > 0:
+                    if i >= 2 ** j:
+                        a[j] = 1
+                        i = i - 2 ** j
+                    else:
+                        j = j - 1
+                actions.append(a)
+            if not no_op:
+                actions.pop(0) # remove no op
+            return actions
 
         # Default action set
         if action_set == "default":
@@ -226,6 +271,22 @@ class Agent:
             actions[1, turn_right]                 = 1
             actions[2, turn_left]                  = 1
 
+        elif action_set == "explorer":
+            # Grab indices corresponding to buttons
+            move_forward = np.where(self.action_indices == 13)
+            turn_right   = np.where(self.action_indices == 14)
+            turn_left    = np.where(self.action_indices == 15)
+            actual_num = (np.size(move_forward) + np.size(turn_right) 
+                          + np.size(turn_left))
+            expected_num = 3
+            _check_actions(actual_num, expected_num)
+
+            # Set actions array with particular button combinations
+            actions = np.zeros([3,3], dtype=np.int8)
+            actions[:, move_forward]               = 1
+            actions[1, turn_right]                 = 1
+            actions[2, turn_left]                  = 1
+
         # Raise error if name not defined
         else:
             raise NameError("Name " + str(action_set) + " not found.")
@@ -240,17 +301,48 @@ class Agent:
 
     def _load_agent_file(self, agent_file):
         """Grabs arguments from agent file"""
+        # Open JSON file
         if not agent_file.lower().endswith(".json"): 
             raise Exception("No agent JSON file.")
         agent = json.loads(open(agent_file).read())
+
+        # Convert "None" string to None type (not supported in JSON)
+        def recursive_search(d, keys):
+            if isinstance(d, dict):
+                for k, v in zip(d.keys(), d.values()):
+                    keys.append(k)
+                    recursive_search(v, keys)
+                if len(keys) > 0: # avoids error at end
+                    keys.pop()
+            else:
+                if d == "None":
+                    t = agent 
+                    for key in keys[:-1]:
+                        t = t[key]
+                    t[keys[-1]] = None
+                keys.pop()
+
+        recursive_search(agent, [])
+
+        # TODO: implement get method to catch KeyError
         self.agent_name = agent["agent_args"]["name"]
         self.agent_type = agent["agent_args"]["type"]
+        self.frame_repeat = agent["agent_args"].get(
+            "frame_repeat", self.DEFAULT_AGENT_ARGS["frame_repeat"])
+        self.position_timeout = agent["agent_args"].get(
+            "position_timeout", self.DEFAULT_AGENT_ARGS["position_timeout"])
+        self.no_op = agent["agent_args"].get(
+            "no_op", self.DEFAULT_AGENT_ARGS["no_op"])
         self.net_file = agent["network_args"]["name"]
         self.net_type = agent["network_args"]["type"]
         self.alpha = agent["network_args"]["alpha"]
         self.gamma = agent["network_args"]["gamma"]
         self.phi = agent["network_args"]["phi"]
         self.channels = agent["network_args"]["channels"]
+        self.reward_scale = agent["learning_args"].get(
+            "reward_scale", self.DEFAULT_AGENT_ARGS["reward_scale"])
+        self.use_shaping_reward = agent["learning_args"].get(
+            "use_shaping_reward", self.DEFAULT_AGENT_ARGS["use_shaping_reward"])
 
     def set_train_mode(self, new_mode):
         """Sets train_mode to new value (True if training; False if testing)"""
@@ -265,14 +357,13 @@ class Agent:
             self.state[1:] = [np.zeros([1], dtype=np.float32)] * self.num_game_var
 
     def reset_history(self):
-        """Resets position, action, and score history to empty."""
+        """Resets position and action history to empty."""
         self.position_history = []
         self.action_history = []
-        self.score_history = []
 
     def _preprocess_image(self, img):
         """Converts and downsamples the input image"""
-        # If channels = 1, image shape is [y, x]. Reshape to [channels, y, x]
+        # If channels = 1, image shape is [y, x]. Reshape to [y, x, channels]
         if img.ndim == 2:
             new_img = img[..., np.newaxis]
         
@@ -359,8 +450,64 @@ class Agent:
         """Starts new DoomGame episode and initialize agent state."""
         self.game.new_episode()
         self.reset_state()
+        self.reset_history()
+        self.position_repeat = 0
+        self.last_total_shaping_reward = 0.0
         for init_step in range(self.phi):
             self.update_state(replace=False)
+        self.track_position()
+
+    def check_position_timeout(self, action):
+        # Check if position timeout exists
+        if self.position_timeout is None:
+            return action
+
+        # Get current position
+        pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
+        pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
+        pos_z = self.game.get_game_variable(GameVariable.POSITION_Z)
+        
+        # If position unchanged, increment counter; otherwise, (re)set to zero
+        try:
+            if [pos_x, pos_y, pos_z] == self.position_history[-1][1:]:
+                self.position_repeat += 1
+            else:
+                self.position_repeat = 0
+        except IndexError:
+            self.position_repeat = 0
+
+        # Get random action other than previous one if timeout exceeded
+        if self.position_repeat >= self.position_timeout:
+            a = randint(0, self.num_actions - 1)
+            action = self.actions[a]
+            while action == self.action_history[-1]:
+                a = randint(0, self.num_actions - 1)
+                action = self.actions[a]
+        
+        return action
+ 
+    def make_action(self, action=None, state=None, timeout=True):
+        if action is None:
+            # Get action from network
+            if state is None: 
+                state = self.state
+            action = self.get_action(state)
+        if timeout and self.position_timeout is not None:
+            # Check position timeout
+            action = self.check_position_timeout(action)
+        
+        # Make action, track agent, and return reward
+        self.track_position()
+        r = self.reward_scale * self.game.make_action(action, self.frame_repeat)
+        self.track_action()
+        if self.use_shaping_reward:
+            # Credit: shaping.py @ github.com/mwydmuch/ViZDoom
+            fixed_shaping_reward = self.game.get_game_variable(GameVariable.USER1)
+            shaping_reward = doom_fixed_to_double(fixed_shaping_reward)
+            shaping_reward = shaping_reward - self.last_total_shaping_reward
+            r += shaping_reward
+            self.last_total_shaping_reward += shaping_reward
+        return r
 
     def track_position(self):
         """Adds current position of agent to position history."""
@@ -374,13 +521,29 @@ class Agent:
         """Adds current action of agent to action history."""
         last_action = self.game.get_last_action()
         timestamp = self.game.get_episode_time()
-        self.action_history.append([timestamp] + last_action)
+        self.action_history.append([timestamp] + last_action) 
 
-    def update_score_history(self):
-        """Adds current score of agent to score history."""
-        score = self.game.get_total_reward()
-        #tracking_score = self.game.get_game_variable(GameVariable.USER1)
-        self.score_history.append(score)
+    def get_score(self, var_list=None):
+        """
+        Returns current score of agent in episode.
+        
+        Args:
+        - var_list (optional, default: None): List of DoomGame USER variables 
+            that represent the score(s) to return. Format should be
+            [GameVariable.USERXX, ...], where XX is between 1 and 60. If None,
+            defaults to USER0 (which is reward visible to agent).
+        
+        Returns:
+        - Current episode score as defined by USER variables. If argument
+            contains multiple variables, then a list of scores is returned.
+        """
+        if var_list is None:
+            return self.game.get_total_reward()
+        else:
+            scores = []
+            for v in var_list:
+                scores.append(self.game.get_game_variable(v))
+            return scores 
 
     def get_layer_output(self, layer_output_names, state=None):
         """
