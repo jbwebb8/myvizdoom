@@ -1,4 +1,5 @@
 import tensorflow as tf
+from network.layers import create_layer
 import json
 
 class NetworkBuilder:
@@ -39,11 +40,15 @@ class NetworkBuilder:
 
     # Adds input layer to graph
     def add_input_layer(self, ph):
-        ph["name"] = "state"
         t = ph["kwargs"]["shape"] # for aesthetics
-        
+
+        # GameVariable input
+        if len(t) == 1:
+            ph["kwargs"]["shape"] = [None, t[0]]
+
+        # Screen input
         # User specifies [H, W]
-        if len(t) == 2:
+        elif len(t) == 2:
             if self.data_format == "NHWC":
                 ph["kwargs"]["shape"] = [None, t[0], t[1], self.network.input_depth]
             elif self.data_format == "NCHW":
@@ -80,111 +85,9 @@ class NetworkBuilder:
     def add_layer(self, layer):
         layer_type = layer["type"].lower()
         input_layer = self._get_object(layer["input"])
-        # Assign custom kwargs
-        if "activation_fn" in layer["kwargs"]:
-            if layer["kwargs"]["activation_fn"] == "relu":
-                layer["kwargs"]["activation_fn"] = tf.nn.relu
-            elif layer["kwargs"]["activation_fn"] == "leaky_relu":
-                layer["kwargs"]["activation_fn"] = lambda x: tf.maximum(0.2 * x, x)
-            elif layer["kwargs"]["activation_fn"] == "softmax":
-                layer["kwargs"]["activation_fn"] = tf.nn.softmax
-            elif layer["kwargs"]["activation_fn"] == "None":
-                layer["kwargs"]["activation_fn"] = None
-            else:
-                raise ValueError("Activation fn \""
-                                    + layer["kwargs"]["activation_fn"] 
-                                    + "\" not yet defined.")            
-        if "weights_initializer" in layer["kwargs"]:
-            if layer["kwargs"]["weights_initializer"] == "xavier":
-                layer["kwargs"]["weights_initializer"] = tf.contrib.layers.xavier_initializer()
-            elif layer["kwargs"]["weights_initializer"][0] == "random_normal":
-                mean = float(layer["kwargs"]["weights_initializer"][1])
-                stddev = float(layer["kwargs"]["weights_initializer"][2])
-                layer["kwargs"]["weights_initializer"] = tf.random_normal_initializer(mean, stddev)
-            else:
-                raise ValueError("Weights initializer \""
-                                    + layer["kwargs"]["weights_initializer"] 
-                                    + "\" not yet defined.")
-        if "biases_initializer" in layer["kwargs"]:
-            if layer["kwargs"]["biases_initializer"][0] == "constant":
-                c = float(layer["kwargs"]["biases_initializer"][1])
-                layer["kwargs"]["biases_initializer"] = tf.constant_initializer(c)
-            elif layer["kwargs"]["biases_initializer"] == "None":
-                layer["kwargs"]["biases_initializer"] = None
-            else:
-                raise ValueError("Biases initializer \""
-                                    + layer["kwargs"]["biases_initializer"] 
-                                    + "\" not yet defined.")
-        
-        if "normalizer_fn" in layer["kwargs"]:
-            if layer["kwargs"]["normalizer_fn"] == "batch_norm":
-                layer["kwargs"]["normalizer_fn"] = tf.contrib.layers.batch_norm
-                if "normalizer_params" not in layer["kwargs"]:
-                    layer["kwargs"]["normalizer_params"] = {}
-                layer["kwargs"]["normalizer_params"]["data_format"] = self.data_format
-                try:
-                    layer["kwargs"]["normalizer_params"]["is_training"] \
-                        = self._get_object("is_training")
-                except KeyError:
-                    is_training = tf.placeholder(tf.bool, name="is_training")
-                    layer["kwargs"]["normalizer_params"]["is_training"] = is_training
-                    self.graph_dict["is_training"] = [is_training, "p"]
-
-        #######################################################
-        # Add new kwargs support here.
-        # if "custom_args" in layer["kwargs"]:
-        #     ...
-        #######################################################
-
-        # Assign custom layer builds    
-        if layer_type == "conv2d":
-            layer["kwargs"]["data_format"] = self.data_format
-            return tf.contrib.layers.convolution2d(input_layer, **layer["kwargs"])
-        elif layer_type == "flatten":
-            with tf.name_scope(layer["kwargs"].pop("scope", "FLAT")):
-                # Yes, I basically copied tf.contrib.layers.flatten, but
-                # it was a good learning experience!
-                # Grab runtime values to determine number of elements
-                input_shape = tf.shape(input_layer)
-                input_ndims = input_layer.get_shape().ndims
-                batch_size = tf.slice(input_shape, [0], [1])
-                layer_shape = tf.slice(input_shape, [1], [input_ndims-1])
-                num_neurons = tf.expand_dims(tf.reduce_prod(layer_shape), 0)
-                flattened_shape = tf.concat([batch_size, num_neurons], 0)
-                if self.data_format == "NHWC":
-                    input_layer = tf.transpose(input_layer, perm=[0, 3, 1, 2])
-                flat = tf.reshape(input_layer, flattened_shape)
-                
-                # Attempt to set values during graph building
-                input_shape = input_layer.get_shape().as_list()
-                batch_size, layer_shape = input_shape[0], input_shape[1:]
-                if all(layer_shape): # None not present
-                    num_neurons = 1
-                    for dim in layer_shape:
-                        num_neurons *= dim
-                    flat.set_shape([batch_size, num_neurons])
-                else: # None present
-                    flat.set_shape([batch_size, None])
-                return flat
-        elif layer_type == ("fully_connected" or "fc"):
-            return tf.contrib.layers.fully_connected(input_layer, **layer["kwargs"])
-        elif layer_type == "dropout":
-            try:
-                layer["kwargs"]["is_training"] = self._get_object("is_training")
-            except KeyError:
-                is_training = tf.placeholder(tf.bool, name="is_training")
-                layer["kwargs"]["is_training"] = is_training
-                self.graph_dict["is_training"] = [is_training, "p"]
-            return tf.contrib.layers.dropout(input_layer, **layer["kwargs"])
-        
-        ###########################################################
-        # Add new layer support here.
-        # elif layer_type == "new_layer":
-        #     return <...>
-        ###########################################################
-        
-        else:
-            raise ValueError("Layer \"" + layer["type"] + "\" not yet defined.")
+        return create_layer(input_layer,
+                            layer,
+                            data_format=self.data_format)
     
     # Adds operation to graph
     def add_op(self, op):
@@ -337,9 +240,11 @@ class NetworkBuilder:
 
         # Add placeholders
         builder_type._add_reserved_placeholders()
+        self.graph_dict["state"] = []
         for ph in net["placeholders"]:
-            if net["global_features"]["input_layer"] == ph["name"]:
-                node = self.add_input_layer(ph) 
+            if ph["name"] in net["global_features"]["input_layer"]:
+                node = self.add_input_layer(ph)
+                self.graph_dict["state"].append(node)
             else:
                 node = self.add_placeholder(ph)
             self.graph_dict[ph["name"]] = [node, "p"]

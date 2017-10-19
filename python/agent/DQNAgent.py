@@ -6,6 +6,7 @@ import tensorflow as tf
 import numpy as np
 from random import randint, random
 import json
+import copy
 
 class DQNAgent(Agent):
     """
@@ -126,11 +127,11 @@ class DQNAgent(Agent):
             if (not isinstance(self.n_step, int)) or (self.n_step < 1):
                 raise ValueError("Agent n_step must be a natural number.")
             if self.n_step > 1:
-                self.s1_buffer = np.zeros([self.n_step] + list(self.state.shape), 
-                                          dtype=np.float32)
+                self.s1_buffer = ([np.zeros([self.n_step] + list(self.state[0].shape), dtype=np.float32)]
+                              + [np.zeros([1], dtype=np.float32)] * self.num_game_var) * self.n_step
                 self.a_buffer = np.zeros(self.n_step, dtype=np.int32)
-                self.s2_buffer = np.zeros([self.n_step] + list(self.state.shape),
-                                          dtype=np.float32)
+                self.s2_buffer = ([np.zeros([self.n_step] + list(self.state[0].shape), dtype=np.float32)]
+                              + [np.zeros([1], dtype=np.float32)] * self.num_game_var) * self.n_step
                 self.isterminal_buffer = np.zeros(self.n_step, dtype=np.float32)
                 self.r_buffer = np.zeros(self.n_step, dtype=np.float32)
                 self.gamma_buffer = np.asarray([self.gamma ** k for k in range(self.n_step)])
@@ -172,11 +173,13 @@ class DQNAgent(Agent):
         """
         if memory_type.lower() == "standard":
             return ReplayMemory(capacity=self.rm_capacity, 
-                                state_shape=self.state.shape,
+                                state_shape=self.state[0].shape,
+                                num_game_var=self.num_game_var,
                                 input_overlap=(self.phi-1)*self.channels)
         elif memory_type.lower() == "prioritized":
             return PrioritizedReplayMemory(capacity=self.rm_capacity, 
-                                           state_shape=self.state.shape,
+                                           state_shape=self.state[0].shape,
+                                           num_game_var=self.num_game_var,
                                            input_overlap=(self.phi-1)*self.channels)
         else:
             raise ValueError("Replay memory type \"" + memory_type + "\" not defined.")
@@ -257,10 +260,10 @@ class DQNAgent(Agent):
                 t_start = self.buffer_pos - (self.n_step - 1)
                 discounted_reward = np.dot(self.gamma_buffer, self.r_buffer)
                 self.memory.add_transition(self.s1_buffer[t_start],
-                                              self.a_buffer[t_start],
-                                              self.s2_buffer[self.buffer_pos],
-                                              self.isterminal_buffer[t_start],
-                                              discounted_reward)
+                                           self.a_buffer[t_start],
+                                           self.s2_buffer[self.buffer_pos],
+                                           self.isterminal_buffer[t_start],
+                                           discounted_reward)
                 
                 # Roll gamma buffer
                 self.gamma_buffer = np.roll(self.gamma_buffer, 1)
@@ -277,15 +280,17 @@ class DQNAgent(Agent):
                 pos = self.buffer_pos - i
                 running_r = self.r_buffer[pos] + (self.gamma * running_r)
                 self.memory.add_transition(self.s1_buffer[pos],
-                                              self.a_buffer[pos],
-                                              self.s2_buffer[self.buffer_pos],
-                                              self.isterminal_buffer[pos],
-                                              running_r)
+                                           self.a_buffer[pos],
+                                           self.s2_buffer[self.buffer_pos],
+                                           self.isterminal_buffer[pos],
+                                           running_r)
             
             # Reset n-step buffers and variables
-            self.s1_buffer.fill(0)
+            self.s1_buffer = ([np.zeros([self.n_step] + list(self.state[0].shape), dtype=np.float32)]
+                              + [np.zeros([1], dtype=np.float32)] * self.num_game_var) * self.n_step
             self.a_buffer.fill(0)
-            self.s2_buffer.fill(0)
+            self.s2_buffer = ([np.zeros([self.n_step] + list(self.state[0].shape), dtype=np.float32)]
+                              + [np.zeros([1], dtype=np.float32)] * self.num_game_var) * self.n_step
             self.isterminal_buffer.fill(0)
             self.r_buffer.fill(0)
             self.gamma_buffer = np.asarray([self.gamma ** k for k in range(self.n_step)])
@@ -307,7 +312,7 @@ class DQNAgent(Agent):
                 return self.epsilon_end
         
         # NOTE: is copying array most efficient implementation?
-        s1 = np.copy(self.state)
+        s1 = copy.deepcopy(self.state)
         
         # With probability epsilon make a random action; otherwise, choose
         # best action.
@@ -324,12 +329,11 @@ class DQNAgent(Agent):
         isterminal = self.game.is_episode_finished()
         if not isterminal:
             # Get new state
-            current_screen = self.game.get_state().screen_buffer
-            self.update_state(current_screen)
-            s2 = np.copy(self.state)
+            self.update_state()
+            s2 = copy.deepcopy(self.state)
         else:
             # Terminal state set to zero
-            s2 = np.zeros(self.state.shape)         
+            s2 = [np.zeros(self.state[0].shape)] + [np.zeros([1], dtype=np.float32)] * self.num_game_var
 
         # Add transition to replay memory
         if self.n_step > 1:

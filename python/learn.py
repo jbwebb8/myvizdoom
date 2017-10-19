@@ -144,7 +144,7 @@ print("Done.")
 print("Initializing toolbox... ", end=""), sys.stdout.flush()
 layer_shapes = agent.get_layer_shape(layer_names)
 toolbox = Toolbox(layer_shapes=layer_shapes, 
-                  state_shape=agent.state.shape,
+                  state_shape=agent.state[0].shape,
                   phi=agent.phi,
                   channels=agent.channels,
                   actions=agent.action_indices,

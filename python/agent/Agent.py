@@ -22,6 +22,8 @@ class Agent:
     - params_file (optional, default: None): File containing weights from 
         previously trained network.
     - train_mode (optional, default: True): Boolean; True if training agent.
+        Important if using batch norm in network to flag use of batch vs.
+        population statistics.
     - action_set (optional, default: default): List of actions available for 
         agent. Possible values are:
         - default: [move_forward], [turn_right], [turn_left], [use],
@@ -136,7 +138,27 @@ class Agent:
                                       session=self.sess,
                                       train_mode=self.train_mode,
                                       scope=self.MAIN_SCOPE)
-        self.state = np.zeros(self.network.input_shape, dtype=np.float32)
+        
+        # Create state = [screen_state, game_variables]
+        self.state = []
+        self.state.append(np.zeros(self.network.input_shape, dtype=np.float32))
+        for gv in self.game.get_available_game_variables():
+            self.state.append(np.zeros([1], dtype=np.float32))
+        self.num_game_var = len(self.state) - 1
+
+        # Cross check agent state with network input states
+        print("\nMapping of agent states --> network states:")
+        print("screen -->", self.network.state[0])
+        gvs = self.game.get_available_game_variables()
+        [print(gv, "-->", s) for gv, s in zip(gvs, self.network.state[1:])]
+        if len(gvs) < len(self.network.state) - 1:
+            raise SyntaxError("Number of inputs in network exceeds number of \
+                              components in agent state.")
+        elif len(gvs) > len(self.network.state) - 1:
+            extra_gvs = gvs[(len(self.network.state) - 1):]
+            msg = "The following game variables were not used: %s" % ", ".join(map(str, extra_gvs))
+            warnings.formatwarning(msg, UserWarning, "", 121)
+            warnings.warn(msg)
 
         # Create tracking lists
         self.position_history = []
@@ -330,7 +352,9 @@ class Agent:
 
     def reset_state(self):
         """Resets agent state to zeros."""
-        self.state = np.zeros(self.network.input_shape, dtype=np.float32)
+        self.state[0] = np.zeros(self.network.input_shape, dtype=np.float32)
+        if self.num_game_var > 0:
+            self.state[1:] = [np.zeros([1], dtype=np.float32)] * self.num_game_var
 
     def reset_history(self):
         """Resets position and action history to empty."""
@@ -380,7 +404,7 @@ class Agent:
 
         return new_img
 
-    def update_state(self, new_img, replace=True):
+    def update_state(self, new_screen=None, new_game_var=None, replace=True):
         """
         Updates current state to previous phi images
         
@@ -390,8 +414,14 @@ class Agent:
             state in FIFO order. If False, append to current state; assumes 
             that state has less than phi images (used for initializing state).
         """
+        # Get current game variables if not specified
+        if new_screen is None:
+            new_screen = self.game.get_state().screen_buffer
+        if new_game_var is None:
+            new_game_var = self.game.get_state().game_variables
+
         # Preprocess screen buffer
-        new_state = self._preprocess_image(new_img)
+        new_screen = self._preprocess_image(new_screen)
 
         # Set data format to feed into convolutional layers
         if self.network.data_format == "NCHW":
@@ -401,14 +431,20 @@ class Agent:
 
         # Add new image to state. Delete least recent image if replace=True.    
         if replace:
-            self.state = np.delete(self.state, np.s_[0:self.channels], axis=ax)
-            self.state = np.append(self.state, new_state, axis=ax)
+            self.state[0] = np.delete(self.state[0], np.s_[0:self.channels], axis=ax)
+            self.state[0] = np.append(self.state[0], new_screen, axis=ax)
+                
         else:
             i = 0
             j = [slice(None,)] * ax
-            while np.count_nonzero(self.state[j + [slice(i, i+1)]]) != 0:
+            while np.count_nonzero(self.state[0][j + [slice(i, i+1)]]) != 0:
                 i += 1
-            self.state[j + [slice(i,i+self.channels)]] = new_state          
+            self.state[0][j + [slice(i,i+self.channels)]] = new_screen
+
+        # Update game variables in state.
+        if self.num_game_var > 0:
+            for i in range(self.num_game_var):
+                self.state[i+1][:] = new_game_var[i]
 
     def initialize_new_episode(self):
         """Starts new DoomGame episode and initialize agent state."""
@@ -418,8 +454,7 @@ class Agent:
         self.position_repeat = 0
         self.last_total_shaping_reward = 0.0
         for init_step in range(self.phi):
-            current_screen = self.game.get_state().screen_buffer
-            self.update_state(current_screen, replace=False)
+            self.update_state(replace=False)
         self.track_position()
 
     def check_position_timeout(self, action):
