@@ -127,11 +127,11 @@ class DQNAgent(Agent):
             if (not isinstance(self.n_step, int)) or (self.n_step < 1):
                 raise ValueError("Agent n_step must be a natural number.")
             if self.n_step > 1:
-                self.s1_buffer = ([np.zeros([self.n_step] + list(self.state[0].shape), dtype=np.float32)]
-                              + [np.zeros([1], dtype=np.float32)] * self.num_game_var) * self.n_step
+                self.s1_buffer = ([np.zeros(list(self.state[0].shape), dtype=np.float32)]
+                                  + [np.zeros([self.num_game_var], dtype=np.float32)]) * self.n_step
                 self.a_buffer = np.zeros(self.n_step, dtype=np.int32)
-                self.s2_buffer = ([np.zeros([self.n_step] + list(self.state[0].shape), dtype=np.float32)]
-                              + [np.zeros([1], dtype=np.float32)] * self.num_game_var) * self.n_step
+                self.s2_buffer = ([np.zeros(list(self.state[0].shape), dtype=np.float32)]
+                                  + [np.zeros([self.num_game_var], dtype=np.float32)]) * self.n_step
                 self.isterminal_buffer = np.zeros(self.n_step, dtype=np.float32)
                 self.r_buffer = np.zeros(self.n_step, dtype=np.float32)
                 self.gamma_buffer = np.asarray([self.gamma ** k for k in range(self.n_step)])
@@ -286,11 +286,11 @@ class DQNAgent(Agent):
                                            running_r)
             
             # Reset n-step buffers and variables
-            self.s1_buffer = ([np.zeros([self.n_step] + list(self.state[0].shape), dtype=np.float32)]
-                              + [np.zeros([1], dtype=np.float32)] * self.num_game_var) * self.n_step
+            self.s1_buffer = ([np.zeros(list(self.state[0].shape), dtype=np.float32)]
+                                  + [np.zeros([self.num_game_var], dtype=np.float32)]) * self.n_step
             self.a_buffer.fill(0)
-            self.s2_buffer = ([np.zeros([self.n_step] + list(self.state[0].shape), dtype=np.float32)]
-                              + [np.zeros([1], dtype=np.float32)] * self.num_game_var) * self.n_step
+            self.s2_buffer = ([np.zeros(list(self.state[0].shape), dtype=np.float32)]
+                                  + [np.zeros([self.num_game_var], dtype=np.float32)]) * self.n_step
             self.isterminal_buffer.fill(0)
             self.r_buffer.fill(0)
             self.gamma_buffer = np.asarray([self.gamma ** k for k in range(self.n_step)])
@@ -333,7 +333,8 @@ class DQNAgent(Agent):
             s2 = copy.deepcopy(self.state)
         else:
             # Terminal state set to zero
-            s2 = [np.zeros(self.state[0].shape)] + [np.zeros([1], dtype=np.float32)] * self.num_game_var
+            s2 = [np.zeros(self.state[0].shape)] \
+                 + [np.zeros([self.num_game_var], dtype=np.float32)]
 
         # Add transition to replay memory
         if self.n_step > 1:

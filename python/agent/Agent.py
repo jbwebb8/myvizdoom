@@ -142,14 +142,18 @@ class Agent:
         # Create state = [screen_state, game_variables]
         self.state = []
         self.state.append(np.zeros(self.network.input_shape, dtype=np.float32))
-        for gv in self.game.get_available_game_variables():
-            self.state.append(np.zeros([1], dtype=np.float32))
-        self.num_game_var = len(self.state) - 1
+        gvs = self.game.get_available_game_variables()
+        self.state.append(np.zeros([len(gvs)], dtype=np.float32))
+        self.fixed_to_float_vector = np.ones([len(gvs)], dtype=np.float32)
+        for i, gv in enumerate(gvs):
+            # Assume USER variables are fixed point numbers
+            if gv.name[0:4] == "USER":
+                self.fixed_to_float_vector[i] = 1.0 / 2.0**16
+        self.num_game_var = len(self.state[1])
 
         # Cross check agent state with network input states
         print("\nMapping of agent states --> network states:")
         print("screen -->", self.network.state[0])
-        gvs = self.game.get_available_game_variables()
         [print(gv, "-->", s) for gv, s in zip(gvs, self.network.state[1:])]
         if len(gvs) < len(self.network.state) - 1:
             raise SyntaxError("Number of inputs in network exceeds number of \
@@ -353,8 +357,7 @@ class Agent:
     def reset_state(self):
         """Resets agent state to zeros."""
         self.state[0] = np.zeros(self.network.input_shape, dtype=np.float32)
-        if self.num_game_var > 0:
-            self.state[1:] = [np.zeros([1], dtype=np.float32)] * self.num_game_var
+        self.state[1] = np.zeros([self.num_game_var], dtype=np.float32)
 
     def reset_history(self):
         """Resets position and action history to empty."""
@@ -419,6 +422,7 @@ class Agent:
             new_screen = self.game.get_state().screen_buffer
         if new_game_var is None:
             new_game_var = self.game.get_state().game_variables
+            new_game_var *= self.fixed_to_float_vector
 
         # Preprocess screen buffer
         new_screen = self._preprocess_image(new_screen)
@@ -442,9 +446,7 @@ class Agent:
             self.state[0][j + [slice(i,i+self.channels)]] = new_screen
 
         # Update game variables in state.
-        if self.num_game_var > 0:
-            for i in range(self.num_game_var):
-                self.state[i+1][:] = new_game_var[i]
+        self.state[1] = new_game_var
 
     def initialize_new_episode(self):
         """Starts new DoomGame episode and initialize agent state."""

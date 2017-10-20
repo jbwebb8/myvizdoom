@@ -15,10 +15,9 @@ class ReplayMemory:
         # Initialize arrays to store transition variables
         self.s1, self.s2 = [], []
         self.s1.append(np.zeros([capacity] + list(state_shape), dtype=np.float32))
+        self.s1.append(np.zeros([capacity, num_game_var], dtype=np.float32))
         self.s2.append(np.zeros([capacity] + s2_shape, dtype=np.float32))
-        for _ in range(num_game_var):
-            self.s1.append(np.zeros(capacity, dtype=np.float32))
-            self.s2.append(np.zeros(capacity, dtype=np.float32))
+        self.s2.append(np.zeros([capacity, num_game_var], dtype=np.float32))
         self.a = np.zeros(capacity, dtype=np.int32)
         self.r = np.zeros(capacity, dtype=np.float32)
         self.isterminal = np.zeros(capacity, dtype=np.float32)
@@ -36,10 +35,8 @@ class ReplayMemory:
             # channel dimension
             self.s2[0][self.pos, ...] = s2[0][[slice(None)] * self.chdim 
                                            + [slice(self.overlap, None)]]
-        if self.state_length > 1:
-            for i in range(1, self.state_length):
-                self.s1[i][self.pos] = s1[i]
-                self.s2[i][self.pos] = s2[i]
+        self.s1[1][self.pos] = s1[1]
+        self.s2[1][self.pos] = s2[1]
         self.a[self.pos] = action
         self.isterminal[self.pos] = isterminal
         self.r[self.pos] = reward
@@ -64,10 +61,8 @@ class ReplayMemory:
                                             axis=self.chdim+1))
         else:
             s2_sample.append(self.s2[0][idx])
-        if self.state_length > 1:
-            for j in range(1, self.state_length):
-                s1_sample.append(self.s1[j][idx])
-                s2_sample.append(self.s2[j][idx])
+        s1_sample.append(self.s1[1][idx])
+        s2_sample.append(self.s2[1][idx])
 
         # Return importance sampling weights of one (stochastic distribution)
         w = np.ones(sample_size)
