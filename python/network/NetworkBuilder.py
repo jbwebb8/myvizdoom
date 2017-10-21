@@ -2,6 +2,8 @@ import tensorflow as tf
 from network.layers import create_layer
 import json
 
+RESERVED_NAMES = ["state", "optimizer", "train_step"]
+
 class NetworkBuilder:
 
     def __init__(self, network, network_file):
@@ -267,7 +269,7 @@ class NetworkBuilder:
         if "loss" in net["global_features"]:
             # Gather loss parameters
             loss_keys = net["global_features"]["loss"]
-            if type(loss_keys) == list:
+            if isinstance(loss_keys, list):
                 loss_type = net["global_features"]["loss"][0]
                 loss_params = net["global_features"]["loss"][1:]
             else:
@@ -306,6 +308,14 @@ class NetworkBuilder:
             if self.network.train_mode:
                 raise ValueError("optimizer not found in network file.") 
         
+        # Final check on use of reserved names
+        for tf_type in ["placeholders", "layers", "ops"]:
+            for n in net[tf_type]:
+                if n["name"] in RESERVED_NAMES:
+                    raise ValueError("Name \"" + n["name"] + "\" in " + tf_type + " is "
+                                     + "reserved. Please choose different name.")
+
+
         return self.graph_dict, self.data_format           
 
     def add_summaries(self):

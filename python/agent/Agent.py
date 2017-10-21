@@ -147,19 +147,24 @@ class Agent:
         self.fixed_to_float_vector = np.ones([len(gvs)], dtype=np.float32)
         for i, gv in enumerate(gvs):
             # Assume USER variables are fixed point numbers
-            if gv.name[0:4] == "USER":
+            if str(gv)[-6:-2] == "USER":
                 self.fixed_to_float_vector[i] = 1.0 / 2.0**16
         self.num_game_var = len(self.state[1])
 
         # Cross check agent state with network input states
         print("\nMapping of agent states --> network states:")
         print("screen -->", self.network.state[0])
-        [print(gv, "-->", s) for gv, s in zip(gvs, self.network.state[1:])]
-        if len(gvs) < len(self.network.state) - 1:
-            raise SyntaxError("Number of inputs in network exceeds number of \
-                              components in agent state.")
-        elif len(gvs) > len(self.network.state) - 1:
-            extra_gvs = gvs[(len(self.network.state) - 1):]
+        i = 0
+        for j in range(1, len(self.network.state)):
+            gv = gvs[i:i+self.network.game_var_sets[j-1]]
+            s = self.network.state[j]
+            print(gv, "-->", s)
+            i += self.network.game_var_sets[j-1]
+        if len(gvs) < sum(self.network.game_var_sets):
+            raise SyntaxError("Number of inputs in network exceeds number of "
+                              + "components in agent state.")
+        elif len(gvs) > sum(self.network.game_var_sets):
+            extra_gvs = gvs[(len(gvs) - sum(self.network.game_var_sets)):]
             msg = "The following game variables were not used: %s" % ", ".join(map(str, extra_gvs))
             warnings.formatwarning(msg, UserWarning, "", 121)
             warnings.warn(msg)
