@@ -36,6 +36,10 @@ def _get_variable_initializer(init_type, var_shape, *args):
         mean = float(args[0])
         stddev = float(args[1])
         return tf.random_normal(var_shape, mean=mean, stddev=stddev)
+    elif init_type == "truncated_normal":
+        mean = float(args[0])
+        stddev = float(args[1])
+        return tf.truncated_normal(var_shape, mean=mean, stddev=stddev)
     elif init_type == "constant":
         c = args[0]
         return tf.constant(c, dtype=tf.float32, shape=var_shape)
