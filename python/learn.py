@@ -32,7 +32,7 @@ parser.add_argument("-e", "--epochs", type=int, default=100, metavar="",
                     help="number of epochs to train")
 parser.add_argument("-s", "--learning-steps", type=int, default=2000, metavar="", 
                     help="learning steps per epoch")
-parser.add_argument("-t", "--test-episodes", type=int, default=1, metavar="", 
+parser.add_argument("-t", "--test-episodes", type=int, default=100, metavar="", 
                     help="test episodes per epoch")
 parser.add_argument("-f", "--save-freq", type=int, default=0, metavar="", 
                     help="save params every x epochs")
