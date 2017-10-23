@@ -57,7 +57,7 @@ class Toolbox:
                                                 dtype=np.float32)) 
 
         # Initialize visualization tools                                      
-        plt.ion()
+        #plt.ion()
         if view_features:
             self.fig_f, self.ax_f = self._initialize_feature_display()
         if view_Q_values:
