@@ -4,10 +4,10 @@ import math
 
 class PrioritizedReplayMemory(ReplayMemory):
 
-    def __init__(self, capacity, state_shape, input_overlap=0, 
+    def __init__(self, capacity, state_shape, num_game_var, input_overlap=0, 
                  alpha=0.6, beta_start=0.4, beta_end=1.0):
         # Initialize base replay memory
-        ReplayMemory.__init__(self, capacity, state_shape, input_overlap)
+        ReplayMemory.__init__(self, capacity, state_shape, num_game_var, input_overlap)
 
         # Create new blank heap (see iPython notebook for details)
         heap_size = 2 ** math.ceil(math.log(capacity, 2)) + capacity
@@ -26,13 +26,15 @@ class PrioritizedReplayMemory(ReplayMemory):
     # Overrides base ReplayMemory function with prioritization
     def add_transition(self, s1, action, s2, isterminal, reward):
         # Store transition variables at current position
-        self.s1[self.pos, ...] = s1
-        self.a[self.pos] = action
+        self.s1[0][self.pos, ...] = s1[0]
         if not isterminal:
             # Store s2 as only the non-overlapping states along the
             # channel dimension
-            self.s2[self.pos, ...] = s2[[slice(None)] * self.chdim 
-                                        + [slice(self.overlap, None)]]
+            self.s2[0][self.pos, ...] = s2[0][[slice(None)] * self.chdim 
+                                           + [slice(self.overlap, None)]]
+        self.s1[1][self.pos] = s1[1]
+        self.s2[1][self.pos] = s2[1]
+        self.a[self.pos] = action
         self.isterminal[self.pos] = isterminal
         self.r[self.pos] = reward
         
@@ -106,8 +108,8 @@ class PrioritizedReplayMemory(ReplayMemory):
         # and β = hyperparameter
         t_ = self.start_pos + t
         P = self.heap[t_] / self.heap[1]
-        w = (1 / self.size + 1 / P) ** self.beta
-        w = w / np.max(w) # normalize weights so all <= 1.0
+        ### Every 70,000 steps or so, a divide by zero error occurs because 
+        ### the search make one wrong decision; not sure why
         if (P == 0).any() or self.size == 0:
             print("m:", m)
             print("t_: ", t_)
@@ -118,18 +120,27 @@ class PrioritizedReplayMemory(ReplayMemory):
             print("beta: ", self.beta)
             print("w: ", w)
             np.savetxt("./heap.csv", self.heap, delimiter=",")
+            P[P == 0] = 1.0 / self.heap[1]
+        ###
+        w = (1 / self.size + 1 / P) ** self.beta
+        w = w / np.max(w) # normalize weights so all <= 1.0
         
-        # Stack overlapping frames from s1 to stored frames of s2 to
-        # recreate full s2 state
-        if self.overlap > 0:    
-            s2 = np.concatenate((self.s1[[t] + [slice(None)] * self.chdim 
-                                 + [slice(None, self.overlap)]], 
-                                 self.s2[t]), 
-                                 axis=self.chdim+1)
+        # Make list of states
+        s1_sample, s2_sample = [], []
+        s1_sample.append(self.s1[0][t])
+        if self.overlap > 0:
+            # Stack overlapping frames from s1 to stored frames of s2 to
+            # recreate full s2 state
+            s2_sample.append(np.concatenate((self.s1[0][[t] + [slice(None)] * self.chdim 
+                                             + [slice(None, self.overlap)]], 
+                                             self.s2[0][t]), 
+                                            axis=self.chdim+1))
         else:
-            s2 = self.s2[t]
+            s2_sample.append(self.s2[0][t])
+        s1_sample.append(self.s1[1][t])
+        s2_sample.append(self.s2[1][t])
 
-        return self.s1[t], self.a[t], s2, self.isterminal[t], self.r[t], w, t
+        return s1_sample, self.a[t], s2_sample, self.isterminal[t], self.r[t], w, t
 
     def update_priority(self, delta, pos):
         # Update priority to reflect proportional prioritization:
