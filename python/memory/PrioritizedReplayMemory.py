@@ -118,7 +118,6 @@ class PrioritizedReplayMemory(ReplayMemory):
             print("P: ", P)
             print("size: ", self.size)
             print("beta: ", self.beta)
-            print("w: ", w)
             np.savetxt("./heap.csv", self.heap, delimiter=",")
             P[P == 0] = 1.0 / self.heap[1]
         ###
