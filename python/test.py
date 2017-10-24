@@ -34,7 +34,7 @@ parser.add_argument("-a", "--action-set", default=None, metavar="",
                     help="name of action set available to agent")
 parser.add_argument("-l", "--layer-names", default=[], metavar="", nargs='*',
                     help="layer output names to probe")
-parser.add_argument("-m", "--max-samples", default=0, metavar="",
+parser.add_argument("-m", "--max-samples", type=int, default=0, metavar="",
                     help="# of samples associated with max node activation")
 parser.add_argument("-v", "--visualize-network", action="store_true", default=False,
                     help="visualize agent state and network activation")
@@ -144,7 +144,7 @@ print("Done.")
 print("Initializing toolbox... ", end=""), sys.stdout.flush()
 layer_shapes = agent.get_layer_shape(layer_names)
 toolbox = Toolbox(layer_shapes=layer_shapes, 
-                  state_shape=agent.state.shape,
+                  state_shape=agent.state[0].shape,
                   phi=agent.phi,
                   channels=agent.channels,
                   actions=agent.action_indices,
@@ -180,7 +180,7 @@ for test_episode in range(test_episodes):
         output = None
         if max_samples > 0:
             output = agent.get_layer_output(layer_names)
-            toolbox.update_max_data(state=agent.state, 
+            toolbox.update_max_data(state=agent.state[0], 
                                     position=agent.position_history[-1],
                                     layer_values=output)
         if visualize_network:
@@ -191,7 +191,7 @@ for test_episode in range(test_episodes):
                 pred_position_history.append(pred_position)
             else:
                 pred_position = None
-            fig = toolbox.visualize_features(state=agent.state, 
+            fig = toolbox.visualize_features(state=agent.state[0], 
                                              position=agent.position_history[-1][1:],
                                              layer_values=output,
                                              pred_position=pred_position)
@@ -273,7 +273,10 @@ if len(layer_names) > 0:
     max_values, max_states, max_positions = toolbox.get_max_data()
     for i in range(len(layer_names)):
         slash = layer_names[i].find("/")
-        abbr_name = layer_names[i][0:slash]                    
+        if slash > -1:
+            abbr_name = layer_names[i][0:slash]
+        else:
+            abbr_name = layer_names[i]
         np.save(max_dir + "max_values_%s" % abbr_name, 
                 max_values[i])
         np.save(max_dir + "max_states_%s" % abbr_name,
