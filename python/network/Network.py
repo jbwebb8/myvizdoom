@@ -157,7 +157,7 @@ class Network:
         layers = []
         for layer_name in layer_output_names:
             layers.append(self._get_layer(layer_name))
-        state = _check_state(state)
+        state = self._check_state(state)
         feed_dict={s_: s for s_, s in zip(self.state, state)}
         feed_dict = self._check_train_mode(feed_dict)
         return self.sess.run(layers, feed_dict=feed_dict)
