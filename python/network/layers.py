@@ -293,6 +293,7 @@ def batch_norm(x,
                epsilon=0.001,
                data_format=None,
                norm_dim="global",
+               is_training=None,
                scope="BatchNorm"):
     """
     norm_dim: Breadth of normalization to perform.
@@ -321,7 +322,21 @@ def batch_norm(x,
         beta = tf.Variable(tf.zeros(num_channels), name="beta")
         pop_mean = tf.Variable(tf.zeros(num_channels), trainable=False, name="pop_mean")
         pop_var = tf.Variable(tf.ones(num_channels), trainable=False, name="pop_var")
-        is_training = tf.placeholder(tf.bool, name="is_training")
+        
+        # Try to grab is_training placeholder from graph if already exists
+        # Otherwise create is_training placeholder
+        is_training = is_training
+        if is_training is None:
+            for op in tf.get_default_graph().get_operations():
+                if op.type == "Placeholder" and op.name.endswith("is_training"):
+                    is_training = tf.get_default_graph().get_tensor_by_name(op.name + ":0")
+                    break
+            if is_training is None:
+                is_training = tf.placeholder(tf.bool, name="is_training")
+                print("Warning: No placeholder found for \"is_training\". "
+                      + "One has been automatically created but may not be " 
+                      + "passed to the Agent object. Consider adding "
+                      + "placeholder if using JSON file.")
 
         # Apply batch normalizing transform to x:
         # x_hat = (x - μ)/(σ^2 + ε)^0.5

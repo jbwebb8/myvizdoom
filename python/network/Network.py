@@ -48,7 +48,7 @@ class Network:
             self.name = network_file[0:-5]
             builder = NetworkBuilder(self, network_file)
             self.graph_dict, self.data_format = builder.load_json(network_file)
-            self.state = self.graph_dict["state"]
+            self.state = self.graph_dict["state"][0]
             self.input_shape = self.state[0].get_shape().as_list()[1:]
             self.game_var_sets = []
             for i in range(1, len(self.state)):

@@ -242,15 +242,15 @@ class NetworkBuilder:
 
         # Add placeholders
         builder_type._add_reserved_placeholders()
-        self.graph_dict["state"] = []
+        self.graph_dict["state"] = [[], "p"]
         for ph in net["placeholders"]:
             if ph["name"] in net["global_features"]["input_layer"]:
                 node = self.add_input_layer(ph)
-                self.graph_dict["state"].append(node)
+                self.graph_dict["state"][0].append(node)
             else:
                 node = self.add_placeholder(ph)
             self.graph_dict[ph["name"]] = [node, "p"]
-        
+
         # Add layers
         for layer in net["layers"]:
             if layer["name"] in net["global_features"]["output_layer"]:
