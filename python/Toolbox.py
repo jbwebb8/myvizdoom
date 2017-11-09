@@ -231,7 +231,7 @@ class Toolbox:
         
         return self.fig_f
         
-    def _initialize_q_display(self, actions, ybounds=[-10, 50]):
+    def _initialize_q_display(self, actions, ybounds=[-12, 0]):
         fig, ax = plt.subplots()
         idx = np.arange(actions.size)
         # TODO: fix action label bug
@@ -264,7 +264,7 @@ class Toolbox:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             plt.draw()
-            self.fig_q.show(block=False)
+            self.fig_q.show()
             plt.pause(0.001)
         
         return self.fig_q
