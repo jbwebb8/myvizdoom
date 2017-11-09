@@ -12,7 +12,7 @@ class PrioritizedReplayMemory(ReplayMemory):
         # Create new blank heap (see iPython notebook for details)
         heap_size = 2 ** math.ceil(math.log(capacity, 2)) + capacity
         self.start_pos = 2 ** math.ceil(math.log(capacity, 2))
-        self.heap = np.zeros(heap_size, dtype=np.float32)
+        self.heap = np.zeros(heap_size, dtype=np.float64)
         self.max_p = 0.01 # tracks max priority value
         self.alpha = alpha # controls probability distribution
         self.beta_start = beta_start
@@ -109,8 +109,8 @@ class PrioritizedReplayMemory(ReplayMemory):
         t_ = self.start_pos + t
         P = self.heap[t_] / self.heap[1]
         ### Every 70,000 steps or so, a divide by zero error occurs because 
-        ### the search make one wrong decision; not sure why
-        if (P == 0).any() or self.size == 0:
+        ### the search moves along a nonexistent path due to numerical errors
+        if (P == 0).any():
             print("m:", m)
             print("t_: ", t_)
             print("heap[t_]: ", self.heap[t_])
