@@ -46,7 +46,7 @@ class Agent:
             infinite looping for actions that do not change state).
         - reward_scale (default: 1.0): Scales rewards built into scenarios by a
             constant.
-        - use_shaping_reward (default: False): If True, the reward received
+        - shape_reward_fns (default: None): If True, the reward received
             after the agent makes an action includes a shaping reward encoded
             in the scenario script (under USER1).
     """
@@ -63,7 +63,7 @@ class Agent:
                           "position_timeout":   None,
                           "no_op":              False,
                           "reward_scale":       1.0,
-                          "use_shaping_reward": False}
+                          "shape_reward_fns":   None}
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default",
@@ -86,7 +86,6 @@ class Agent:
         self.actions = self._set_actions(action_set)
         self.num_actions = len(self.actions)        
         self.position_repeat = 0
-        self.last_total_shaping_reward = 0.0
         
         # Load learning and network parameters
         if agent_file is not None:
@@ -112,8 +111,8 @@ class Agent:
                                                  self.DEFAULT_AGENT_ARGS["channels"])
             self.reward_scale       = kwargs.pop("reward_scale",
                                                  self.DEFAULT_AGENT_ARGS["reward_scale"])
-            self.use_shaping_reward = kwargs.pop("use_shaping_reward",
-                                                 self.DEFAULT_AGENT_ARGS["use_shaping_reward"])
+            self.shape_reward_fns   = kwargs.pop("shape_reward_fns",
+                                                 self.DEFAULT_AGENT_ARGS["shape_reward_fns"])
             
         if self.channels != self.game.get_screen_channels():
             raise ValueError("Number of image channels between agent and "
@@ -168,6 +167,10 @@ class Agent:
             msg = "The following game variables were not used: %s" % ", ".join(map(str, extra_gvs))
             warnings.formatwarning(msg, UserWarning, "", 121)
             warnings.warn(msg)
+
+        # Set up reward shaping function via JSON format if not passed explicitly
+        if "shape_reward" not in kwargs:
+            self.initialize_shape_reward, self.shape_reward = self._set_shape_reward()
 
         # Create tracking lists
         self.position_history = []
@@ -350,9 +353,81 @@ class Agent:
         self.channels = agent["network_args"]["channels"]
         self.reward_scale = agent["learning_args"].get(
             "reward_scale", self.DEFAULT_AGENT_ARGS["reward_scale"])
-        self.use_shaping_reward = agent["learning_args"].get(
-            "use_shaping_reward", self.DEFAULT_AGENT_ARGS["use_shaping_reward"])
+        self.shape_reward_fns = agent["learning_args"].get(
+            "shape_reward_fns", self.DEFAULT_AGENT_ARGS["shape_reward_fns"])
 
+    def _set_shape_reward(self):
+        if self.shape_reward_fns is None or len(self.shape_reward_fns) == 0:
+            return [None, lambda r: r]
+        self.shape_reward_buffer = [0.0] * len(self.shape_reward_fns)
+        init_fn_list, fn_list = [], []
+        for i, fn in enumerate(self.shape_reward_fns):
+            if fn[0].lower == "user1":
+                def init_shape_user1():
+                    self.shape_reward_buffer[i] = self.game.get_game_variable(GameVariable.USER1)
+                def shape_user1(r):
+                    # Credit: shaping.py @ github.com/mwydmuch/ViZDoom
+                    fixed_user1 = self.game.get_game_variable(GameVariable.USER1)
+                    shaping_reward = doom_fixed_to_double(fixed_user1)
+                    shaping_reward = shaping_reward - self.shape_reward_buffer[i]
+                    r += shaping_reward
+                    self.shape_reward_buffer[i] += shaping_reward
+                    return r
+                init_fn_list.append(init_shape_user1)
+                fn_list.append(shape_user1)
+            elif fn[0].lower() == "health_loss":
+                def init_shape_health_loss():
+                    self.shape_reward_buffer[i] = self.game.get_game_variable(GameVariable.HEALTH)
+                def shape_health_loss(r):
+                    h = self.game.get_game_variable(GameVariable.HEALTH)
+                    if h < self.shape_reward_buffer[i]:
+                        r += fn[1] * (h - self.shape_reward_buffer[i])
+                    self.shape_reward_buffer[i] = h
+                    return r
+                init_fn_list.append(init_shape_health_loss)
+                fn_list.append(shape_health_loss)
+            elif fn[0].lower() == "ammo_loss":
+                def init_shape_ammo_loss():
+                    self.shape_reward_buffer[i] = self.game.get_game_variable(GameVariable.AMMO1)
+                def shape_ammo_loss(r):
+                    ammo = self.game.get_game_variable(GameVariable.AMMO1)
+                    if ammo < self.shape_reward_buffer[i]:
+                        r += fn[1] * (ammo - self.shape_reward_buffer[i])
+                    self.shape_reward_buffer[i] = ammo
+                    return r
+                init_fn_list.append(init_shape_ammo_loss)
+                fn_list.append(shape_ammo_loss)
+            elif fn[0].lower() == "distance":
+                def init_shape_distance():
+                    p_x = self.game.get_game_variable(GameVariable.POSITION_X)
+                    p_y = self.game.get_game_variable(GameVariable.POSITION_Y)
+                    p_z = self.game.get_game_variable(GameVariable.POSITION_Z)
+                    self.shape_reward_buffer[i] = [p_x, p_y, p_z]    
+                def shape_distance(r):
+                    p_x = self.game.get_game_variable(GameVariable.POSITION_X)
+                    p_y = self.game.get_game_variable(GameVariable.POSITION_Y)
+                    p_z = self.game.get_game_variable(GameVariable.POSITION_Z)
+                    p_diff = (np.asarray([p_x, p_y, p_z]) 
+                                 - np.asarray(self.shape_reward_buffer[i]))
+                    dist_diff = np.sqrt(np.sum(p_diff ** 2))
+                    r += fn[1] * dist_diff
+                    return r
+                init_fn_list.append(init_shape_distance)
+                fn_list.append(shape_distance)
+            else:
+                raise ValueError("Reward shaping type \"" + fn[0] + "\" not recognized.")
+
+            def init_shape_reward():
+                for init_fn in init_fn_list:
+                    init_fn()   
+
+            def shape_reward(r):
+                for fn in fn_list:
+                    r = fn(r)
+                return r
+
+        return [init_shape_reward, shape_reward]
+                
     def set_train_mode(self, new_mode):
         """Sets train_mode to new value (True if training; False if testing)"""
         assert isinstance(new_mode, bool)
@@ -459,7 +534,7 @@ class Agent:
         self.reset_state()
         self.reset_history()
         self.position_repeat = 0
-        self.last_total_shaping_reward = 0.0
+        self.initialize_shape_reward()
         for init_step in range(self.phi):
             self.update_state(replace=False)
         self.track_position()
@@ -492,7 +567,7 @@ class Agent:
                 action = self.actions[a]
         
         return action
- 
+
     def make_action(self, action=None, state=None, timeout=True):
         if action is None:
             # Get action from network
@@ -506,14 +581,8 @@ class Agent:
         # Make action, track agent, and return reward
         self.track_position()
         r = self.reward_scale * self.game.make_action(action, self.frame_repeat)
+        r = self.shape_reward(r)
         self.track_action()
-        if self.use_shaping_reward:
-            # Credit: shaping.py @ github.com/mwydmuch/ViZDoom
-            fixed_shaping_reward = self.game.get_game_variable(GameVariable.USER1)
-            shaping_reward = doom_fixed_to_double(fixed_shaping_reward)
-            shaping_reward = shaping_reward - self.last_total_shaping_reward
-            r += shaping_reward
-            self.last_total_shaping_reward += shaping_reward
         return r
 
     def track_position(self):
