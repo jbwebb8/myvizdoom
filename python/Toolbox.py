@@ -15,8 +15,17 @@ class Toolbox:
     - num_samples: Store top k samples that best activated nodes.
     """
 
-    def __init__(self, layer_shapes, state_shape, phi, channels, actions,
-                 num_samples=4, data_format="NCHW", color_format="RGB"):
+    def __init__(self, 
+                 layer_shapes, 
+                 state_shape, 
+                 phi, 
+                 channels, 
+                 actions,
+                 num_samples=4, 
+                 data_format="NCHW", 
+                 color_format="RGB",
+                 view_features=True,
+                 view_Q_values=False):
         # Set toolbox parameters
         self.layer_shapes = layer_shapes
         layer_sizes = np.ones(len(layer_shapes), dtype=np.int64)
@@ -34,26 +43,29 @@ class Toolbox:
         self.data_format = data_format
 
         # Initialize max data arrays
-        self.max_values, self.max_states, self.max_positions = [], [], []
-        # NOTE: must keep separate arrays for each layer because layer sizes
-        # differ
-        for i in range(self.num_layers):
-            self.max_values.append(np.zeros([layer_sizes[i], num_samples],
-                                            dtype=np.float64))
-            self.max_states.append(np.zeros([layer_sizes[i], num_samples] 
-                                            + list(state_shape), 
-                                            dtype=np.float32))
-            self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4],
-                                               dtype=np.float32)) 
+        if num_samples > 0:
+            self.max_values, self.max_states, self.max_positions = [], [], []
+            # NOTE: must keep separate arrays for each layer because layer sizes
+            # differ
+            for i in range(self.num_layers):
+                self.max_values.append(np.zeros([layer_sizes[i], num_samples],
+                                                dtype=np.float64))
+                self.max_states.append(np.zeros([layer_sizes[i], num_samples] 
+                                                + list(state_shape), 
+                                                dtype=np.float32))
+                self.max_positions.append(np.zeros([layer_sizes[i], num_samples, 4],
+                                                dtype=np.float32)) 
 
         # Initialize visualization tools                                      
-        self.fig_f, self.ax_f = self._initialize_feature_display()
-        self.fig_q, self.ax_q, self.idx_q, self.bars_q, self.labels_q \
-            = self._initialize_q_display(self.actions)
+        #plt.ion()
+        if view_features:
+            self.fig_f, self.ax_f = self._initialize_feature_display()
+        if view_Q_values:
+            self.fig_q, self.ax_q, self.idx_q, self.bars_q, self.labels_q \
+                = self._initialize_q_display(self.actions)
         self.all_objects = []
         self.color_format = color_format
         self.prev_action = 0
-        plt.ion()         
 
     def update_max_data(self, state, position, layer_values):
         for i in range(self.num_layers):
@@ -214,12 +226,12 @@ class Toolbox:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             plt.draw()
-            plt.show(block=False)
+            self.fig_f.show()
             plt.pause(0.001)
         
         return self.fig_f
         
-    def _initialize_q_display(self, actions, ybounds=[-10, 50]):
+    def _initialize_q_display(self, actions, ybounds=[-12, 0]):
         fig, ax = plt.subplots()
         idx = np.arange(actions.size)
         # TODO: fix action label bug
@@ -252,7 +264,7 @@ class Toolbox:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             plt.draw()
-            plt.show(block=False)
+            self.fig_q.show()
             plt.pause(0.001)
         
         return self.fig_q

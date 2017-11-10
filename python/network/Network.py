@@ -49,7 +49,10 @@ class Network:
             builder = NetworkBuilder(self, network_file)
             self.graph_dict, self.data_format = builder.load_json(network_file)
             self.state = self.graph_dict["state"][0]
-            self.input_shape = self.state.get_shape().as_list()[1:]
+            self.input_shape = self.state[0].get_shape().as_list()[1:]
+            self.game_var_sets = []
+            for i in range(1, len(self.state)):
+                self.game_var_sets.append(self.state[i].get_shape().as_list()[1])
             if self.data_format == "NCHW":
                 self.input_res = self.input_shape[1:]
             else:
@@ -98,11 +101,34 @@ class Network:
                                          scope=self.scope)
             self.sess.run(tf.variables_initializer(var_list))
 
-    def _check_state(self, state):
-        if state is not None and state.ndim < 4:
-            return state.reshape([1] + list(state.shape))
+    def _check_state(self, agent_state):
+        """ 
+        Converts agent state = [screen, game_var] to network state of form
+        [screen, game_var_set_1, game_var_set_2, ...]
+        """
+        if agent_state is not None:
+            feed_state = [] # avoids mutating agent state by reference
+            
+            # Check screen shape; add sample size dimension if needed
+            if agent_state[0].ndim == 3:
+                feed_state.append(agent_state[0].reshape([1] + list(agent_state[0].shape)))
+            else:
+                feed_state.append(agent_state[0])
+            
+            # Check game variables (if present); make column vector if needed
+            i = 0
+            if agent_state[1].ndim == 1:
+                game_vars = agent_state[1].reshape([1] + list(agent_state[1].shape))
+            else:
+                game_vars = agent_state[1]
+            for j in range(1, len(self.state)):
+                feed_state.append(game_vars[:, i:i+self.game_var_sets[j-1]])
+                i += self.game_var_sets[j-1]
+
+            return feed_state
+        
         else:
-            return state
+            return agent_state
     
     def _check_actions(self, actions):
         if actions.ndim < 2:
@@ -131,9 +157,8 @@ class Network:
         layers = []
         for layer_name in layer_output_names:
             layers.append(self._get_layer(layer_name))
-        if state.ndim < 4:
-            state = state.reshape([1] + list(state.shape))
-        feed_dict = {self.state: state}
+        state = self._check_state(state)
+        feed_dict={s_: s for s_, s in zip(self.state, state)}
         feed_dict = self._check_train_mode(feed_dict)
         return self.sess.run(layers, feed_dict=feed_dict)
     

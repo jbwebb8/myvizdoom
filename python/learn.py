@@ -32,7 +32,7 @@ parser.add_argument("-e", "--epochs", type=int, default=100, metavar="",
                     help="number of epochs to train")
 parser.add_argument("-s", "--learning-steps", type=int, default=2000, metavar="", 
                     help="learning steps per epoch")
-parser.add_argument("-t", "--test-episodes", type=int, default=1, metavar="", 
+parser.add_argument("-t", "--test-episodes", type=int, default=100, metavar="", 
                     help="test episodes per epoch")
 parser.add_argument("-f", "--save-freq", type=int, default=0, metavar="", 
                     help="save params every x epochs")
@@ -79,9 +79,6 @@ trackable = args.track
 save_gifs = args.save_gifs
 exp_name = args.name
 exp_descr = args.description
-
-# Other parameters
-#frame_repeat = 12       # frames to repeat action before choosing again 
 
 # Makes directory if does not already exist
 def make_directory(folders):
@@ -147,7 +144,7 @@ print("Done.")
 print("Initializing toolbox... ", end=""), sys.stdout.flush()
 layer_shapes = agent.get_layer_shape(layer_names)
 toolbox = Toolbox(layer_shapes=layer_shapes, 
-                  state_shape=agent.state.shape,
+                  state_shape=agent.state[0].shape,
                   phi=agent.phi,
                   channels=agent.channels,
                   actions=agent.action_indices,
@@ -161,8 +158,7 @@ save_exp_details(details_dir, agent)
 
 # Train and test agent for specified number of epochs
 print("Starting the training!")
-test_scores_all = []
-train_scores_all = []
+test_scores_all, train_scores_all = [], []
 time_start = time()
 for epoch in range(epochs):
     print("\nEpoch %d\n-------" % (epoch + 1))
@@ -199,7 +195,7 @@ for epoch in range(epochs):
     save_epoch = (epoch + 1 == epochs or (epoch + 1) % save_freq == 0)
     for test_episode in range(test_episodes_per_epoch):
         agent.initialize_new_episode()
-        screen_history, position_history, action_history = [[]] * 3
+        screen_history, position_history, action_history = [], [], []
         while not game.is_episode_finished():
             current_screen = game.get_state().screen_buffer
             agent.update_state(current_screen)

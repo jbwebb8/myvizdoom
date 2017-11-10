@@ -1,0 +1,92 @@
+{
+    "global_features": {
+        "type": "DQN",
+        "input_layer": "state",
+        "output_layer": "Q",
+        "loss": ["huber", 1.0],
+        "optimizer": "rmsprop"        
+    },
+    
+    "placeholders": [
+        {
+            "name": "state",
+            "data_type": "float32",
+            "kwargs": {
+                "shape": [84, 84],
+                "name": "state"
+            } 
+        }
+    ],
+
+    "layers": [
+        {
+            "name": "CONV_1",
+            "type": "conv2d",
+            "input": "state",
+            "kwargs": {
+                "scope": "CONV_1",
+                "num_outputs": 32, 
+                "kernel_size": [8, 8],
+                "stride": [4, 4],
+                "padding": "VALID",
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", 0, 0.1], 
+                "biases_initializer": ["constant", 0.1]
+            }
+        },
+
+        {
+            "name": "CONV_2",
+            "type": "conv2d",
+            "input": "CONV_1",
+            "kwargs": {
+                "scope": "CONV_2",
+                "num_outputs": 64, 
+                "kernel_size": [4, 4],
+                "stride": [2, 2],
+                "padding": "VALID",
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", 0, 0.1], 
+                "biases_initializer": ["constant", 0.1]
+            }
+        },
+
+        {
+            "name": "CONV_2_FLAT",
+            "type": "flatten",
+            "input": "CONV_2",
+            "kwargs": {
+                "scope": "CONV_2_FLAT"
+            }
+        },
+
+        {
+            "name": "FC_1",
+            "type": "fully_connected",
+            "input": "CONV_2_FLAT",
+            "kwargs": {
+                "scope": "FC_1",        
+                "num_outputs": 128,
+                "activation_fn": "relu",
+                "weights_initializer": ["random_normal", 0, 0.1], 
+                "biases_initializer": ["constant", 0.1]
+            }
+        },
+
+        {
+            "name": "Q",
+            "type": "fully_connected",
+            "input": "FC_1",
+            "kwargs": {
+                "scope": "Q",
+                "num_outputs": 1,
+                "activation_fn": "None",
+                "weights_initializer": ["random_normal", 0, 0.1], 
+                "biases_initializer": ["constant", 0.1]
+            }
+        }
+    ],
+
+    "ops": [
+    ]
+}

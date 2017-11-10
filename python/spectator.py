@@ -33,6 +33,7 @@ for i in range(episodes):
     # Create new episode
     print("Episode #" + str(i + 1))
     game.new_episode()
+    frame = 0
     while not game.is_episode_finished():
         # Get state, advance current user action, and obtain reward
         state = game.get_state()
@@ -41,11 +42,13 @@ for i in range(episodes):
         reward = game.get_last_reward()
 
         # Print results
-        #print("State #" + str(state.number))
-        #print("Game variables: ", state.game_variables)
-        #print("Action:", last_action)
-        #print("Reward:", reward)
-        #print("=====================")
+        frame += 1
+        if frame % 10 == 0:
+            print("State #" + str(state.number))
+            print("Game variables: ", state.game_variables)
+            print("Action:", last_action)
+            print("Reward:", reward)
+            print("=====================")
 
     print("Episode finished!")
     print("Total reward:", game.get_total_reward())

@@ -44,7 +44,7 @@ class PositionEncoder(Agent):
         
         # Load DQN-specific learning and network parameters
         if agent_file is not None:
-            self._load_DQN_agent_file(agent_file)
+            self._load_PE_agent_file(agent_file)
         else:
             self.n_step             = kwargs.pop("n_step",
                                                  DEFAULT_DQN_AGENT_ARGS["n_step"])
@@ -69,7 +69,7 @@ class PositionEncoder(Agent):
             self.rm_start_size      = kwargs.pop("replay_memory_start_size",
                                                  DEFAULT_DQN_AGENT_ARGS["replay_memory_start_size"])
                         
-        # Create target network and replay memory if training
+        # Create replay memory if training
         if self.train_mode:
             # Create replay memory and set specific functions
             self.memory = self._create_memory(self.rm_type)
@@ -78,8 +78,8 @@ class PositionEncoder(Agent):
             # similar functions
             self.learn_from_memory = self._set_memory_fns(self.rm_type)
     
-    def _load_DQN_agent_file(self, agent_file):
-        """Grabs DQN-specific arguments from agent file"""
+    def _load_PE_agent_file(self, agent_file):
+        """Grabs Position Encoder-specific arguments from agent file"""
         if not agent_file.lower().endswith(".json"): 
             raise Exception("No agent JSON file.")
         agent = json.loads(open(agent_file).read())
@@ -88,8 +88,6 @@ class PositionEncoder(Agent):
         self.epsilon_const_rate = agent["learning_args"]["epsilon_const_rate"]
         self.epsilon_decay_rate = agent["learning_args"]["epsilon_decay_rate"]
         self.batch_size = agent["learning_args"]["batch_size"]
-        self.target_net_freq = agent["learning_args"]["target_network_update_freq"]
-        self.target_net_rate = agent["learning_args"]["target_network_update_rate"]
         self.rm_type = agent["memory_args"]["replay_memory_type"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
         self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
