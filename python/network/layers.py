@@ -12,6 +12,8 @@ def create_layer(input_layer, layer_dict, data_format="NHWC"):
         return fully_connected(input_layer, **layer_dict["kwargs"])
     elif layer_type.lower() == "multi_input_fully_connected":
         return multi_input_fully_connected(input_layer, **layer_dict["kwargs"])
+    elif layer_type.lower() == "dropout":
+        return dropout(input_layer, **layer_dict["kwargs"])
     else:
         raise ValueError("Layer type \"" + layer_type + "\" not supported.")
 
@@ -375,3 +377,15 @@ def batch_norm(x,
         out = gamma_rs * x_hat + beta_rs
 
         return out
+
+    def dropout(x,
+                keep_prob=0.5,
+                scope="DropOut"):
+        with tf.name_scope(scope):
+            input_shape = tf.shape(x)
+            rand = tf.random_uniform(input_shape)
+            mask = tf.cast(tf.less_equal(x, rand), tf.float32)
+            out = tf.cond(is_training,
+                          x * mask,
+                          x)
+            return out
