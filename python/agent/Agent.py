@@ -386,6 +386,16 @@ class Agent:
                     return r
                 init_fn_list.append(init_shape_health_loss)
                 fn_list.append(shape_health_loss)
+            elif fn[0].lower() == "health_diff":
+                def init_shape_health_diff():
+                    self.shape_reward_buffer[i] = self.game.get_game_variable(GameVariable.HEALTH)
+                def shape_health_diff(r):
+                    h = self.game.get_game_variable(GameVariable.HEALTH)
+                    r += fn[1] * (h - self.shape_reward_buffer[i])
+                    self.shape_reward_buffer[i] = h
+                    return r
+                init_fn_list.append(init_shape_health_diff)
+                fn_list.append(shape_health_diff)
             elif fn[0].lower() == "ammo_loss":
                 def init_shape_ammo_loss():
                     self.shape_reward_buffer[i] = self.game.get_game_variable(GameVariable.AMMO1)
