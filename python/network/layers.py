@@ -14,15 +14,10 @@ def create_layer(input_layer, layer_dict, data_format="NHWC"):
         return multi_input_fully_connected(input_layer, **layer_dict["kwargs"])
     elif layer_type.lower() == "dropout":
         return dropout(input_layer, **layer_dict["kwargs"])
+    elif layer_type.lower() == "noisy":
+        return noisy(input_layer, **layer_dict["kwargs"])
     else:
         raise ValueError("Layer type \"" + layer_type + "\" not supported.")
-
-def _assign_kwargs(layer_kwargs):
-    # Format:
-    # if _ in layer_kwargs:
-    #     if _ == _:
-    #         return _
-    pass
 
 def _check_list(arg):
     if isinstance(arg, list):
@@ -378,14 +373,31 @@ def batch_norm(x,
 
         return out
 
-    def dropout(x,
-                keep_prob=0.5,
-                scope="DropOut"):
-        with tf.name_scope(scope):
-            input_shape = tf.shape(x)
-            rand = tf.random_uniform(input_shape)
-            mask = tf.cast(tf.less_equal(x, rand), tf.float32)
-            out = tf.cond(is_training,
-                          x * mask,
-                          x)
-            return out
+def noisy(x,
+          mean=0.0,
+          stddev=1.0,
+          seed=None,
+          scope="Noisy"):
+    with tf.name_scope(scope):
+        input_shape = tf.shape(x)
+        noise = tf.random_normal(input_shape,
+                                 mean=mean, 
+                                 stddev=stddev, 
+                                 seed=seed)
+        return x + noise
+
+###############################################################################
+# Layers in development
+###############################################################################
+
+def dropout(x,
+            keep_prob=0.5,
+            scope="DropOut"):
+    with tf.name_scope(scope):
+        input_shape = tf.shape(x)
+        rand = tf.random_uniform(input_shape)
+        mask = tf.cast(tf.less_equal(x, rand), tf.float32)
+        out = tf.cond(is_training,
+                        x * mask,
+                        x)
+        return out
