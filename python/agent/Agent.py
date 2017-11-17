@@ -358,7 +358,7 @@ class Agent:
 
     def _set_shape_reward(self):
         if self.shape_reward_fns is None or len(self.shape_reward_fns) == 0:
-            return [None, lambda r: r]
+            return [lambda: None, lambda r: r]
         self.shape_reward_buffer = [0.0] * len(self.shape_reward_fns)
         init_fn_list, fn_list = [], []
         for i, fn in enumerate(self.shape_reward_fns):
