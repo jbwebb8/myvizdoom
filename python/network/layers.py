@@ -1,6 +1,10 @@
 import tensorflow as tf
 
-def create_layer(input_layer, layer_dict, data_format="NHWC"):
+def create_layer(input_layer, 
+                 layer_dict, 
+                 data_format="NHWC", 
+                 is_training=None):
+    # TODO: replace layer_dict with just kwargs
     layer_type = layer_dict["type"]
     if layer_type.lower() == "conv2d":
         layer_dict["kwargs"]["data_format"] = data_format
@@ -13,8 +17,10 @@ def create_layer(input_layer, layer_dict, data_format="NHWC"):
     elif layer_type.lower() == "multi_input_fully_connected":
         return multi_input_fully_connected(input_layer, **layer_dict["kwargs"])
     elif layer_type.lower() == "dropout":
+        layer_dict["kwargs"]["is_training"] = is_training
         return dropout(input_layer, **layer_dict["kwargs"])
     elif layer_type.lower() == "noisy":
+        layer_dict["kwargs"]["is_training"] = is_training
         return noisy(input_layer, **layer_dict["kwargs"])
     else:
         raise ValueError("Layer type \"" + layer_type + "\" not supported.")
@@ -285,13 +291,68 @@ def multi_input_fully_connected(input_layers,
 
         return out
 
+def noisy(x,
+          mean=0.0,
+          stddev=1.0,
+          seed=None,
+          is_training=None,
+          scope="noisy"):
+    with tf.name_scope(scope):
+        # Create is_training placeholder if not specified
+        if is_training is None:
+            is_training = tf.placeholder(tf.bool, name="is_training")
+            print("Warning: No placeholder found for \"is_training\". "
+                    + "One has been automatically created but may not be " 
+                    + "passed to the Agent object. Consider adding "
+                    + "placeholder if using JSON file.")
+        
+        # Add noise if is_training = True
+        input_shape = tf.shape(x)
+        noise = tf.random_normal(input_shape,
+                                 mean=mean, 
+                                 stddev=stddev, 
+                                 seed=seed)
+        out = tf.where(is_training,
+                       x + noise,
+                       x)
+                      
+        return out
+
+def dropout(x,
+            keep_prob=0.5,
+            is_training=None,
+            scope="dropout"):
+    with tf.name_scope(scope):
+        # Create is_training placeholder if not specified
+        if is_training is None:
+            is_training = tf.placeholder(tf.bool, name="is_training")
+            print("Warning: No placeholder found for \"is_training\". "
+                    + "One has been automatically created but may not be " 
+                    + "passed to the Agent object. Consider adding "
+                    + "placeholder if using JSON file.")
+        
+        # NOTE: is hard coding keep_prob better than using placeholder?
+        input_shape = tf.shape(x)
+        rand = tf.random_uniform(input_shape)
+        mask = tf.cast(tf.less_equal(rand, keep_prob), tf.float32, name="mask")
+        out = tf.where(is_training,
+                       x * mask,
+                       x)
+
+        return out
+
+###############################################################################
+# Layers in development
+###############################################################################
+
+# Need to confirm population stats are being updated appropriately
 def batch_norm(x,
                decay=0.999,
                epsilon=0.001,
                data_format=None,
                norm_dim="global",
                is_training=None,
-               scope="BatchNorm"):
+               scope="batchnorm"):
     """
     norm_dim: Breadth of normalization to perform.
     - global: Normalize channel-by-channel over batch size, height, and width
@@ -322,18 +383,18 @@ def batch_norm(x,
         
         # Try to grab is_training placeholder from graph if already exists
         # Otherwise create is_training placeholder
-        is_training = is_training
+        #is_training = is_training
+        #if is_training is None:
+        #    for op in tf.get_default_graph().get_operations():
+        #        if op.type == "Placeholder" and op.name.endswith("is_training"):
+        #            is_training = tf.get_default_graph().get_tensor_by_name(op.name + ":0")
+        #            break
         if is_training is None:
-            for op in tf.get_default_graph().get_operations():
-                if op.type == "Placeholder" and op.name.endswith("is_training"):
-                    is_training = tf.get_default_graph().get_tensor_by_name(op.name + ":0")
-                    break
-            if is_training is None:
-                is_training = tf.placeholder(tf.bool, name="is_training")
-                print("Warning: No placeholder found for \"is_training\". "
-                      + "One has been automatically created but may not be " 
-                      + "passed to the Agent object. Consider adding "
-                      + "placeholder if using JSON file.")
+            is_training = tf.placeholder(tf.bool, name="is_training")
+            print("Warning: No placeholder found for \"is_training\". "
+                    + "One has been automatically created but may not be " 
+                    + "passed to the Agent object. Consider adding "
+                    + "placeholder if using JSON file.")
 
         # Apply batch normalizing transform to x:
         # x_hat = (x - μ)/(σ^2 + ε)^0.5
@@ -354,7 +415,11 @@ def batch_norm(x,
                     batch_mean_rs = tf.reshape(batch_mean, param_shape)
                     batch_var_rs = tf.reshape(batch_var, param_shape)
                     return (x - batch_mean_rs) / (tf.sqrt(batch_var_rs + epsilon))
-        
+        # Add update ops to tf collection (so they will be updated every 
+        # learning step via with control dependencies)
+        tf.add_to_collection(tf.GraphKeys.UPDATE_OPS,
+                             [update_pop_mean, update_pop_var])
+
         # If testing, use population statistics for transformation
         def x_hat_test():
             with tf.name_scope("pop_stats"):
@@ -371,33 +436,4 @@ def batch_norm(x,
         beta_rs = tf.reshape(beta, param_shape)
         out = gamma_rs * x_hat + beta_rs
 
-        return out
-
-def noisy(x,
-          mean=0.0,
-          stddev=1.0,
-          seed=None,
-          scope="Noisy"):
-    with tf.name_scope(scope):
-        input_shape = tf.shape(x)
-        noise = tf.random_normal(input_shape,
-                                 mean=mean, 
-                                 stddev=stddev, 
-                                 seed=seed)
-        return x + noise
-
-###############################################################################
-# Layers in development
-###############################################################################
-
-def dropout(x,
-            keep_prob=0.5,
-            scope="DropOut"):
-    with tf.name_scope(scope):
-        input_shape = tf.shape(x)
-        rand = tf.random_uniform(input_shape)
-        mask = tf.cast(tf.less_equal(x, rand), tf.float32)
-        out = tf.cond(is_training,
-                        x * mask,
-                        x)
         return out
