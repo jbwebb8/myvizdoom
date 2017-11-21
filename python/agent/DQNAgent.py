@@ -2,6 +2,7 @@ from agent.Agent import Agent
 from network.DQNetwork import DQNetwork
 from memory.ReplayMemory import ReplayMemory
 from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
+from memory.TrajectoryReplayMemory import TrajectoryReplayMemory
 import tensorflow as tf
 import numpy as np
 from random import randint, random
@@ -55,7 +56,8 @@ class DQNAgent(Agent):
                               "target_network_update_rate": 0.001,
                               "replay_memory_type": "standard",
                               "replay_memory_size": 10000,
-                              "replay_memory_start_size": 10000}
+                              "replay_memory_start_size": 10000,
+                              "trajectory_length": 1}
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default", 
@@ -97,6 +99,8 @@ class DQNAgent(Agent):
                                                  DEFAULT_DQN_AGENT_ARGS["replay_memory_size"])
             self.rm_start_size      = kwargs.pop("replay_memory_start_size",
                                                  DEFAULT_DQN_AGENT_ARGS["replay_memory_start_size"])
+            self.rm_tr_len          = kwargs.pop("trajectory_length",
+                                                 DEFAULT_DQN_AGENT_ARGS["trajectory_length"])
                         
         # Create target network and replay memory if training
         if self.train_mode:
@@ -154,6 +158,8 @@ class DQNAgent(Agent):
         self.rm_type = agent["memory_args"]["replay_memory_type"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
         self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
+        self.rm_tr_len = agent["memory_args"].get(
+            "trajectory_length", self.DEFAULT_DQN_AGENT_ARGS["trajectory_length"])
 
     def _create_memory(self, memory_type):
         """
@@ -181,6 +187,12 @@ class DQNAgent(Agent):
                                            state_shape=self.state[0].shape,
                                            num_game_var=self.num_game_var,
                                            input_overlap=(self.phi-1)*self.channels)
+        elif memory_type.lower() == "trajectory":
+            return TrajectoryReplayMemory(capacity=self.rm_capacity, 
+                                          state_shape=self.state[0].shape,
+                                          num_game_var=self.num_game_var,
+                                          input_overlap=(self.phi-1)*self.channels,
+                                          trajectory_length=self.rm_tr_len)
         else:
             raise ValueError("Replay memory type \"" + memory_type + "\" not defined.")
 
@@ -189,7 +201,7 @@ class DQNAgent(Agent):
         if memory_type.lower() == "standard":            
             def learn_from_memory(*args):
                 # Learn from minibatch of replay memory experiences
-                s1, a, target_q, w, idx= self._get_learning_batch()
+                s1, a, target_q, w, idx = self._get_learning_batch()
                 _ = self.network.learn(s1, a, target_q)
 
             return learn_from_memory
@@ -208,6 +220,25 @@ class DQNAgent(Agent):
                 error = target_q - q[np.arange(q.shape[0]), np.squeeze(a)]
                 self.memory.update_priority(error, idx)
 
+            return learn_from_memory
+
+        elif memory_type.lower() == "trajectory":
+            def learn_from_memory(*args):
+                # Get minibatch of replay memory trajectories
+                # Each has shape [batch_size * traj_len, ...]
+                s1, a, s2, isterminal, r, w, idx = self.memory.get_sample(self.batch_size)
+                t = self.rm_tr_len # for aesthetics
+                for i in range(t)[::-1]: # work backwards from t+n --> t
+                    target_q = self._get_target_q([s1[0][i::t], s1[1][i::t]], 
+                                                  a[i::t], 
+                                                  [s2[0][i::t], s2[1][i::t]], 
+                                                  isterminal[i::t], 
+                                                  r[i::t])
+                    _ = self.network.learn([s1[0][i::t], s1[1][i::t]], 
+                                           a[i::t], 
+                                           target_q, 
+                                           weights=w[i::t])
+            
             return learn_from_memory
 
     def _get_target_update_ops(self, tau):

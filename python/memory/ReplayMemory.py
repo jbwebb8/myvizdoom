@@ -22,8 +22,9 @@ class ReplayMemory:
         self.r = np.zeros(capacity, dtype=np.float32)
         self.isterminal = np.zeros(capacity, dtype=np.float32)
 
+        self.state_shape = state_shape
+        self.num_game_var = num_game_var
         self.capacity = capacity
-        self.state_length = num_game_var + 1
         self.size = 0
         self.pos = 0
 
