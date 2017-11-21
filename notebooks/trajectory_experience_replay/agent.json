@@ -1,0 +1,32 @@
+{
+    "agent_args": {
+        "name": "ddqn",
+        "type": "ddqn"
+    },
+    "network_args": {
+        "name": "dqn",
+        "type": "dqn",
+        "alpha": 0.000025,
+        "gamma": 0.99,
+        "phi": 1,
+        "channels": 3
+    },
+    "learning_args": {
+        "n_step": 1,
+        "epsilon_start": 1.0,
+        "epsilon_end": 0.1,
+        "epsilon_const_rate": 0.1,
+        "epsilon_decay_rate": 0.6,
+        "batch_size": 32,
+        "target_network_update_freq": 4,
+        "target_network_update_rate": 0.001,
+        "position_timeout": "None",
+        "shape_reward_fns": []
+    },
+    "memory_args": {
+        "replay_memory_type": "trajectory",
+        "replay_memory_size": 100,
+        "replay_memory_start_size": 100,
+        "trajectory_length": 10
+    }
+}
