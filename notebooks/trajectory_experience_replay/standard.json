@@ -24,7 +24,7 @@
         "shape_reward_fns": []
     },
     "memory_args": {
-        "replay_memory_type": "trajectory",
+        "replay_memory_type": "standard",
         "replay_memory_size": 100,
         "replay_memory_start_size": 100,
         "trajectory_length": 10
