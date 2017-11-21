@@ -1,0 +1,103 @@
+{
+    "global_features": {
+        "type": "DQN",
+        "input_layer": ["screen"],
+        "output_layer": "Q",
+        "loss": ["huber", 1.0],
+        "optimizer": "rmsprop"        
+    },
+    
+    "placeholders": [
+        {
+            "name": "screen",
+            "data_type": "float32",
+            "kwargs": {
+                "shape": [84, 84],
+                "name": "screen"
+            } 
+        }
+    ],
+
+    "layers": [
+        
+        {
+            "name": "CONV_1",
+            "type": "conv2d",
+            "input": "screen",
+            "kwargs": {
+                "scope": "CONV_1",
+                "num_outputs": 32, 
+                "kernel_size": [8, 8],
+                "stride": [4, 4],
+                "padding": "VALID",
+                "activation_fn": "leaky_relu",
+                "weights_initializer": "xavier", 
+                "biases_initializer": ["constant", 0.1]
+            }
+        },
+
+        {
+            "name": "CONV_1_DROPOUT",
+            "type": "dropout",
+            "input": "CONV_1",
+            "kwargs": {
+                "scope": "CONV_1_DROPOUT",
+                "keep_prob": 0.8
+            }
+        },
+
+        {
+            "name": "CONV_2",
+            "type": "conv2d",
+            "input": "CONV_1_DROPOUT",
+            "kwargs": {
+                "scope": "CONV_2",
+                "num_outputs": 64, 
+                "kernel_size": [4, 4],
+                "stride": [2, 2],
+                "padding": "VALID",
+                "activation_fn": "leaky_relu",
+                "weights_initializer": "xavier", 
+                "biases_initializer": ["constant", 0.1]
+            }
+        },
+        
+        {
+            "name": "CONV_2_FLAT",
+            "type": "flatten",
+            "input": "CONV_2",
+            "kwargs": {
+                "scope": "CONV_2_FLAT"
+            }
+        },
+
+        {
+            "name": "FC_1",
+            "type": "fully_connected",
+            "input": "CONV_2_FLAT",
+            "kwargs": {
+                "scope": "FC_1",        
+                "num_outputs": 512,
+                "activation_fn": "leaky_relu",
+                "weights_initializer": "xavier", 
+                "biases_initializer": ["constant", 0.1]
+            }
+        },
+
+        {
+            "name": "Q",
+            "type": "fully_connected",
+            "input": "FC_1",
+            "kwargs": {
+                "scope": "Q",
+                "num_outputs": 1,
+                "activation_fn": "None",
+                "weights_initializer": "xavier", 
+                "biases_initializer": ["constant", 0.1]
+            }
+        }
+    ],
+
+    "ops": [
+    ]
+}
