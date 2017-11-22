@@ -4,8 +4,15 @@ import math
 
 class PrioritizedReplayMemory(ReplayMemory):
 
-    def __init__(self, capacity, state_shape, num_game_var, input_overlap=0, 
-                 alpha=0.6, beta_start=0.4, beta_end=1.0):
+    def __init__(self, 
+                 capacity, 
+                 state_shape, 
+                 num_game_var, 
+                 input_overlap=0,
+                 trajectory_length=1,
+                 alpha=0.6, 
+                 beta_start=0.4, 
+                 beta_end=1.0):
         # Initialize base replay memory
         ReplayMemory.__init__(self, capacity, state_shape, num_game_var, input_overlap)
 
@@ -124,8 +131,23 @@ class PrioritizedReplayMemory(ReplayMemory):
         w = (1 / self.size + 1 / P) ** self.beta
         w = w / np.max(w) # normalize weights so all <= 1.0
         
+        # The next two blocks add trajectories. If trajectory length
+        # is 1, then they simply leave the variables unchanged.
+        # Sample probability is taken from the last state of the trajectory,
+        # so add previous n states to transition indices.
+        x, y = np.meshgrid(t, np.arange(self.tr_len))
+        t = np.transpose(x - y).flatten() # [i-n, i-n+1, ..., i, j-n, j-n+1, ..., j, ...]
+        t %= self.capacity # wrap end cases (not needed if subtracting)
+
+        # Because sampling probability is based only on the last state, weights
+        # derived from the last transition must be copied to the rest of the
+        # transitions in each trajectory.
+        w = np.transpose(np.tile(w, [self.tr_len, 1])).flatten()
+
         # Make list of states
         s1_sample, s2_sample = [], []
+
+        # Get screen component
         s1_sample.append(self.s1[0][t])
         if self.overlap > 0:
             # Stack overlapping frames from s1 to stored frames of s2 to
@@ -136,10 +158,17 @@ class PrioritizedReplayMemory(ReplayMemory):
                                             axis=self.chdim+1))
         else:
             s2_sample.append(self.s2[0][t])
+        
+        # Get game variable component
         s1_sample.append(self.s1[1][t])
         s2_sample.append(self.s2[1][t])
 
-        return s1_sample, self.a[t], s2_sample, self.isterminal[t], self.r[t], w, t
+        # Get other transition parameters
+        a_sample = self.a[t]
+        isterminal_sample = self.isterminal[t]
+        r_sample = self.r[t]
+
+        return s1_sample, a_sample, s2_sample, isterminal_sample, r_sample, w, t
 
     def update_priority(self, delta, pos):
         # Update priority to reflect proportional prioritization:

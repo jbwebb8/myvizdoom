@@ -2,7 +2,6 @@ from agent.Agent import Agent
 from network.DQNetwork import DQNetwork
 from memory.ReplayMemory import ReplayMemory
 from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
-from memory.TrajectoryReplayMemory import TrajectoryReplayMemory
 import tensorflow as tf
 import numpy as np
 from random import randint, random
@@ -181,48 +180,20 @@ class DQNAgent(Agent):
             return ReplayMemory(capacity=self.rm_capacity, 
                                 state_shape=self.state[0].shape,
                                 num_game_var=self.num_game_var,
-                                input_overlap=(self.phi-1)*self.channels)
+                                input_overlap=(self.phi-1)*self.channels,
+                                trajectory_length=self.rm_tr_len)
         elif memory_type.lower() == "prioritized":
             return PrioritizedReplayMemory(capacity=self.rm_capacity, 
                                            state_shape=self.state[0].shape,
                                            num_game_var=self.num_game_var,
-                                           input_overlap=(self.phi-1)*self.channels)
-        elif memory_type.lower() == "trajectory":
-            return TrajectoryReplayMemory(capacity=self.rm_capacity, 
-                                          state_shape=self.state[0].shape,
-                                          num_game_var=self.num_game_var,
-                                          input_overlap=(self.phi-1)*self.channels,
-                                          trajectory_length=self.rm_tr_len)
+                                           input_overlap=(self.phi-1)*self.channels,
+                                           trajectory_length=self.rm_tr_len)
         else:
             raise ValueError("Replay memory type \"" + memory_type + "\" not defined.")
 
     def _set_memory_fns(self, memory_type):
         """Returns function to learn from memory based on memory type."""
         if memory_type.lower() == "standard":            
-            def learn_from_memory(*args):
-                # Learn from minibatch of replay memory experiences
-                s1, a, target_q, w, idx = self._get_learning_batch()
-                _ = self.network.learn(s1, a, target_q)
-
-            return learn_from_memory
-
-        elif memory_type.lower() == "prioritized":
-            def learn_from_memory(epoch, epochs):
-                # Update IS parameter β
-                self.memory.update_beta(epoch, epochs)
-
-                # Learn from minibatch of replay memory experiences
-                s1, a, target_q, w, idx = self._get_learning_batch()
-                q = self.network.get_q_values(s1) # before weight updates
-                _ = self.network.learn(s1, a, target_q, weights=w)
-
-                # Update priority in PER
-                error = target_q - q[np.arange(q.shape[0]), np.squeeze(a)]
-                self.memory.update_priority(error, idx)
-
-            return learn_from_memory
-
-        elif memory_type.lower() == "trajectory":
             def learn_from_memory(*args):
                 # Get minibatch of replay memory trajectories
                 # Each has shape [batch_size * traj_len, ...]
@@ -238,7 +209,34 @@ class DQNAgent(Agent):
                                            a[i::t], 
                                            target_q, 
                                            weights=w[i::t])
-            
+
+            return learn_from_memory
+
+        elif memory_type.lower() == "prioritized":
+            def learn_from_memory(epoch, epochs):
+                # Update IS parameter β
+                self.memory.update_beta(epoch, epochs)
+
+                # Learn from minibatch of replay memory experiences
+                s1, a, s2, isterminal, r, w, idx = self.memory.get_sample(self.batch_size)
+                q = self.network.get_q_values(s1) # before weight updates
+                t = self.rm_tr_len # for aesthetics
+                target_q = np.zeros([len(q)])
+                for i in range(t)[::-1]: # work backwards from t --> t-n
+                    target_q[i::t] = self._get_target_q([s1[0][i::t], s1[1][i::t]], 
+                                                        a[i::t], 
+                                                        [s2[0][i::t], s2[1][i::t]], 
+                                                        isterminal[i::t], 
+                                                        r[i::t])
+                    _ = self.network.learn([s1[0][i::t], s1[1][i::t]], 
+                                           a[i::t], 
+                                           target_q[i::t], 
+                                           weights=w[i::t])
+
+                # Update priority in PER
+                error = target_q - q[np.arange(q.shape[0]), np.squeeze(a)]
+                self.memory.update_priority(error, idx)
+
             return learn_from_memory
 
     def _get_target_update_ops(self, tau):
