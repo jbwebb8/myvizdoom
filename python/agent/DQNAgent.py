@@ -2,7 +2,6 @@ from agent.Agent import Agent
 from network.DQNetwork import DQNetwork
 from memory.ReplayMemory import ReplayMemory
 from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
-from memory.TrajectoryReplayMemory import TrajectoryReplayMemory
 import tensorflow as tf
 import numpy as np
 from random import randint, random
