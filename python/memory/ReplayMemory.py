@@ -27,12 +27,62 @@ class ReplayMemory:
         self.r = np.zeros(capacity, dtype=np.float32)
         self.isterminal = np.zeros(capacity, dtype=np.float32)
 
+        # Get trajectory parameter(s) of either form:
+        # A) [start_length, stop_length, const_fraction, decay_fraction]
+        if isinstance(trajectory_length, list):
+            # Perform error checks
+            if len(trajectory_length) != 4:
+                raise ValueError("Replay memory trajectory length must be "
+                                 + "integer or list [start, stop, const_frac, "
+                                 + "decay_frac].")
+            elif trajectory_length[2] + trajectory_length[3] > 1.0:
+                raise ValueError("Trajectory length constant fraction + "
+                                 + "decay fraction must be less than or equal "
+                                 + "to 1.")
+            elif trajectory_length[0] < 1 or trajectory_length[1] < 1:
+                raise ValueError("Trajectory length must be >= 1.")
+
+            # Set parameters
+            self.tr_len_start = trajectory_length[0]
+            self.tr_len_stop = trajectory_length[1]
+            self.tr_len_const = trajectory_length[2]
+            self.tr_len_decay = trajectory_length[3]
+            self.tr_len = self.tr_len_start
+        # B) constant_trajectory_length
+        else:
+            # Perform error checks
+            if trajectory_length < 1:
+                raise ValueError("Trajectory length must be >= 1.")
+
+            # Set parameters
+            self.tr_len_start = trajectory_length
+            self.tr_len_stop = trajectory_length
+            self.tr_len_const = 1.0
+            self.tr_len_decay = 0.0
+            self.tr_len = self.tr_len_start 
+
+        # Store other parameters
         self.state_shape = state_shape
         self.num_game_var = num_game_var
-        self.tr_len = trajectory_length
         self.capacity = capacity
         self.size = 0
         self.pos = 0
+
+    def update_trajectory_length(self, epoch, total_epochs):
+        frac_train = epoch / total_epochs
+        if frac_train < self.tr_len_const:
+            self.tr_len = self.tr_len_start
+        elif frac_train < self.tr_len_const + self.tr_len_decay:
+            self.tr_len = ((self.tr_len_stop - self.tr_len_start)
+                           * (frac_train - self.tr_len_const) / self.tr_len_decay
+                           + self.tr_len_start)
+            self.tr_len = round(self.tr_len)
+        else:
+            self.tr_len = self.tr_len_stop
+        
+        # Cast as int to avoid indexing errors
+        if not isinstance(self.tr_len, int):
+            self.tr_len = int(self.tr_len)
 
     def add_transition(self, s1, action, s2, isterminal, reward):
         # Store transition variables at current position
