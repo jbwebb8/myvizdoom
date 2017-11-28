@@ -114,11 +114,10 @@ def save_exp_details(folder, agent):
 
 # Initializes DoomGame from config file
 def initialize_vizdoom(config_file):
-    print("Initializing doom... ", end=""), sys.stdout.flush()
+    print("Initializing doom... "), sys.stdout.flush()
     game = DoomGame()
     game.load_config(config_file)
     game.init()
-    print("Done.")
     return game  
 
 # Make output directories
@@ -129,7 +128,7 @@ make_directory([results_dir, details_dir, game_dir, max_dir])
 
 # Initialize agent and TensorFlow graph
 game = initialize_vizdoom(config_file_path)
-print("Loading agent... ", end=""), sys.stdout.flush()
+print("Loading agent... "), sys.stdout.flush()
 agent = create_agent(agent_file_path,
                      game=game, 
                      params_file=params_file_path,
@@ -138,10 +137,9 @@ agent = create_agent(agent_file_path,
 if trackable:
     np.savetxt(game_dir + "action_indices.txt", 
                agent.action_indices)
-print("Done.")
 
 # Initialize toolbox
-print("Initializing toolbox... ", end=""), sys.stdout.flush()
+print("Initializing toolbox... "), sys.stdout.flush()
 layer_shapes = agent.get_layer_shape(layer_names)
 toolbox = Toolbox(layer_shapes=layer_shapes, 
                   state_shape=agent.state[0].shape,
@@ -151,7 +149,6 @@ toolbox = Toolbox(layer_shapes=layer_shapes,
                   num_samples=max_samples,
                   data_format=agent.network.data_format,
                   color_format=color_format)
-print("Done.")
 
 # Save experimental details
 save_exp_details(details_dir, agent)
@@ -169,6 +166,7 @@ for epoch in range(epochs):
     agent.set_train_mode(True)
     score_history = []
     agent.initialize_new_episode()
+    #agent.make_action() # HACK: just for MAP02H
     for learning_step in trange(learning_steps_per_epoch):
         agent.perform_learning_step(epoch, epochs)
         if game.is_episode_finished():
@@ -203,7 +201,7 @@ for epoch in range(epochs):
                 if save_gifs == "agent_state":
                     current_screen = agent._preprocess_image(current_screen)
                 screen_history.append(current_screen)
-            agent.make_action()
+            r = agent.make_action()
             print("Game tick %d of max %d in test episode %d of %d.        " 
                   % (game.get_episode_time() - game.get_episode_start_time(), 
                      game.get_episode_timeout(),

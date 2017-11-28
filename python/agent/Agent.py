@@ -151,7 +151,7 @@ class Agent:
         self.num_game_var = len(self.state[1])
 
         # Cross check agent state with network input states
-        print("\nMapping of agent states --> network states:")
+        print("Mapping of agent states --> network states:")
         print("screen -->", self.network.state[0])
         i = 0
         for j in range(1, len(self.network.state)):
