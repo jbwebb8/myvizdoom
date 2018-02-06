@@ -3,8 +3,8 @@ import tensorflow as tf
 def create_layer(input_layer, 
                  layer_dict, 
                  data_format="NHWC", 
-                 is_training=None):
-    # TODO: replace layer_dict with just kwargs
+                 is_training=None,
+                 batch_size=None):
     layer_type = layer_dict["type"]
     if layer_type.lower() == "conv2d":
         layer_dict["kwargs"]["data_format"] = data_format
@@ -22,6 +22,9 @@ def create_layer(input_layer,
     elif layer_type.lower() == "noisy":
         layer_dict["kwargs"]["is_training"] = is_training
         return noisy(input_layer, **layer_dict["kwargs"])
+    elif layer_type.lower() == "rnn":
+        layer_dict["kwargs"]["batch_size"] = batch_size
+        return rnn(input_layer, **layer_dict["kwargs"])
     else:
         raise ValueError("Layer type \"" + layer_type + "\" not supported.")
 
@@ -64,7 +67,10 @@ def _apply_activation(activation_type, x, *args):
     elif activation_type.lower() == "leaky_relu":
         return tf.maximum(x, 0.1 * x, name="Leaky_Relu")
     elif activation_type.lower() == "softmax":
-        return tf.nn.softmax(x)
+        row_max = tf.reduce_max(x, axis=1, keep_dims=True)
+        x_shifted = x - row_max # for numeric stability
+        exp = tf.exp(x_shifted)
+        return exp / tf.reduce_sum(exp, axis=1, keep_dims=True)
     elif activation_type.lower() == "none":
         return x
     else:
@@ -437,3 +443,62 @@ def batch_norm(x,
         out = gamma_rs * x_hat + beta_rs
 
         return out
+
+def rnn(x,
+        num_hidden,
+        trace_length=None,
+        batch_size=None,
+        init_state=None,
+        cell_type="lstm",
+        scope="RNN"):
+    with tf.name_scope(scope):
+        # Assume flattened input shape = [batch_size*trace_length, hidden_in]
+        # in sequential order: {x_i, ..., x_(i+t), x_j, ..., x_(j+t), ...},
+        # where t = trace_length and i, j are random integers
+        input_shape = x.get_shape().as_list() # specified
+        hidden_in = input_shape[1]
+
+        # Create trace_length placeholder if neither trace_length nor batch_size
+        # specified; otherwise, one can be inferred from the other
+        if trace_length is None and batch_size is None:
+            trace_length = tf.placeholder(tf.int32, name="trace_length")
+            print("Warning: No placeholders found for \"trace_length\", \"batch_size\". "
+                    + "One has been automatically created but may not be " 
+                    + "passed to the Agent object. Consider adding "
+                    + "placeholder if using JSON file.")
+        elif trace_length is None: # batch_size specified
+            trace_length = tf.shape(x)[0] // batch_size # grab at runtime
+        elif batch_size is None: # trace_length specified
+            batch_size = tf.shape(x)[0] // trace_length # grab at runtime
+        
+        # Reshape into [[x_i, ..., x_(i+t)], [x_j, ..., x_(j+t)], ...]
+        x = tf.reshape(x, [batch_size, trace_length, hidden_in])
+
+        # Get RNN cell type
+        if cell_type.lower() == "lstm":
+            rnn_cell = tf.contrib.rnn.LSTMCell(num_units=num_hidden)
+        elif cell_type.lower() == "basic_rnn":
+            rnn_cell = tf.contrib.rnn.BasicRNNCell(num_units=num_hidden)
+        elif cell_type.lower() == "gru":
+            rnn_cell = tf.contrib.rnn.GRUCell(num_units=num_hidden)
+        
+        # Create initial state if not specified
+        if init_state is None:
+            init_state = rnn_cell.zero_state(batch_size, tf.float32)
+
+        # Create dynamic RNN
+        out, state = tf.nn.dynamic_rnn(inputs=x,
+                                       cell=rnn_cell,
+                                       dtype=tf.float32,
+                                       initial_state=init_state)
+        out = tf.reshape(out, shape=[-1, num_hidden])
+
+        return [out, state, init_state]
+
+# TODO list:
+# - Add <return> parameter to specify what values to return:
+#   - Output
+#   - Weights
+#   - Biases
+#   - RNN states
+#   - Etc.

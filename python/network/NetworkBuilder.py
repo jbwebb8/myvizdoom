@@ -91,10 +91,15 @@ class NetworkBuilder:
             is_training = self._get_object("is_training")
         except KeyError:
             is_training = None
+        try:
+            batch_size = self._get_object("batch_size")
+        except KeyError:
+            batch_size = None
         return create_layer(input_layer,
                             layer,
                             data_format=self.data_format,
-                            is_training=is_training)
+                            is_training=is_training,
+                            batch_size=batch_size)
     
     # Adds operation to graph
     def add_op(self, op):
@@ -238,6 +243,10 @@ class NetworkBuilder:
             builder_type = _AC(self)
         elif net_type == "dueling_dqn":
             builder_type = _DuelingDQN(self)
+        elif net_type == "drqn":
+            builder_type = _DRQN(self)
+        elif net_type == "dueling_drqn":
+            builder_type = _DuelingDRQN(self)
         elif net_type == "position":
             builder_type = _PositionEncoder(self)
         elif net_type == "custom":
@@ -257,11 +266,17 @@ class NetworkBuilder:
             self.graph_dict[ph["name"]] = [node, "p"]
 
         # Add layers
+        self.graph_dict["rnn_states"] = []
+        self.graph_dict["rnn_init_states"] = []
         for layer in net["layers"]:
             if layer["name"] in net["global_features"]["output_layer"]:
                 l = builder_type._add_output_layer(layer)
             else:
                 l = self.add_layer(layer)
+            if isinstance(l, list): # recurrent layer
+                self.graph_dict["rnn_states"].append(l[1])
+                self.graph_dict["rnn_init_states"].append(l[2])
+                l = l[0]
             self.graph_dict[layer["name"]] = [l, "l"]
         
         # Add ops
@@ -343,7 +358,13 @@ class NetworkBuilder:
         neur_sum = []
         with tf.name_scope("neurons"):
             for name in self.graph_dict:
-                if self.graph_dict[name][1] == "l":
+                # Skip if not instance of nonempty list to avoid error
+                if (not isinstance(self.graph_dict[name], list) or
+                    len(self.graph_dict[name]) == 0):
+                    continue
+
+                # Otherwise, add activation and value summary if layer
+                elif self.graph_dict[name][-1] == "l":
                     layer = self.graph_dict[name][0]
                     with tf.name_scope(name):
                         num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
@@ -452,6 +473,115 @@ class _DuelingDQN(_DQN):
         best_action = tf.argmax(self.nb.graph_dict["Q"][0], axis=1, 
                                 name="best_action")
         self.nb.graph_dict["best_action"] = [best_action, "o"]
+
+class _DRQN(_DQN):
+    def __init__(self, network_builder):
+        _DQN.__init__(self, network_builder)
+    
+    # Override DQN function to add batch_size
+    def _add_reserved_placeholders(self):
+        # <actions> must be [?, 2] rather than [None] due to tf indexing 
+        # constraints (tf.gather_nd). Alternatively, could switch to 
+        # indexing similar to 
+        # https://github.com/awjuliani/DeepRL-Agents/blob/master/Vanilla-Policy.ipynb
+        self.nb.graph_dict["target_q"] = [tf.placeholder(tf.float32, 
+                                                shape=[None],
+                                                name="target_q"), "p"]
+        self.nb.graph_dict["actions"] = [tf.placeholder(tf.int32,
+                                                shape=[None, 2],
+                                                name="actions"), "p"]
+        self.nb.graph_dict["batch_size"] = [tf.placeholder(tf.int32,
+                                                           shape=[],
+                                                           name="batch_size"), "p"]
+    
+    # Override DQN function to apply loss mask
+    def _add_loss_fn(self, loss_type, loss_params):
+        # Extract Q(s,a) and utilize importance sampling weights
+        q_sa = tf.gather_nd(self.nb.graph_dict["Q"][0], 
+                            self.nb.graph_dict["actions"][0], 
+                            name="q_sa")
+        w = tf.placeholder(tf.float32, shape=[None], name="IS_weights")
+
+        # Create mask to ignore first mask_len losses in each trace
+        w_ = w
+        if "mask" in loss_params:
+            idx = loss_params.index("mask")
+            mask_len = loss_params.pop(idx+1)
+            _ = loss_params.pop(idx)
+            if not isinstance(mask_len, int) or mask_len < 0:
+                raise ValueError("Length of loss mask must be nonnegative integer.")
+            if mask_len > 0:
+                with tf.name_scope("loss_mask"):
+                    batch_size = self.nb.graph_dict["batch_size"][0]
+                    tr_len = tf.shape(w)[0] // batch_size
+                    mask_len = tf.minimum(mask_len, tr_len)
+                    mask_zeros = tf.zeros([batch_size, mask_len])
+                    mask_ones = tf.ones([batch_size, tr_len - mask_len])
+                    w_ = tf.reshape(tf.concat([mask_zeros, mask_ones], axis=1), [-1])
+    
+        # Add loss function
+        loss_fn = self.nb.add_loss_fn(loss_type=loss_type,
+                                    target=self.nb.graph_dict["target_q"][0],
+                                    prediction=q_sa,
+                                    weights=w_,
+                                    params=loss_params)
+        self.nb.graph_dict["IS_weights"] = [w, "p"]
+        self.nb.graph_dict["loss"] = [loss_fn, "o"]
+
+
+class _DuelingDRQN(_DuelingDQN):
+    def __init__(self, network_builder):
+        _DuelingDQN.__init__(self, network_builder)
+    
+    # Override DQN function to add batch_size
+    def _add_reserved_placeholders(self):
+        # <actions> must be [?, 2] rather than [None] due to tf indexing 
+        # constraints (tf.gather_nd). Alternatively, could switch to 
+        # indexing similar to 
+        # https://github.com/awjuliani/DeepRL-Agents/blob/master/Vanilla-Policy.ipynb
+        self.nb.graph_dict["target_q"] = [tf.placeholder(tf.float32, 
+                                                shape=[None],
+                                                name="target_q"), "p"]
+        self.nb.graph_dict["actions"] = [tf.placeholder(tf.int32,
+                                                shape=[None, 2],
+                                                name="actions"), "p"]
+        self.nb.graph_dict["batch_size"] = [tf.placeholder(tf.int32,
+                                                           shape=[],
+                                                           name="batch_size"), "p"]
+    
+    # Override DQN function to apply loss mask
+    def _add_loss_fn(self, loss_type, loss_params):
+        # Extract Q(s,a) and utilize importance sampling weights
+        q_sa = tf.gather_nd(self.nb.graph_dict["Q"][0], 
+                            self.nb.graph_dict["actions"][0], 
+                            name="q_sa")
+        w = tf.placeholder(tf.float32, shape=[None], name="IS_weights")
+
+        # Create mask to ignore first mask_len losses in each trace
+        w_ = w
+        if "mask" in loss_params:
+            idx = loss_params.index("mask")
+            mask_len = loss_params.pop(idx+1)
+            _ = loss_params.pop(idx)
+            if not isinstance(mask_len, int) or mask_len < 0:
+                raise ValueError("Length of loss mask must be nonnegative integer.")
+            if mask_len > 0:
+                with tf.name_scope("loss_mask"):
+                    batch_size = self.nb.graph_dict["batch_size"][0]
+                    tr_len = tf.shape(w)[0] // batch_size
+                    mask_len = tf.minimum(mask_len, tr_len)
+                    mask_zeros = tf.zeros([batch_size, mask_len])
+                    mask_ones = tf.ones([batch_size, tr_len - mask_len])
+                    w_ = tf.reshape(tf.concat([mask_zeros, mask_ones], axis=1), [-1])
+    
+        # Add loss function
+        loss_fn = self.nb.add_loss_fn(loss_type=loss_type,
+                                    target=self.nb.graph_dict["target_q"][0],
+                                    prediction=q_sa,
+                                    weights=w_,
+                                    params=loss_params)
+        self.nb.graph_dict["IS_weights"] = [w, "p"]
+        self.nb.graph_dict["loss"] = [loss_fn, "o"]
 
 class _AC:
     def __init__(self, network_builder):

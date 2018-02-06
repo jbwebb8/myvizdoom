@@ -7,10 +7,12 @@ import json
 ###############################################################################
 
 def create_agent(agent_filename, **kwargs):
-    from agent import Agent, DQNAgent, DDQNAgent, ACERAgent, PositionEncoder
+    from agent import Agent, DQNAgent, DDQNAgent, DRQNAgent, DDRQNAgent, ACERAgent, PositionEncoder
     agent_types = {"agent": Agent.Agent,
                    "dqn": DQNAgent.DQNAgent,
                    "ddqn": DDQNAgent.DDQNAgent,
+                   "drqn": DRQNAgent.DRQNAgent,
+                   "ddrqn": DDRQNAgent.DDRQNAgent,
                    "acer": ACERAgent.ACERAgent,
                    "position": PositionEncoder.PositionEncoder}
     agent_file = json.loads(open(agent_filename).read())
@@ -18,9 +20,10 @@ def create_agent(agent_filename, **kwargs):
     return agent_types[agent_type](agent_file=agent_filename, **kwargs)
 
 def create_network(network_filename, **kwargs):
-    from network import DQNetwork, ACNetwork, PositionEncoder
+    from network import DQNetwork, DRQNetwork, ACNetwork, PositionEncoder
     network_types = {"dqn": DQNetwork.DQNetwork,
                      "dueling_dqn": DQNetwork.DQNetwork,
+                     "drqn": DRQNetwork.DRQNetwork,
                      "ac": ACNetwork.ACNetwork,
                      "position": PositionEncoder.PositionEncoder}
     net_file = json.loads(open(network_filename).read())

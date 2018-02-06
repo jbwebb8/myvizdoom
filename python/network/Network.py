@@ -131,17 +131,56 @@ class Network:
             return agent_state
     
     def _check_actions(self, actions):
-        if actions.ndim < 2:
+        try:
+            ndim = actions.ndim
+        except AttributeError: # not numpy array
+            actions_ = np.asarray(actions)
+            ndim = actions_.ndim
+            if ndim == 0: # not list or tuple
+                actions_ = np.asarray([actions])
+                ndim = actions_.ndim
+            actions = actions_
+        if actions.ndim < 2 or actions.shape[1] < 2:
             return np.column_stack([np.arange(actions.shape[0]), actions])
         else:
             return actions
 
     def _check_train_mode(self, feed_dict):
+        """
+        Adds training-dependent parameters to feed_dict if exist:
+        - is_training: True if training
+        - rnn_states, rnn_init_states: Uses current RNN state if testing,
+          otherwise uses initial states. Ignores if no RNN in graph.
+        """
+        # Feed is_training if exists
         try:
             feed_dict[self.is_training] = self.train_mode
         except AttributeError:
             pass
+        
+        # Feed initial (training) or current (testing) RNN states if RNN defined
+        try:
+            if self.train_mode:
+                self.reset_rnn_state(batch_size=self.train_batch_size)
+                batch_size_ = self.train_batch_size
+            else:
+                batch_size_ = 1
+            feed_dict.update({rs_: rs for rs_, rs in 
+                              zip(self.rnn_states, self.rnn_current_states)})
+            feed_dict[self.batch_size] = batch_size_
+            
+        except AttributeError:
+            pass
+
         return feed_dict
+
+    def reset_rnn_state(self, batch_size=1):
+        """Placeholder function for RNN"""
+        pass
+    
+    def update_rnn_state(self, s1):
+        """Placeholder function for RNN"""
+        pass
 
     def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)
