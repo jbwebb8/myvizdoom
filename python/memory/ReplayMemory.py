@@ -10,7 +10,17 @@ class ReplayMemory:
                  state_shape, 
                  num_game_var, 
                  input_overlap=0,
-                 trajectory_length=1):
+                 trajectory_length=1,
+                 n_step=1,
+                 aux_var_shapes=[]):
+        # Store memory parameters
+        self.state_shape = state_shape
+        self.num_game_var = num_game_var
+        self.capacity = capacity
+        self.size = 0
+        self.pos = 0
+        self.n_step = n_step
+        
         # Determine s2 shape based on overlap
         self.overlap = input_overlap
         self.chdim = np.argmin(state_shape)
@@ -26,6 +36,8 @@ class ReplayMemory:
         self.a = np.zeros(capacity, dtype=np.int32)
         self.r = np.zeros(capacity, dtype=np.float32)
         self.isterminal = np.zeros(capacity, dtype=np.float32)
+        self.aux_vars = [] # auxiliary variables to additionally be stored
+        self.add_auxiliary_variables(aux_var_shapes)
 
         # Get trajectory parameter(s) of either form:
         # A) [start_length, stop_length, const_fraction, decay_fraction]
@@ -61,12 +73,11 @@ class ReplayMemory:
             self.tr_len_decay = 0.0
             self.tr_len = self.tr_len_start 
 
-        # Store other parameters
-        self.state_shape = state_shape
-        self.num_game_var = num_game_var
-        self.capacity = capacity
-        self.size = 0
-        self.pos = 0
+    def add_auxiliary_variables(self, aux_var_shapes):
+        for s in aux_var_shapes:
+            if not isinstance(s, list):
+                s = [s]
+            self.aux_vars.append(np.zeros([self.capacity] + s, dtype=np.float32))
 
     def update_trajectory_length(self, epoch, total_epochs):
         frac_train = epoch / total_epochs
@@ -84,7 +95,7 @@ class ReplayMemory:
         if not isinstance(self.tr_len, int):
             self.tr_len = int(self.tr_len)
 
-    def add_transition(self, s1, action, s2, isterminal, reward):
+    def add_transition(self, s1, action, s2, isterminal, reward, *args):
         # Store transition variables at current position
         self.s1[0][self.pos, ...] = s1[0]
         if not isterminal:
@@ -98,6 +109,14 @@ class ReplayMemory:
         self.isterminal[self.pos] = isterminal
         self.r[self.pos] = reward
 
+        # Store auxiliary variables if specified
+        if len(args) != len(self.aux_vars):
+            raise SyntaxError("Number of auxiliary variables does not match"
+                              + "number of arguments: %d vars, %d args"
+                              % (len(self.aux_vars), len(args)))
+        for i, aux_var in enumerate(self.aux_vars):
+            aux_var[self.pos] = args[i]
+
         # Increment pointer or start over if reached end
         self.pos = (self.pos + 1) % self.capacity
         self.size = min(self.size + 1, self.capacity)
@@ -105,7 +124,7 @@ class ReplayMemory:
     def get_sample(self, sample_size):
         # Get random minibatch of indices
         idx = np.random.randint(0, self.size, sample_size)
-        x, y = np.meshgrid(idx, np.arange(self.tr_len))
+        x, y = np.meshgrid(idx, np.arange(self.tr_len) * self.n_step) # non-overlapping n-step sequences
         idx = np.transpose(x + y).flatten() # [i, i+1, ..., i+n, j, j+1, ..., j+n, k...]
         idx %= self.capacity # wrap end cases
 
@@ -134,9 +153,13 @@ class ReplayMemory:
         a_sample = self.a[idx]
         isterminal_sample = self.isterminal[idx]
         r_sample = self.r[idx]
+        aux_var_sample = []
+        for aux_var in self.aux_vars:
+            aux_var_sample.append(aux_var[idx])
 
         # Return importance sampling weights of one (stochastic distribution)
         w = np.ones([sample_size * self.tr_len])
 
-        return s1_sample, a_sample, s2_sample, isterminal_sample, r_sample, w, idx
+        return (s1_sample, a_sample, s2_sample, isterminal_sample, r_sample,
+                w, idx, *aux_var_sample)
         

@@ -10,11 +10,18 @@ class PrioritizedReplayMemory(ReplayMemory):
                  num_game_var, 
                  input_overlap=0,
                  trajectory_length=1,
+                 n_step=1,
                  alpha=0.6, 
                  beta_start=0.4, 
                  beta_end=1.0):
         # Initialize base replay memory
-        ReplayMemory.__init__(self, capacity, state_shape, num_game_var, input_overlap)
+        ReplayMemory.__init__(self, 
+                              capacity, 
+                              state_shape, 
+                              num_game_var, 
+                              input_overlap=input_overlap,
+                              trajectory_length=trajectory_length,
+                              n_step=n_step)
 
         # Create new blank heap (see iPython notebook for details)
         heap_size = 2 ** math.ceil(math.log(capacity, 2)) + capacity
@@ -31,7 +38,7 @@ class PrioritizedReplayMemory(ReplayMemory):
                       + self.beta_start )
 
     # Overrides base ReplayMemory function with prioritization
-    def add_transition(self, s1, action, s2, isterminal, reward):
+    def add_transition(self, s1, action, s2, isterminal, reward, *args):
         # Store transition variables at current position
         self.s1[0][self.pos, ...] = s1[0]
         if not isterminal:
@@ -44,6 +51,14 @@ class PrioritizedReplayMemory(ReplayMemory):
         self.a[self.pos] = action
         self.isterminal[self.pos] = isterminal
         self.r[self.pos] = reward
+
+        # Store auxiliary variables if specified
+        if len(args) != len(self.aux_vars):
+            raise SyntaxError("Number of auxiliary variables does not match"
+                              + "number of arguments: %d vars, %d args"
+                              % (len(self.aux_vars), len(args)))
+        for i, aux_var in enumerate(self.aux_vars):
+            aux_var[self.pos] = args[i]
         
         # Create initial priority equal to current maximum:
         # p_t = max_i<t(p_i)
@@ -135,7 +150,7 @@ class PrioritizedReplayMemory(ReplayMemory):
         # is 1, then they simply leave the variables unchanged.
         # Sample probability is taken from the last state of the trajectory,
         # so add previous n states to transition indices.
-        x, y = np.meshgrid(t, np.arange(self.tr_len))
+        x, y = np.meshgrid(t, np.arange(self.tr_len) * self.n_step)
         t = np.transpose(x - y).flatten() # [i-n, i-n+1, ..., i, j-n, j-n+1, ..., j, ...]
         t %= self.capacity # wrap end cases (not needed if subtracting)
 
@@ -167,8 +182,12 @@ class PrioritizedReplayMemory(ReplayMemory):
         a_sample = self.a[t]
         isterminal_sample = self.isterminal[t]
         r_sample = self.r[t]
+        aux_var_sample = []
+        for aux_var in self.aux_vars:
+            aux_var_sample.append(aux_var[t])
 
-        return s1_sample, a_sample, s2_sample, isterminal_sample, r_sample, w, t
+        return (s1_sample, a_sample, s2_sample, isterminal_sample, r_sample, 
+            w, t, *aux_var_sample)
 
     def update_priority(self, delta, pos):
         # Update priority to reflect proportional prioritization:
