@@ -10,8 +10,9 @@ _vizdoom.ini
 # Programs
 .vscode
 
-# Temporary files
+# Temporary/backup files
 *.bak
+*-checkpoint.ipynb
 tmp
 temp
 
