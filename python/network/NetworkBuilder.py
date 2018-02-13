@@ -122,6 +122,8 @@ class NetworkBuilder:
     # Adds loss function to graph
     def add_loss_fn(self, loss_type, target, prediction, 
                     weights=None, params=None):
+        if not isinstance(params, list):
+            params = [params]
         error = tf.subtract(target, prediction, name="error")
         if weights is not None:
             error = weights * error
@@ -151,6 +153,15 @@ class NetworkBuilder:
                                 name="policy_loss")
             tf.add_to_collection(tf.GraphKeys.LOSSES, pi_loss_fn)
             return pi_loss_fn
+
+        elif loss_type.lower() == "softmax_cross_entropy_with_logits":
+            logits = prediction
+            sum_axis = params[0]
+            logits_shifted = logits - tf.reduce_max(logits, axis=sum_axis, keep_dims=True)
+            log_sum_exp = tf.log(tf.reduce_sum(tf.exp(logits_shifted), axis=sum_axis, keep_dims=True)) # ln(Σe^x)
+            xent = -tf.reduce_sum(tf.multiply(target, (logits_shifted - log_sum_exp)))
+            tf.add_to_collection(tf.GraphKeys.LOSSES, xent)
+            return xent
 
         ###########################################################
         # Add new loss function support here.
@@ -249,6 +260,8 @@ class NetworkBuilder:
             builder_type = _DuelingDRQN(self)
         elif net_type == "position":
             builder_type = _PositionEncoder(self)
+        elif net_type == "decoder":
+            builder_type = _Decoder(self)
         elif net_type == "custom":
             builder_type = _Custom(self)
         else:
@@ -338,12 +351,15 @@ class NetworkBuilder:
 
         return self.graph_dict, self.data_format           
 
-    def add_summaries(self):
+    def add_summaries(self, var_list=None, val_list=None, loss_list=None):
         # Create summaries for trainable variables (weights and biases)
         var_sum = []
+        if var_list is None:
+            # Get all trainable variables
+            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                         scope=self.network.scope)
         with tf.name_scope("trainable_variables"):
-            for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                         scope=self.network.scope):
+            for var in var_list:
                 with tf.name_scope(var.name[:-2]):
                     mean = tf.reduce_mean(var)
                     var_sum.append(tf.summary.scalar("mean", mean))
@@ -356,32 +372,31 @@ class NetworkBuilder:
         
         # Create summaries for neurons (% activated, values)
         neur_sum = []
+        if val_list is None:
+            # Get all layers that are not empty lists
+            val_list = self.graph_dict
+            val_list = [v for v in val_list if (isinstance(val_list[v], list)
+                                                and (len(val_list[v]) > 0)
+                                                and (val_list[v][-1] == "l"))]
         with tf.name_scope("neurons"):
-            for name in self.graph_dict:
-                # Skip if not instance of nonempty list to avoid error
-                if (not isinstance(self.graph_dict[name], list) or
-                    len(self.graph_dict[name]) == 0):
-                    continue
-
-                # Otherwise, add activation and value summary if layer
-                elif self.graph_dict[name][-1] == "l":
-                    layer = self.graph_dict[name][0]
-                    with tf.name_scope(name):
-                        num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
-                        num_act = tf.cast(tf.count_nonzero(layer), tf.float64)
-                        frac_act = tf.div(num_act, num_elements) # TODO: get fraction of neurons ever activated
-                        neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
-                        neur_sum.append(tf.summary.histogram("values", layer))
+            for v in val_list:
+                layer = self.graph_dict[v][0]
+                with tf.name_scope(v):
+                    num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
+                    num_act = tf.cast(tf.count_nonzero(layer), tf.float64)
+                    frac_act = tf.div(num_act, num_elements) # TODO: get fraction of neurons ever activated
+                    neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
+                    neur_sum.append(tf.summary.histogram("values", layer))
         
         # Create summaries for gradients
         grad_sum = []
+        if loss_list is None:
+            # Get all losses classified under LOSSES GraphKey
+            loss_list = tf.get_collection(tf.GraphKeys.LOSSES,
+                                        scope=self.network.scope)
+        optimizer = self.graph_dict["optimizer"][0]
         with tf.name_scope("gradients"):
-            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
-                                        scope=self.network.scope)
-            loss = tf.get_collection(tf.GraphKeys.LOSSES,
-                                        scope=self.network.scope)
-            optimizer = self.graph_dict["optimizer"][0]
-            for i, l in enumerate(loss):
+            for i, l in enumerate(loss_list):
                 gvs = optimizer.compute_gradients(l, var_list=var_list)
                 for g, v in gvs:
                     with tf.name_scope(v.name[:-2]):
@@ -391,13 +406,11 @@ class NetworkBuilder:
         # Create summaries for losses
         loss_sum = []
         with tf.name_scope("losses"):
-            loss = tf.get_collection(tf.GraphKeys.LOSSES,
-                                     scope=self.network.scope)
-            for l in loss:
+            for l in loss_list:
                 mean_loss = tf.reduce_mean(l)
                 loss_sum.append(tf.summary.scalar(l.name[:-2], mean_loss)) 
 
-        return var_sum, neur_sum, grad_sum, loss_sum
+        return [s for s in [var_sum, neur_sum, grad_sum, loss_sum] if len(s) > 0]
 
 class _DQN:
     def __init__(self, network_builder):
@@ -676,7 +689,142 @@ class _PositionEncoder:
         self.nb.graph_dict["IS_weights"] = [w, "p"]
         self.nb.graph_dict["loss"] = [loss_fn, "o"]
 
+class _Decoder:
+
+    def __init__(self, network_builder):
+        self.nb = network_builder
+
+    def _add_reserved_placeholders(self):
+        self.nb.graph_dict["target_pos"] = [tf.placeholder(tf.float32, 
+                                                           shape=[None, 2],
+                                                           name="position"), "p"]
+        self.nb.graph_dict["target_act"] = [tf.placeholder(tf.int32, 
+                                                           shape=[None], 
+                                                           name="action"), "p"]
+        self.nb.graph_dict["IS_weights"] = [tf.placeholder(tf.float32, 
+                                                           shape=[None], 
+                                                           name="IS_weights"), "p"]
+    
+    def _add_output_layer(self, layer):
+        if layer["name"].lower() in ["pos", "position"]:
+            layer["name"] = "POS"
+            layer["num_outputs"] = 2
+        elif layer["name"].lower() == "r":
+            layer["name"] = "R"
+            layer["num_outputs"] = 1
+        elif layer["name"].lower() in ["act", "actions"]:
+            layer["name"] = "ACT_logits"
+            #layer["num_outputs"] = self.nb.network.encoding_net.num_outputs
+        return self.nb.add_layer(layer)
+    
+    def _add_reserved_ops(self):
+        # Create softmax for action prediction (logits needed for stable loss fn)
+        if "ACT_logits" in self.nb.graph_dict:
+            act_logits = self.nb.graph_dict["ACT_logits"][0]
+            self.nb.graph_dict["ACT_softmax"] = tf.nn.softmax(act_logits)
+    
+    def _add_loss_fn(self, loss_type, loss_params):
+        w = tf.placeholder(tf.float32, shape=[None], name="IS_weights")
+        loss_list = []
+
+        # Get loss types and params
+        if loss_type.lower() == "standard":
+            loss_type_pos = "mean_squared_error"
+            loss_params_pos = None
+            loss_type_r = "mean_squared_error"
+            loss_params_r = None
+            loss_type_act = "softmax_cross_entropy_with_logits"
+            loss_params_act = 1 # axis to sum over
+        else:
+            raise ValueError("Loss type \"" + loss_type 
+                             + "\" not supported for Decoder class.")
+        
+        # Position loss: default is MSE
+        if "POS" in self.nb.graph_dict:
+            with tf.name_scope("loss_pos"):
+                pred_pos = self.nb.graph_dict["POS"][0]
+                pred_len = pred_pos.get_shape().as_list()[1]
+                target_pos = self.nb.graph_dict["target_pos"][0]
+                target_pos = tf.reshape(target_pos, shape=[-1, pred_len, 2])
+                w_ = tf.expand_dims(tf.expand_dims(w, axis=1), axis=2)
+                loss_pos = self.nb.add_loss_fn(loss_type=loss_type_pos, 
+                                            target=target_pos, 
+                                            prediction=pred_pos, 
+                                            weights=w_, 
+                                            params=loss_params_pos)
+                self.nb.graph_dict["loss_pos"] = [loss_pos, "o"]
+                loss_list.append(loss_pos)
+        
+        # Radius loss: default is MSE
+        if "R" in self.nb.graph_dict:
+            with tf.name_scope("loss_r"):
+                pred_r = self.nb.graph_dict["R"][0]
+                pred_len = pred_r.get_shape().as_list()[1]
+                if "POS" not in self.nb.graph_dict:
+                    target_pos = self.nb.graph_dict["target_pos"][0]
+                    target_pos = tf.reshape(target_pos, shape=[-1, pred_len, 2])
+                target_r = tf.sqrt(tf.reduce_sum(tf.square(target_pos), 
+                                                 axis=2, 
+                                                 keep_dims=True),
+                                   name="target_r")
+                w_ = tf.expand_dims(tf.expand_dims(w, axis=1), axis=2)
+                loss_r = self.nb.add_loss_fn(loss_type=loss_type_r,
+                                             target=target_r,
+                                             prediction=pred_r,
+                                             weights=w_,
+                                             params=loss_params_r)
+                self.nb.graph_dict["loss_r"] = [loss_r, "o"]
+                loss_list.append(loss_r)
+        
+        # Action loss: default is cross-entropy
+        if "ACT_logits" in self.nb.graph_dict:
+            with tf.name_scope("loss_act"):
+                pred_act = self.nb.graph_dict["ACT_logits"][0]
+                pred_len = pred_act.get_shape().as_list()[1]
+                target_act = self.nb.graph_dict["target_act"][0]
+                target_act_rs = tf.reshape(target_act, shape=[-1, pred_len])
+                target_act_oh = tf.one_hot(target_act_rs, self.nb.network.encoding_net.num_outputs)
+                w_ = tf.expand_dims(w, axis=1)
+                loss_act = self.nb.add_loss_fn(loss_type=loss_type_act, 
+                                            target=target_act_oh, 
+                                            prediction=pred_act, 
+                                            weights=w_, 
+                                            params=loss_params_act)
+                self.nb.graph_dict["loss_act"] = [loss_act, "o"]
+                loss_list.append(loss_act)
+
+        self.nb.graph_dict["IS_weights"] = [w, "p"]
+        loss_tot = tf.add_n(loss_list, name="loss_tot")
+        self.nb.graph_dict["loss_tot"] = [loss_tot, "o"]
+
+# TODO: give stand-alone capability to JSON file building
 class _Custom:
+
+    def __init__(self, network_builder):
+        self.nb = network_builder
+
+    def _add_reserved_placeholders(self):
+        self.nb.graph_dict["target"] = tf.placeholder(tf.float32, 
+                                                      shape=[None],
+                                                      name="target")
+    
+    def _add_output_layer(self, layer):
+        self.output_name = layer["name"]
+        return self.nb.add_layer(layer)
+    
+    def _add_reserved_ops(self):
+        pass
+    
+    def _add_loss_fn(self, loss_type, loss_params):
+        target = self.nb.graph_dict["target"]
+        prediction = self.nb.graph_dict[self.output_name]
+        self.nb.add_loss_fn(loss_type, target, prediction, 
+                            weights=None, params=loss_params)
+
+# Do not use the class below. It is just a template for new class creation.
+# If you want to build the network entirely from the JSON file, then use the
+# _Custom class
+class _Template:
 
     def __init__(self, network_builder):
         self.nb = network_builder

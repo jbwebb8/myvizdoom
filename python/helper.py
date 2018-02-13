@@ -7,25 +7,28 @@ import json
 ###############################################################################
 
 def create_agent(agent_filename, **kwargs):
-    from agent import Agent, DQNAgent, DDQNAgent, DRQNAgent, DDRQNAgent, ACERAgent, PositionEncoder
+    from agent import Agent, DQNAgent, DDQNAgent, DRQNAgent, DDRQNAgent, \
+        ACERAgent, PositionEncoder, DecoderAgent
     agent_types = {"agent": Agent.Agent,
                    "dqn": DQNAgent.DQNAgent,
                    "ddqn": DDQNAgent.DDQNAgent,
                    "drqn": DRQNAgent.DRQNAgent,
                    "ddrqn": DDRQNAgent.DDRQNAgent,
                    "acer": ACERAgent.ACERAgent,
-                   "position": PositionEncoder.PositionEncoder}
+                   "position": PositionEncoder.PositionEncoder,
+                   "decoder": DecoderAgent.DecoderAgent}
     agent_file = json.loads(open(agent_filename).read())
     agent_type = agent_file["agent_args"]["type"]
     return agent_types[agent_type](agent_file=agent_filename, **kwargs)
 
 def create_network(network_filename, **kwargs):
-    from network import DQNetwork, DRQNetwork, ACNetwork, PositionEncoder
+    from network import DQNetwork, DRQNetwork, ACNetwork, PositionEncoder, DecoderNetwork
     network_types = {"dqn": DQNetwork.DQNetwork,
                      "dueling_dqn": DQNetwork.DQNetwork,
                      "drqn": DRQNetwork.DRQNetwork,
                      "ac": ACNetwork.ACNetwork,
-                     "position": PositionEncoder.PositionEncoder}
+                     "position": PositionEncoder.PositionEncoder,
+                     "decoder": DecoderNetwork.DecoderNetwork}
     net_file = json.loads(open(network_filename).read())
     net_type = net_file["global_features"]["type"].lower()
     return network_types[net_type](network_file=network_filename, **kwargs)
