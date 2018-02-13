@@ -357,7 +357,7 @@ class DQNAgent(Agent):
         
         # With probability epsilon make a random action; otherwise, choose
         # best action.
-        epsilon = get_exploration_rate(epoch, epoch_tot)
+        epsilon = self.get_exploration_rate(epoch, epoch_tot)
         if random() <= epsilon:
             a = randint(0, self.num_actions - 1)
         else:

@@ -1,4 +1,5 @@
 from agent.DQNAgent import DQNAgent
+import numpy as np
 
 class DRQNAgent(DQNAgent):
 
@@ -38,15 +39,8 @@ class DRQNAgent(DQNAgent):
                 # is handled internally by the memory class, and traces are 
                 # reshaped internally in the tf graph to [batch_size, trace_length, ...]
                 s1, a, s2, isterminal, r, w, idx = self.memory.get_sample(self.batch_size)
-                target_q = self._get_target_q([s1[0], s1[1]], 
-                                              a, 
-                                              [s2[0], s2[1]], 
-                                              isterminal, 
-                                              r)
-                _ = self.network.learn([s1[0], s1[1]], 
-                                       a, 
-                                       target_q, 
-                                       weights=w)
+                target_q = self._get_target_q(s1, a, s2, isterminal, r)
+                _ = self.network.learn(s1, a, target_q, weights=w)
 
             return learn_from_memory
 
@@ -59,7 +53,6 @@ class DRQNAgent(DQNAgent):
                 # Get minibatch of replay memory trajectories: see note above
                 s1, a, s2, isterminal, r, w, idx = self.memory.get_sample(self.batch_size)
                 q = self.network.get_q_values(s1) # before weight updates
-                t = self.memory.tr_len # for aesthetics
                 target_q = self._get_target_q(s1, a, s2, isterminal, r) 
                 _ = self.network.learn(s1, a, target_q, weights=w) 
 
