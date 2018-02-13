@@ -67,6 +67,7 @@ class PrioritizedReplayMemory(ReplayMemory):
 
         # Increment pointer or start over if reached end (sliding window)
         self.pos = (self.pos + 1) % self.capacity
+        self.lap += (self.pos == 0)
         self.size = min(self.size + 1, self.capacity)
         
     # Recursive function to update parent of node j
@@ -104,7 +105,7 @@ class PrioritizedReplayMemory(ReplayMemory):
             return self._retrieve(2 * node + 1, m)
 
     # Overrides base ReplayMemory function by sampling based on priority
-    def get_sample(self, sample_size):
+    def get_sample(self, sample_size, idx_start=None, idx_end=None):
         # Initialize matrices
         m = np.zeros(sample_size)
 
@@ -145,18 +146,24 @@ class PrioritizedReplayMemory(ReplayMemory):
         ###
         w = (1 / self.size + 1 / P) ** self.beta
         w = w / np.max(w) # normalize weights so all <= 1.0
-        
+
         # The next two blocks add trajectories. If trajectory length
         # is 1, then they simply leave the variables unchanged.
-        # Sample probability is taken from the last state of the trajectory,
-        # so add previous n states to transition indices.
-        x, y = np.meshgrid(t, np.arange(self.tr_len) * self.n_step)
-        t = np.transpose(x - y).flatten() # [i-n, i-n+1, ..., i, j-n, j-n+1, ..., j, ...]
-        t %= self.capacity # wrap end cases (not needed if subtracting)
 
-        # Because sampling probability is based only on the last state, weights
-        # derived from the last transition must be copied to the rest of the
-        # transitions in each trajectory.
+        # Extend transition indices to cover (valid) trajectories.
+        # Default behavior is to extend backwards from the given t
+        # (adding the previous n states to the transition indices),
+        # thus sampling based on the probability of the last transition.
+        t = self._get_valid_idx_trajectories(t, 
+                                             idx_start=idx_start, 
+                                             idx_end=idx_end)
+
+        # Because sampling probability is based only on one state, weights
+        # derived from that transition must be copied to the rest of the
+        # transitions in each trajectory. Note that this is independent of 
+        # which direction the trajectories were extended, i.e. 
+        # [i-n, i-n+1, ..., i, j-n, j-n+1, ..., j, ...] (backwards), or
+        # [i, i+1, ..., i+n, j, j+1, ..., j+n, k...] (forwards)
         w = np.transpose(np.tile(w, [self.tr_len, 1])).flatten()
 
         # Make list of states

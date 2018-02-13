@@ -19,6 +19,7 @@ class ReplayMemory:
         self.capacity = capacity
         self.size = 0
         self.pos = 0
+        self.lap = 0
         self.n_step = n_step
         
         # Determine s2 shape based on overlap
@@ -119,14 +120,51 @@ class ReplayMemory:
 
         # Increment pointer or start over if reached end
         self.pos = (self.pos + 1) % self.capacity
+        self.lap += (self.pos == 0)
         self.size = min(self.size + 1, self.capacity)
 
-    def get_sample(self, sample_size):
+    def _get_valid_idx(self, idx, valid_idx, side='right'):
+        # Check intent since 'right' assumed below
+        if side not in ['left', 'right']:
+            raise ValueError("Undefined value \"" + side + "\" for arg 'side'.")
+        
+        # Round to nearest right-sided valid idx doing left-sided search
+        valid_idx = np.sort(valid_idx) # sort if not already sorted
+        new_idx_ = np.searchsorted(valid_idx, idx, side='left') # right-sided round
+        new_idx_ %= len(valid_idx) # wrap end case
+        
+        # Round to nearest left-sided valid idx if specified
+        if side == 'left':
+            new_idx = valid_idx[new_idx_]
+            new_idx_ = new_idx_ - (new_idx != idx) # left shift if not equal
+        
+        return valid_idx[new_idx_]
+
+    def _get_valid_idx_trajectories(self, idx, idx_start=None, idx_end=None):
+        # If shifted to valid start values, move forward in trajectory
+        if idx_start is not None:
+            idx = self._get_valid_idx(idx, idx_start, side='left')
+            x, y = np.meshgrid(idx, np.arange(self.tr_len) * self.n_step) # non-overlapping n-step sequences
+            idx = np.transpose(x + y).flatten() # [i, i+1, ..., i+n, j, j+1, ..., j+n, k...]
+            idx %= self.capacity # wrap end cases
+        
+        # Otherwise, move backward in trajectory
+        else:
+            if idx_end is not None:
+                idx = self._get_valid_idx(idx, idx_end, side='right')
+            x, y = np.meshgrid(idx, np.arange(self.tr_len) * self.n_step) # non-overlapping n-step sequences
+            idx = np.transpose(x - y).flatten() # [i-n, i-n+1, ..., i, j-n, j-n+1, ..., j, ...]
+        
+        return idx
+
+    def get_sample(self, sample_size, idx_start=None, idx_end=None):
         # Get random minibatch of indices
         idx = np.random.randint(0, self.size, sample_size)
-        x, y = np.meshgrid(idx, np.arange(self.tr_len) * self.n_step) # non-overlapping n-step sequences
-        idx = np.transpose(x + y).flatten() # [i, i+1, ..., i+n, j, j+1, ..., j+n, k...]
-        idx %= self.capacity # wrap end cases
+
+        # Extend idx to cover (valid) trajectories
+        idx = self._get_valid_idx_trajectories(idx, 
+                                               idx_start=idx_start, 
+                                               idx_end=idx_end)
 
         # TODO: find isterminal in sequences and cut short
           
