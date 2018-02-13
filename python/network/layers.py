@@ -25,6 +25,8 @@ def create_layer(input_layer,
     elif layer_type.lower() == "rnn":
         layer_dict["kwargs"]["batch_size"] = batch_size
         return rnn(input_layer, **layer_dict["kwargs"])
+    elif layer_type.lower() == "stack":
+        return stack(input_layer, **layer_dict["kwargs"])
     else:
         raise ValueError("Layer type \"" + layer_type + "\" not supported.")
 
@@ -346,6 +348,12 @@ def dropout(x,
                        x)
 
         return out
+
+def stack(x,
+          axis=-1,
+          scope="stack"):
+    with tf.name_scope(scope):
+        return tf.stack(x, axis=axis, name="stack")
 
 ###############################################################################
 # Layers in development
