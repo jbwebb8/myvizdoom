@@ -51,23 +51,16 @@ class PositionEncoder(Network):
                         global_step=global_step,
                         write_meta_graph=save_meta)
         if save_summaries:
-            var_sum_ = self.sess.run(self.var_sum)
-            self.writer.add_summary(var_sum_, global_step)
-            if test_batch is not None:
-                s1, position, w = test_batch
-                s1 = self._check_state(s1)
-                feed_dict = {self.state: s1, self.position: position, 
-                                self.IS_weights: w}
-                feed_dict = self._check_train_mode(feed_dict)
-                neur_sum_ = self.sess.run(self.neur_sum,
-                                            feed_dict=feed_dict)
-                self.writer.add_summary(neur_sum_, global_step)
-                grad_sum_ = self.sess.run(self.grad_sum,
-                                            feed_dict=feed_dict)
-                self.writer.add_summary(grad_sum_, global_step)
-                loss_sum_ = self.sess.run(self.loss_sum,
-                                          feed_dict=feed_dict)
-                self.writer.add_summary(loss_sum_, global_step)
+            if test_batch is None:
+                raise ValueError("Test batch must be provided "
+                                 + "to save summaries.")
+            s1, position, w = test_batch
+            s1 = self._check_state(s1)
+            feed_dict = {self.state: s1, self.position: position, 
+                            self.IS_weights: w}
+            feed_dict = self._check_train_mode(feed_dict)
+            sum_list_ = self.sess.run(self.sum_list, feed_dict=feed_dict)
+            self.writer.add_summary(sum_list_, global_step)
             self.writer.flush()
             # TODO: implement event accumulator to save files (esp. histograms)
             # to CSV files.

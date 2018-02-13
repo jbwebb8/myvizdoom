@@ -29,9 +29,17 @@ class Network:
     Output directory branched into log directory for FileWriter and params
     directory for Saver.
     """
-    def __init__(self, phi, num_channels, num_outputs, output_directory,
-                 session, train_mode=True, learning_rate=None, 
-                 network_file=None, params_file=None, scope=""):
+    def __init__(self, 
+                 phi, 
+                 num_channels, 
+                 num_outputs, 
+                 output_directory,
+                 session, 
+                 train_mode=True, 
+                 learning_rate=None, 
+                 network_file=None, 
+                 params_file=None, 
+                 scope=""):
         # Set basic network parameters and objects
         self.input_depth = phi * num_channels
         self.num_outputs = num_outputs
@@ -81,15 +89,12 @@ class Network:
                     
             # Create summaries for TensorBoard visualization
             with tf.name_scope("summaries"):
-               var_sum, neur_sum, grad_sum, loss_sum = builder.add_summaries()
+               sum_list = builder.add_summaries()
             
             # Create objects for saving
             self.saver = tf.train.Saver(max_to_keep=None)        
             self.graph = tf.get_default_graph() 
-            self.var_sum = tf.summary.merge(var_sum)
-            self.neur_sum = tf.summary.merge(neur_sum)
-            self.grad_sum = tf.summary.merge(grad_sum)
-            self.loss_sum = tf.summary.merge(loss_sum)
+            self.sum_list = tf.summary.merge(sum_list)
             self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
             self.ea = event_accumulator.EventAccumulator(self.log_dir)
 
