@@ -9,6 +9,7 @@ from random import randint, random
 import json
 import warnings
 import os, errno
+from utils import recursive_dict_search
 
 class Agent:
     """
@@ -319,22 +320,7 @@ class Agent:
         agent = json.loads(open(agent_file).read())
 
         # Convert "None" string to None type (not supported in JSON)
-        def recursive_search(d, keys):
-            if isinstance(d, dict):
-                for k, v in zip(d.keys(), d.values()):
-                    keys.append(k)
-                    recursive_search(v, keys)
-                if len(keys) > 0: # avoids error at end
-                    keys.pop()
-            else:
-                if d == "None":
-                    t = agent 
-                    for key in keys[:-1]:
-                        t = t[key]
-                    t[keys[-1]] = None
-                keys.pop()
-
-        recursive_search(agent, [])
+        recursive_dict_search(agent, "None", None)
 
         # TODO: implement get method to catch KeyError
         self.agent_name = agent["agent_args"]["name"]
