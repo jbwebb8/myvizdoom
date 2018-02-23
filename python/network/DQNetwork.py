@@ -10,7 +10,6 @@ class DQNetwork(Network):
     - target_q
     - loss
     - IS_weights
-    - optimizer
     - train_step
     - best_action
     """
@@ -36,7 +35,6 @@ class DQNetwork(Network):
         self.target_q = self.graph_dict["target_q"][0]
         self.loss = self.graph_dict["loss"][0]
         self.IS_weights = self.graph_dict["IS_weights"][0]
-        self.optimizer = self.graph_dict["optimizer"][0]
         self.train_step = self.graph_dict["train_step"][0]
         self.best_a = self.graph_dict["best_action"][0]
     
