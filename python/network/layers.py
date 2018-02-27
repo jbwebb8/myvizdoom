@@ -1,32 +1,45 @@
 import tensorflow as tf
 
 def create_layer(input_layer, 
-                 layer_dict, 
+                 layer_dict={}, 
                  data_format="NHWC", 
                  is_training=None,
-                 batch_size=None):
-    layer_type = layer_dict["type"]
+                 batch_size=None,
+                 **kwargs):
+    # Get layer type either through dict or kwarg
+    try:
+        layer_type = layer_dict["type"]
+    except KeyError:
+        layer_type = kwargs.pop("layer_type", None)
+        if layer_type is None:
+            raise SyntaxError("Layer type must be provided.")
+    
+    # Avoid KeyError
+    if "kwargs" not in layer_dict:
+        layer_dict["kwargs"] = {}
+    
+    # Return layer of specific type
     if layer_type.lower() == "conv2d":
         layer_dict["kwargs"]["data_format"] = data_format
-        return conv2d(input_layer, **layer_dict["kwargs"])
+        return conv2d(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "flatten":
         layer_dict["kwargs"]["data_format"] = data_format
-        return flatten(input_layer, **layer_dict["kwargs"])
+        return flatten(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "fully_connected":
-        return fully_connected(input_layer, **layer_dict["kwargs"])
+        return fully_connected(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "multi_input_fully_connected":
-        return multi_input_fully_connected(input_layer, **layer_dict["kwargs"])
+        return multi_input_fully_connected(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "dropout":
         layer_dict["kwargs"]["is_training"] = is_training
-        return dropout(input_layer, **layer_dict["kwargs"])
+        return dropout(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "noisy":
         layer_dict["kwargs"]["is_training"] = is_training
-        return noisy(input_layer, **layer_dict["kwargs"])
+        return noisy(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "rnn":
         layer_dict["kwargs"]["batch_size"] = batch_size
-        return rnn(input_layer, **layer_dict["kwargs"])
+        return rnn(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "stack":
-        return stack(input_layer, **layer_dict["kwargs"])
+        return stack(input_layer, **layer_dict["kwargs"], **kwargs)
     else:
         raise ValueError("Layer type \"" + layer_type + "\" not supported.")
 
@@ -470,6 +483,7 @@ def rnn(x,
         # specified; otherwise, one can be inferred from the other
         if trace_length is None and batch_size is None:
             trace_length = tf.placeholder(tf.int32, name="trace_length")
+            batch_size = tf.shape(x)[0] // trace_length # grab at runtime
             print("Warning: No placeholders found for \"trace_length\", \"batch_size\". "
                     + "One has been automatically created but may not be " 
                     + "passed to the Agent object. Consider adding "

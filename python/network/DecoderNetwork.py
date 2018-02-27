@@ -50,7 +50,6 @@ class DecoderNetwork():
 
             # Get other training variables
             self.IS_weights = self.graph_dict["IS_weights"][0]
-            self.optimizer = self.graph_dict["optimizer"][0]
             self.train_step = self.graph_dict["train_step"][0]
 
             # Add summaries

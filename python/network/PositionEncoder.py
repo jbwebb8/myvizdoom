@@ -7,7 +7,6 @@ class PositionEncoder(Network):
     - state
     - position
     - loss
-    - optimizer
     - train_step
     """
     def __init__(self, phi, num_channels, num_outputs, output_directory, 
@@ -31,7 +30,6 @@ class PositionEncoder(Network):
         self.position = self.graph_dict["position"][0]
         self.loss = self.graph_dict["loss"][0]
         self.IS_weights = self.graph_dict["IS_weights"][0]
-        self.optimizer = self.graph_dict["optimizer"][0]
         self.train_step = self.graph_dict["train_step"][0]
 
     def learn(self, s1, position, weights=None):

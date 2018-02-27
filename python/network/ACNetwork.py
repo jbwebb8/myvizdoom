@@ -27,7 +27,6 @@ class ACNetwork(Network):
         self.loss_pi = self.graph_dict["loss_pi"][0]
         self.loss_v = self.graph_dict["loss_v"][0]
         self.IS_weights = self.graph_dict["IS_weights"][0]
-        self.optimizer = self.graph_dict["optimizer"][0]
         self.train_step = self.graph_dict["train_step"][0]
     
     def learn(self, s1, a, q_sa, weights=None):
