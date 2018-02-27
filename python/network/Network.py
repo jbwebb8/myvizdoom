@@ -100,7 +100,11 @@ class Network:
 
         # Initialize variables or load parameters if provided
         if params_file is not None:
-            self.saver.restore(self.sess, params_file)
+            if not isinstance(params_file, list):
+                params_file = [params_file]
+            for pf in params_file:
+                self.saver.restore(self.sess, pf)
+                print("Restoring params from %s" % pf)
         else:
             var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
                                          scope=self.scope)

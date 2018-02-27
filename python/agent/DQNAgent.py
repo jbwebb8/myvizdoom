@@ -270,9 +270,9 @@ class DQNAgent(Agent):
         https://github.com/awjuliani/DeepRL-Agents/blob/master/Double-Dueling-DQN.ipynb
         """
         update_ops = []
-        main_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+        main_vars = tf.get_collection(tf.GraphKeys.MODEL_VARIABLES,
                                       scope=self.MAIN_SCOPE)
-        target_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+        target_vars = tf.get_collection(tf.GraphKeys.MODEL_VARIABLES,
                                         scope=self.TARGET_SCOPE)
         for mv, tv in zip(main_vars, target_vars):
             update = tf.assign(tv, tau * mv.value() + (1 - tau) * tv.value())
