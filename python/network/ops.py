@@ -35,7 +35,7 @@ def rnn_loss_mask(weights,
                   scope="loss_mask"):
     with tf.name_scope(scope):
         # Get batch size and trace length of RNN output
-        ndim = tf.rank(weights)
+        ndim = len(weights.get_shape().as_list()) # assumes shape is known
         if ndim < 2: # tf.shape(weights) = [batch_size*tr_len]
             if batch_size is None:
                 raise ValueError("batch_size required if weights flattened.")

@@ -80,16 +80,28 @@ def _create_train_step(optimizer,
                        mod_dict={}):
     # Minimize each loss function and backpropagate to variables their
     # gradients, which may be modified.
+    root = tf.get_variable_scope().name
     if loss_list is None:
         loss_list = []
         for scope in _check_list(loss_scope):
-            loss_list += tf.get_collection(tf.GraphKeys.LOSSES, 
-                                           scope=scope)
+            if scope is not None:
+                scope = ('/').join([root, scope])
+            losses = tf.get_collection(tf.GraphKeys.LOSSES, 
+                                       scope=scope)
+            if losses is None:
+                print("Warning: no losses found for scope " + scope + " .")
+            loss_list += losses
     if var_list is None:
         var_list = []
         for scope in _check_list(var_scope):
-            var_list += tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
-                                          scope=scope)
+            if scope is not None:
+                scope = ('/').join([root, scope])
+            var = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
+                                    scope=scope)
+            if var is None:
+                print("Warning: no variables found for scope " + scope + " .")
+            var_list += var
+
     train_step = []
     for l in loss_list:
         # Compute gradients for specified variables:

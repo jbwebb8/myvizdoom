@@ -132,9 +132,12 @@ class NetworkBuilder:
             input_op = []
         
         # Replace references in keyword args with graph_dict objects
-        for k, v in op["kwargs"].items():
-            if v in self.graph_dict:
-                op["kwargs"][k] = self._get_object(v)
+        try:
+            for k, v in op["kwargs"].items():
+                if v in self.graph_dict:
+                    op["kwargs"][k] = self._get_object(v)
+        except KeyError:
+            pass
         
         return create_op(input_op, op, **kwargs)
 
@@ -147,9 +150,12 @@ class NetworkBuilder:
             input_loss = []
         
         # Replace references in keyword args with graph_dict objects
-        for k, v in loss["kwargs"].items():
-            if v in self.graph_dict:
-                loss["kwargs"][k] = self._get_object(v)
+        try:
+            for k, v in loss["kwargs"].items():
+                if v in self.graph_dict:
+                    loss["kwargs"][k] = self._get_object(v)
+        except KeyError:
+            pass
 
         return create_loss_fn(input_loss, loss, **kwargs)
 
@@ -263,9 +269,10 @@ class NetworkBuilder:
         train_steps = []
         for ts in net["train_steps"]:
             train_step = self.add_train_step(ts)
-            train_steps.append(train_step)
+            for train_step_ in train_step:
+                train_steps.append(train_step_)
             self.graph_dict[ts["name"]] = [train_step, "s"]
-        self.graph_dict["train_step"] = train_steps + ["s"]
+        self.graph_dict["train_step"] = [train_steps, "s"]
         if self.network.train_mode and len(net["train_steps"]) == 0:
             raise ValueError("optimizer not found in network file.") 
         
@@ -492,9 +499,9 @@ class _DRQN(_DQN):
         # Create mask to ignore first mask_len losses in each trace
         if "mask" in loss_dict:
             w = self.nb.add_op(op_type="rnn_loss_mask",
-                                weights=self.nb.graph_dict["IS_weights"][0],
-                                mask_len=loss_dict["mask"],
-                                batch_size=self.nb.graph_dict["batch_size"][0])
+                               weights=self.nb.graph_dict["IS_weights"][0],
+                               mask_len=loss_dict["mask"],
+                               batch_size=self.nb.graph_dict["batch_size"][0])
         else:
             w = self.nb.graph_dict["IS_weights"][0]
     
@@ -505,6 +512,7 @@ class _DRQN(_DQN):
                                       weights=w)
         self.nb.graph_dict["loss"] = [loss_fn, "o"]
 
+        return loss_fn
 
 class _DuelingDRQN(_DuelingDQN):
     def __init__(self, network_builder):
@@ -550,6 +558,8 @@ class _DuelingDRQN(_DuelingDQN):
                                       prediction=q_sa,
                                       weights=w)
         self.nb.graph_dict["loss"] = [loss_fn, "o"]
+
+        return loss_fn
 
 ### Not configured with new format ###
 class _AC:
@@ -608,11 +618,17 @@ class _AC:
                                             prediction=v,
                                             weights=w,
                                             params=loss_params)
+            
+            # Total loss
+            total_loss = tf.add(pi_loss_fn, v_loss_fn)
+
         else:
             raise ValueError("Loss type \"" + loss_type + "not recognized.")
         
         self.nb.graph_dict["loss_pi"] = [pi_loss_fn, "o"]
         self.nb.graph_dict["loss_v"] = [v_loss_fn, "o"]
+
+        return total_loss
 
 ### Not configured with new format ###
 class _PositionEncoder:
@@ -643,6 +659,7 @@ class _PositionEncoder:
                             weights=w, params=loss_params)
         self.nb.graph_dict["IS_weights"] = [w, "p"]
         self.nb.graph_dict["loss"] = [loss_fn, "o"]
+        return loss_fn
 
 class _Decoder:
     LOSS_OUTPUTS = ["position", "r", "action"]
@@ -745,6 +762,8 @@ class _Decoder:
         loss_tot = tf.add_n(loss_list, name="loss_tot")
         self.nb.graph_dict["loss_tot"] = [loss_tot, "o"]
 
+        return loss_tot
+
 # Do not use the class below. It is just a template for new class creation.
 class _Template:
     def __init__(self, network_builder):
@@ -765,7 +784,9 @@ class _Template:
     def _add_loss_fn(self, loss_dict):
         target = self.nb.graph_dict["target"]
         prediction = self.nb.graph_dict[self.output_name]
-        self.nb.add_loss_fn(loss_dict,
-                            target=target, 
-                            prediction=prediction, 
-                            weights=None)
+        loss_fn = self.nb.add_loss_fn(loss_dict,
+                                      target=target, 
+                                      prediction=prediction, 
+                                      weights=None)
+        return loss_fn
+        
