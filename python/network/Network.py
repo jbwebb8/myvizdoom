@@ -1,7 +1,7 @@
 from network.NetworkBuilder import NetworkBuilder
 import tensorflow as tf
-from tensorflow.tensorboard.backend.event_processing \
-    import event_accumulator
+#from tensorflow.tensorboard.backend.event_processing \
+#    import event_accumulator # deprecated and/or moved
 import numpy as np
 import json
 import os, errno
@@ -96,7 +96,7 @@ class Network:
             self.graph = tf.get_default_graph() 
             self.sum_list = tf.summary.merge(sum_list)
             self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
-            self.ea = event_accumulator.EventAccumulator(self.log_dir)
+            #self.ea = event_accumulator.EventAccumulator(self.log_dir)
 
         # Initialize variables or load parameters if provided
         if params_file is not None:
@@ -169,19 +169,32 @@ class Network:
         
         # Feed initial (training) or current (testing) RNN states if RNN defined
         try:
+            # If train mode, use batch size of training batch (e.g. 32), and
+            # set initial RNN state to zeros (temporal coding will come from
+            # reshaping batches into [batch_size, trace_length]).
             if self.train_mode:
-                self.reset_rnn_state(batch_size=self.train_batch_size)
                 batch_size_ = self.train_batch_size
+                rnn_init_states_ = self.get_rnn_zero_state(batch_size_)
+            
+            # If test mode, use batch size of 1, and set initial RNN state to
+            # the current state (temporal coding will come from updating RNN
+            # state with each transition, specifically in Agent.update_state()).
             else:
                 batch_size_ = 1
-            feed_dict.update({rs_: rs for rs_, rs in 
-                              zip(self.rnn_states, self.rnn_current_states)})
+                rnn_init_states_ = self.rnn_current_states
+            
+            # Add RNN initial states and batch size to feed_dict
+            feed_dict.update({rs: rs_ for rs, rs_ in 
+                              zip(self.rnn_init_states, rnn_init_states_)})
             feed_dict[self.batch_size] = batch_size_
             
         except AttributeError:
             pass
 
         return feed_dict
+
+    def get_rnn_zero_state(self, batch_size=1):
+        pass
 
     def reset_rnn_state(self, batch_size=1):
         """Placeholder function for RNN"""

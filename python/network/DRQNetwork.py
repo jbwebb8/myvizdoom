@@ -35,16 +35,20 @@ class DRQNetwork(DQNetwork):
         self.train_batch_size = batch_size
         self.reset_rnn_state()
     
+    def get_rnn_zero_state(self, batch_size=1):
+        feed_dict = {self.batch_size: batch_size}
+        return self.sess.run(self.rnn_init_states, feed_dict=feed_dict)
+
     def reset_rnn_state(self, batch_size=1):
         #feed_dict = {s: np.zeros([batch_size] + s.get_shape().as_list()[1:]) for s in self.state}
-        feed_dict = {self.batch_size: batch_size}
-        self.rnn_current_states = self.sess.run(self.rnn_init_states,
-                                                feed_dict=feed_dict)
+        self.rnn_current_states = self.get_rnn_zero_state(batch_size)
 
     def update_rnn_state(self, s1, batch_size=1):
         s1 = self._check_state(s1)
         feed_dict = {s_: s for s_, s in zip(self.state, s1)}
         feed_dict.update({self.batch_size: batch_size})
+        feed_dict.update({rs_: rs for rs_, rs in 
+                          zip(self.rnn_init_states, self.rnn_current_states)})
         self.rnn_current_states = self.sess.run(self.rnn_states, 
                                                 feed_dict=feed_dict)
 
