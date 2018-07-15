@@ -26,6 +26,7 @@ def create_network(network_filename, **kwargs):
     network_types = {"dqn": DQNetwork.DQNetwork,
                      "dueling_dqn": DQNetwork.DQNetwork,
                      "drqn": DRQNetwork.DRQNetwork,
+                     "dueling_drqn": DRQNetwork.DRQNetwork,
                      "ac": ACNetwork.ACNetwork,
                      "position": PositionEncoder.PositionEncoder,
                      "decoder": DecoderNetwork.DecoderNetwork}

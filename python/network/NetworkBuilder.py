@@ -457,7 +457,7 @@ class _DuelingDQN(_DQN):
         V = self.nb.graph_dict["V"][0]
         A = self.nb.graph_dict["A"][0]
         with tf.name_scope("Q"):
-            A_mean = tf.reduce_mean(A, axis=1, keep_dims=True)
+            A_mean = tf.reduce_mean(A, axis=1, keepdims=True)
             Q = tf.add(V, tf.subtract(A, A_mean), name="Q")
             self.nb.graph_dict["Q"] = [Q, "o"]
 
@@ -537,6 +537,7 @@ class _DuelingDRQN(_DuelingDQN):
                                                            shape=[],
                                                            name="batch_size"), "p"]
     
+    # Override DQN function to apply loss mask
     def _add_loss_fn(self, loss_dict):
         # Extract Q(s,a) and utilize importance sampling weights
         q_sa = tf.gather_nd(self.nb.graph_dict["Q"][0], 
@@ -730,7 +731,7 @@ class _Decoder:
                     target_pos = tf.reshape(target_pos, shape=[-1, pred_len, 2])
                 target_r = tf.sqrt(tf.reduce_sum(tf.square(target_pos), 
                                                  axis=2, 
-                                                 keep_dims=True),
+                                                 keepdims=True),
                                    name="target_r")
                 w_ = tf.expand_dims(tf.expand_dims(w, axis=1), axis=2)
                 loss_r = self.nb.add_loss_fn(loss_dict,

@@ -256,7 +256,7 @@ for epoch in range(epochs):
         model_filename = exp_name + "_model"
         print("Stashing network... ", end="")
         agent.save_model(model_filename, global_step=None,
-                         save_meta=(epoch == 0), save_summaries=False)
+                         save_meta=(epoch == 0), save_summaries=True)
 
     print("Done.")
     print("Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0))

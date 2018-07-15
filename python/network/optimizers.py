@@ -104,10 +104,11 @@ def _create_train_step(optimizer,
 
     train_step = []
     for l in loss_list:
-        # Compute gradients for specified variables:
-        # list of [grad(var), var]
+        # Compute gradients for specified variables (list of [grad(var), var])
+        # and filter out nonexistent grads (e.g. dL_target/dtheta_main)
         gvs = optimizer.compute_gradients(l, var_list=var_list)
-
+        gvs = [[g, v] for g, v in gvs if g is not None] 
+        
         # Modify gradients for each layer in mod dictionary
         for layer_name, mod_list in mod_dict.items():
             clip_type = mod_list[0]
