@@ -141,8 +141,19 @@ class ReplayMemory:
         return valid_idx[new_idx_]
 
     def _get_valid_idx_trajectories(self, idx, idx_start=None, idx_end=None):
+        # Get trajectories constrained within episodes (do not cross terminal states)
+        a, b = np.meshgrid(np.argwhere(self.isterminal), np.arange((self.tr_len - 1) * self.n_step) + 1)
+        invalid_idx = np.unique(np.transpose(a+b).flatten())
+        invalid_idx %= self.capacity
+        if idx_start is not None:
+            invalid_idx -= (self.tr_len - 1) * self.n_step
+        valid_idx = np.ones(self.capacity)
+        valid_idx[invalid_idx] = 0
+        valid_idx = np.argwhere(valid_idx).flatten()
+
         # If shifted to valid start values, move forward in trajectory
         if idx_start is not None:
+            idx_start = np.unique(np.concatenate(idx_start, valid_idx))
             idx = self._get_valid_idx(idx, idx_start, side='left')
             x, y = np.meshgrid(idx, np.arange(self.tr_len) * self.n_step) # non-overlapping n-step sequences
             idx = np.transpose(x + y).flatten() # [i, i+1, ..., i+n, j, j+1, ..., j+n, k...]
@@ -151,9 +162,13 @@ class ReplayMemory:
         # Otherwise, move backward in trajectory
         else:
             if idx_end is not None:
-                idx = self._get_valid_idx(idx, idx_end, side='right')
+                idx_end = np.unique(np.concatenate(idx_end, valid_idx))
+            else:
+                idx_end = valid_idx
+            idx = self._get_valid_idx(idx, idx_end, side='right')
             x, y = np.meshgrid(idx, np.arange(self.tr_len) * self.n_step) # non-overlapping n-step sequences
-            idx = np.transpose(x - y).flatten() # [i-n, i-n+1, ..., i, j-n, j-n+1, ..., j, ...]
+            idx = np.transpose(x + y).flatten() # [i, i+1, ..., i+n, j, j+1, ..., j+n, k...]
+            idx -= (self.tr_len - 1) * self.n_step # [i-n, i-n+1, ..., i, j-n, j-n+1, ..., j, ...]
         
         return idx
 
