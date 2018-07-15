@@ -4,10 +4,24 @@ import math
 
 class PrioritizedReplayMemory(ReplayMemory):
 
-    def __init__(self, capacity, state_shape, num_game_var, input_overlap=0, 
-                 alpha=0.6, beta_start=0.4, beta_end=1.0):
+    def __init__(self, 
+                 capacity, 
+                 state_shape, 
+                 num_game_var, 
+                 input_overlap=0,
+                 trajectory_length=1,
+                 n_step=1,
+                 alpha=0.6, 
+                 beta_start=0.4, 
+                 beta_end=1.0):
         # Initialize base replay memory
-        ReplayMemory.__init__(self, capacity, state_shape, num_game_var, input_overlap)
+        ReplayMemory.__init__(self, 
+                              capacity, 
+                              state_shape, 
+                              num_game_var, 
+                              input_overlap=input_overlap,
+                              trajectory_length=trajectory_length,
+                              n_step=n_step)
 
         # Create new blank heap (see iPython notebook for details)
         heap_size = 2 ** math.ceil(math.log(capacity, 2)) + capacity
@@ -24,7 +38,7 @@ class PrioritizedReplayMemory(ReplayMemory):
                       + self.beta_start )
 
     # Overrides base ReplayMemory function with prioritization
-    def add_transition(self, s1, action, s2, isterminal, reward):
+    def add_transition(self, s1, action, s2, isterminal, reward, *args):
         # Store transition variables at current position
         self.s1[0][self.pos, ...] = s1[0]
         if not isterminal:
@@ -37,6 +51,14 @@ class PrioritizedReplayMemory(ReplayMemory):
         self.a[self.pos] = action
         self.isterminal[self.pos] = isterminal
         self.r[self.pos] = reward
+
+        # Store auxiliary variables if specified
+        if len(args) != len(self.aux_vars):
+            raise SyntaxError("Number of auxiliary variables does not match"
+                              + "number of arguments: %d vars, %d args"
+                              % (len(self.aux_vars), len(args)))
+        for i, aux_var in enumerate(self.aux_vars):
+            aux_var[self.pos] = args[i]
         
         # Create initial priority equal to current maximum:
         # p_t = max_i<t(p_i)
@@ -45,6 +67,7 @@ class PrioritizedReplayMemory(ReplayMemory):
 
         # Increment pointer or start over if reached end (sliding window)
         self.pos = (self.pos + 1) % self.capacity
+        self.lap += (self.pos == 0)
         self.size = min(self.size + 1, self.capacity)
         
     # Recursive function to update parent of node j
@@ -82,7 +105,7 @@ class PrioritizedReplayMemory(ReplayMemory):
             return self._retrieve(2 * node + 1, m)
 
     # Overrides base ReplayMemory function by sampling based on priority
-    def get_sample(self, sample_size):
+    def get_sample(self, sample_size, idx_start=None, idx_end=None):
         # Initialize matrices
         m = np.zeros(sample_size)
 
@@ -123,9 +146,30 @@ class PrioritizedReplayMemory(ReplayMemory):
         ###
         w = (1 / self.size + 1 / P) ** self.beta
         w = w / np.max(w) # normalize weights so all <= 1.0
-        
+
+        # The next two blocks add trajectories. If trajectory length
+        # is 1, then they simply leave the variables unchanged.
+
+        # Extend transition indices to cover (valid) trajectories.
+        # Default behavior is to extend backwards from the given t
+        # (adding the previous n states to the transition indices),
+        # thus sampling based on the probability of the last transition.
+        t = self._get_valid_idx_trajectories(t, 
+                                             idx_start=idx_start, 
+                                             idx_end=idx_end)
+
+        # Because sampling probability is based only on one state, weights
+        # derived from that transition must be copied to the rest of the
+        # transitions in each trajectory. Note that this is independent of 
+        # which direction the trajectories were extended, i.e. 
+        # [i-n, i-n+1, ..., i, j-n, j-n+1, ..., j, ...] (backwards), or
+        # [i, i+1, ..., i+n, j, j+1, ..., j+n, k...] (forwards)
+        w = np.transpose(np.tile(w, [self.tr_len, 1])).flatten()
+
         # Make list of states
         s1_sample, s2_sample = [], []
+
+        # Get screen component
         s1_sample.append(self.s1[0][t])
         if self.overlap > 0:
             # Stack overlapping frames from s1 to stored frames of s2 to
@@ -136,10 +180,21 @@ class PrioritizedReplayMemory(ReplayMemory):
                                             axis=self.chdim+1))
         else:
             s2_sample.append(self.s2[0][t])
+        
+        # Get game variable component
         s1_sample.append(self.s1[1][t])
         s2_sample.append(self.s2[1][t])
 
-        return s1_sample, self.a[t], s2_sample, self.isterminal[t], self.r[t], w, t
+        # Get other transition parameters
+        a_sample = self.a[t]
+        isterminal_sample = self.isterminal[t]
+        r_sample = self.r[t]
+        aux_var_sample = []
+        for aux_var in self.aux_vars:
+            aux_var_sample.append(aux_var[t])
+
+        return (s1_sample, a_sample, s2_sample, isterminal_sample, r_sample, 
+            w, t, *aux_var_sample)
 
     def update_priority(self, delta, pos):
         # Update priority to reflect proportional prioritization:

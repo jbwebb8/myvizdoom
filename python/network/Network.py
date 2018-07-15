@@ -29,9 +29,17 @@ class Network:
     Output directory branched into log directory for FileWriter and params
     directory for Saver.
     """
-    def __init__(self, phi, num_channels, num_outputs, output_directory,
-                 session, train_mode=True, learning_rate=None, 
-                 network_file=None, params_file=None, scope=""):
+    def __init__(self, 
+                 phi, 
+                 num_channels, 
+                 num_outputs, 
+                 output_directory,
+                 session, 
+                 train_mode=True, 
+                 learning_rate=None, 
+                 network_file=None, 
+                 params_file=None, 
+                 scope=""):
         # Set basic network parameters and objects
         self.input_depth = phi * num_channels
         self.num_outputs = num_outputs
@@ -81,21 +89,22 @@ class Network:
                     
             # Create summaries for TensorBoard visualization
             with tf.name_scope("summaries"):
-               var_sum, neur_sum, grad_sum, loss_sum = builder.add_summaries()
+               sum_list = builder.add_summaries()
             
             # Create objects for saving
             self.saver = tf.train.Saver(max_to_keep=None)        
             self.graph = tf.get_default_graph() 
-            self.var_sum = tf.summary.merge(var_sum)
-            self.neur_sum = tf.summary.merge(neur_sum)
-            self.grad_sum = tf.summary.merge(grad_sum)
-            self.loss_sum = tf.summary.merge(loss_sum)
+            self.sum_list = tf.summary.merge(sum_list)
             self.writer = tf.summary.FileWriter(self.log_dir, self.graph)
             self.ea = event_accumulator.EventAccumulator(self.log_dir)
 
         # Initialize variables or load parameters if provided
         if params_file is not None:
-            self.saver.restore(self.sess, params_file)
+            if not isinstance(params_file, list):
+                params_file = [params_file]
+            for pf in params_file:
+                self.saver.restore(self.sess, pf)
+                print("Restoring params from %s" % pf)
         else:
             var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
                                          scope=self.scope)
@@ -131,17 +140,56 @@ class Network:
             return agent_state
     
     def _check_actions(self, actions):
-        if actions.ndim < 2:
+        try:
+            ndim = actions.ndim
+        except AttributeError: # not numpy array
+            actions_ = np.asarray(actions)
+            ndim = actions_.ndim
+            if ndim == 0: # not list or tuple
+                actions_ = np.asarray([actions])
+                ndim = actions_.ndim
+            actions = actions_
+        if actions.ndim < 2 or actions.shape[1] < 2:
             return np.column_stack([np.arange(actions.shape[0]), actions])
         else:
             return actions
 
     def _check_train_mode(self, feed_dict):
+        """
+        Adds training-dependent parameters to feed_dict if exist:
+        - is_training: True if training
+        - rnn_states, rnn_init_states: Uses current RNN state if testing,
+          otherwise uses initial states. Ignores if no RNN in graph.
+        """
+        # Feed is_training if exists
         try:
             feed_dict[self.is_training] = self.train_mode
         except AttributeError:
             pass
+        
+        # Feed initial (training) or current (testing) RNN states if RNN defined
+        try:
+            if self.train_mode:
+                self.reset_rnn_state(batch_size=self.train_batch_size)
+                batch_size_ = self.train_batch_size
+            else:
+                batch_size_ = 1
+            feed_dict.update({rs_: rs for rs_, rs in 
+                              zip(self.rnn_states, self.rnn_current_states)})
+            feed_dict[self.batch_size] = batch_size_
+            
+        except AttributeError:
+            pass
+
         return feed_dict
+
+    def reset_rnn_state(self, batch_size=1):
+        """Placeholder function for RNN"""
+        pass
+    
+    def update_rnn_state(self, s1):
+        """Placeholder function for RNN"""
+        pass
 
     def load_params(self, params_file_path):
         self.saver.restore(self.sess, params_file_path)

@@ -1,5 +1,5 @@
 from agent.Agent import Agent
-from network.DQNetwork import DQNetwork
+from helper import create_network
 from memory.ReplayMemory import ReplayMemory
 from memory.PrioritizedReplayMemory import PrioritizedReplayMemory
 import tensorflow as tf
@@ -45,7 +45,9 @@ class DQNAgent(Agent):
 
     MAIN_SCOPE = "main_network"
     TARGET_SCOPE = "target_network"
-    DEFAULT_DQN_AGENT_ARGS = {"n_step": 1,
+    DEFAULT_DQN_AGENT_ARGS = {"softmax_policy": False,
+                              "T": 1,
+                              "n_step": 1,
                               "epsilon_start": 1.0,
                               "epsilon_end": 0.1,
                               "epsilon_const_rate": 0.1,
@@ -55,7 +57,8 @@ class DQNAgent(Agent):
                               "target_network_update_rate": 0.001,
                               "replay_memory_type": "standard",
                               "replay_memory_size": 10000,
-                              "replay_memory_start_size": 10000}
+                              "replay_memory_start_size": 10000,
+                              "trajectory_length": 1}
 
     def __init__(self, game, output_directory, agent_file=None,
                  params_file=None, train_mode=True, action_set="default", 
@@ -97,27 +100,29 @@ class DQNAgent(Agent):
                                                  DEFAULT_DQN_AGENT_ARGS["replay_memory_size"])
             self.rm_start_size      = kwargs.pop("replay_memory_start_size",
                                                  DEFAULT_DQN_AGENT_ARGS["replay_memory_start_size"])
+            self.rm_tr_len_params   = kwargs.pop("trajectory_length",
+                                                 DEFAULT_DQN_AGENT_ARGS["trajectory_length"])
                         
         # Create target network and replay memory if training
         if self.train_mode:
             # Create target network to bootstrap Q'(s', a')
             self.target_net_dir = self.net_dir + "target_net/"
             self._make_directory([self.target_net_dir])
-            self.target_network = DQNetwork(phi=self.phi, 
-                                            num_channels=self.channels, 
-                                            num_outputs=self.num_actions,
-                                            learning_rate=self.alpha,
-                                            network_file=self.net_file,
-                                            output_directory=self.target_net_dir,
-                                            session=self.sess,
-                                            train_mode=self.train_mode,
-                                            scope=self.TARGET_SCOPE)
+            self.target_network = create_network(self.net_file,
+                                                 phi=self.phi, 
+                                                 num_channels=self.channels, 
+                                                 num_outputs=self.num_actions,
+                                                 learning_rate=self.alpha,
+                                                 output_directory=self.target_net_dir,
+                                                 session=self.sess,
+                                                 train_mode=self.train_mode,
+                                                 scope=self.TARGET_SCOPE)
             target_init_ops = self._get_target_update_ops(1.0)
             self.sess.run(target_init_ops) # copy main network initialized params
             self.target_update_ops = self._get_target_update_ops(self.target_net_rate)
             
             # Create replay memory and set specific functions
-            self.memory = self._create_memory(self.rm_type)
+            self.memory = self.create_memory(self.rm_type)
             # NOTE: may be worth incorporating this difference as some if
             # statements rather than separate functions if other ER share
             # similar functions
@@ -127,11 +132,11 @@ class DQNAgent(Agent):
             if (not isinstance(self.n_step, int)) or (self.n_step < 1):
                 raise ValueError("Agent n_step must be a natural number.")
             if self.n_step > 1:
-                self.s1_buffer = ([np.zeros(list(self.state[0].shape), dtype=np.float32)]
-                                  + [np.zeros([self.num_game_var], dtype=np.float32)]) * self.n_step
+                self.s1_buffer = ([[np.zeros(list(self.state[0].shape), dtype=np.float32)]
+                                  + [np.zeros([self.num_game_var], dtype=np.float32)]]) * self.n_step
                 self.a_buffer = np.zeros(self.n_step, dtype=np.int32)
-                self.s2_buffer = ([np.zeros(list(self.state[0].shape), dtype=np.float32)]
-                                  + [np.zeros([self.num_game_var], dtype=np.float32)]) * self.n_step
+                self.s2_buffer = ([[np.zeros(list(self.state[0].shape), dtype=np.float32)]
+                                  + [np.zeros([self.num_game_var], dtype=np.float32)]]) * self.n_step
                 self.isterminal_buffer = np.zeros(self.n_step, dtype=np.float32)
                 self.r_buffer = np.zeros(self.n_step, dtype=np.float32)
                 self.gamma_buffer = np.asarray([self.gamma ** k for k in range(self.n_step)])
@@ -143,6 +148,10 @@ class DQNAgent(Agent):
         if not agent_file.lower().endswith(".json"): 
             raise Exception("No agent JSON file.")
         agent = json.loads(open(agent_file).read())
+        self.softmax_policy = agent["agent_args"].get(
+            "softmax_policy", self.DEFAULT_DQN_AGENT_ARGS["softmax_policy"])
+        self.T = agent["agent_args"].get(
+            "T", self.DEFAULT_DQN_AGENT_ARGS["T"])
         self.n_step = agent["learning_args"]["n_step"]
         self.epsilon_start = agent["learning_args"]["epsilon_start"]
         self.epsilon_end = agent["learning_args"]["epsilon_end"]
@@ -154,8 +163,10 @@ class DQNAgent(Agent):
         self.rm_type = agent["memory_args"]["replay_memory_type"]
         self.rm_capacity = agent["memory_args"]["replay_memory_size"]
         self.rm_start_size = agent["memory_args"]["replay_memory_start_size"]
+        self.rm_tr_len_params = agent["memory_args"].get(
+            "trajectory_length", self.DEFAULT_DQN_AGENT_ARGS["trajectory_length"])
 
-    def _create_memory(self, memory_type):
+    def create_memory(self, memory_type):
         """
         Creates replay memory to store transitions for learning.
         
@@ -175,34 +186,63 @@ class DQNAgent(Agent):
             return ReplayMemory(capacity=self.rm_capacity, 
                                 state_shape=self.state[0].shape,
                                 num_game_var=self.num_game_var,
-                                input_overlap=(self.phi-1)*self.channels)
+                                input_overlap=(self.phi-1)*self.channels,
+                                trajectory_length=self.rm_tr_len_params)
         elif memory_type.lower() == "prioritized":
             return PrioritizedReplayMemory(capacity=self.rm_capacity, 
                                            state_shape=self.state[0].shape,
                                            num_game_var=self.num_game_var,
-                                           input_overlap=(self.phi-1)*self.channels)
+                                           input_overlap=(self.phi-1)*self.channels,
+                                           trajectory_length=self.rm_tr_len_params)
         else:
             raise ValueError("Replay memory type \"" + memory_type + "\" not defined.")
 
     def _set_memory_fns(self, memory_type):
         """Returns function to learn from memory based on memory type."""
         if memory_type.lower() == "standard":            
-            def learn_from_memory(*args):
-                # Learn from minibatch of replay memory experiences
-                s1, a, target_q, w, idx= self._get_learning_batch()
-                _ = self.network.learn(s1, a, target_q)
+            def learn_from_memory(epoch, epochs):
+                # Update memory parameters
+                self.memory.update_trajectory_length(epoch, epochs)
+
+                # Get minibatch of replay memory trajectories
+                # Each has shape [batch_size * traj_len, ...]
+                # Note that n-step is handled internally by the memory class
+                s1, a, s2, isterminal, r, w, idx = self.memory.get_sample(self.batch_size)
+                t = self.memory.tr_len # for aesthetics
+                for i in range(t)[::-1]: # work backwards from t+n --> t
+                    target_q = self._get_target_q([s1[0][i::t], s1[1][i::t]], 
+                                                  a[i::t], 
+                                                  [s2[0][i::t], s2[1][i::t]], 
+                                                  isterminal[i::t], 
+                                                  r[i::t])
+                    _ = self.network.learn([s1[0][i::t], s1[1][i::t]], 
+                                           a[i::t], 
+                                           target_q, 
+                                           weights=w[i::t])
 
             return learn_from_memory
 
         elif memory_type.lower() == "prioritized":
             def learn_from_memory(epoch, epochs):
-                # Update IS parameter β
+                # Update memory parameters
+                self.memory.update_trajectory_length(epoch, epochs)
                 self.memory.update_beta(epoch, epochs)
 
                 # Learn from minibatch of replay memory experiences
-                s1, a, target_q, w, idx = self._get_learning_batch()
+                s1, a, s2, isterminal, r, w, idx = self.memory.get_sample(self.batch_size)
                 q = self.network.get_q_values(s1) # before weight updates
-                _ = self.network.learn(s1, a, target_q, weights=w)
+                t = self.memory.tr_len # for aesthetics
+                target_q = np.zeros([len(q)])
+                for i in range(t)[::-1]: # work backwards from t --> t-n
+                    target_q[i::t] = self._get_target_q([s1[0][i::t], s1[1][i::t]], 
+                                                        a[i::t], 
+                                                        [s2[0][i::t], s2[1][i::t]], 
+                                                        isterminal[i::t], 
+                                                        r[i::t])
+                    _ = self.network.learn([s1[0][i::t], s1[1][i::t]], 
+                                           a[i::t], 
+                                           target_q[i::t], 
+                                           weights=w[i::t])
 
                 # Update priority in PER
                 error = target_q - q[np.arange(q.shape[0]), np.squeeze(a)]
@@ -230,9 +270,9 @@ class DQNAgent(Agent):
         https://github.com/awjuliani/DeepRL-Agents/blob/master/Double-Dueling-DQN.ipynb
         """
         update_ops = []
-        main_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+        main_vars = tf.get_collection(tf.GraphKeys.MODEL_VARIABLES,
                                       scope=self.MAIN_SCOPE)
-        target_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+        target_vars = tf.get_collection(tf.GraphKeys.MODEL_VARIABLES,
                                         scope=self.TARGET_SCOPE)
         for mv, tv in zip(main_vars, target_vars):
             update = tf.assign(tv, tau * mv.value() + (1 - tau) * tv.value())
@@ -286,41 +326,44 @@ class DQNAgent(Agent):
                                            running_r)
             
             # Reset n-step buffers and variables
-            self.s1_buffer = ([np.zeros(list(self.state[0].shape), dtype=np.float32)]
-                                  + [np.zeros([self.num_game_var], dtype=np.float32)]) * self.n_step
+            self.s1_buffer = ([[np.zeros(list(self.state[0].shape), dtype=np.float32)]
+                                  + [np.zeros([self.num_game_var], dtype=np.float32)]]) * self.n_step
             self.a_buffer.fill(0)
-            self.s2_buffer = ([np.zeros(list(self.state[0].shape), dtype=np.float32)]
-                                  + [np.zeros([self.num_game_var], dtype=np.float32)]) * self.n_step
+            self.s2_buffer = ([[np.zeros(list(self.state[0].shape), dtype=np.float32)]
+                                  + [np.zeros([self.num_game_var], dtype=np.float32)]]) * self.n_step
             self.isterminal_buffer.fill(0)
             self.r_buffer.fill(0)
             self.gamma_buffer = np.asarray([self.gamma ** k for k in range(self.n_step)])
             self.buffer_pos = 0
             self.episode_step = 0
 
+    def get_exploration_rate(self, epoch, epoch_tot):
+        epsilon_const_epochs = self.epsilon_const_rate * epoch_tot
+        epsilon_decay_epochs = self.epsilon_decay_rate * epoch_tot
+        if epoch < epsilon_const_epochs:
+            return self.epsilon_start
+        elif epoch < epsilon_const_epochs + epsilon_decay_epochs:
+            # Linear decay
+            return (self.epsilon_start
+                    + (self.epsilon_start - self.epsilon_end) / epsilon_decay_epochs 
+                    * (epsilon_const_epochs - epoch))
+        else:
+            return self.epsilon_end
+
     def perform_learning_step(self, epoch, epoch_tot):
-        def get_exploration_rate():
-            epsilon_const_epochs = self.epsilon_const_rate * epoch_tot
-            epsilon_decay_epochs = self.epsilon_decay_rate * epoch_tot
-            if epoch < epsilon_const_epochs:
-                return self.epsilon_start
-            elif epoch < epsilon_decay_epochs:
-                # Linear decay
-                return (self.epsilon_start
-                        + (self.epsilon_start - self.epsilon_end) / epsilon_decay_epochs 
-                        * (epsilon_const_epochs - epoch))
-            else:
-                return self.epsilon_end
         
         # NOTE: is copying array most efficient implementation?
         s1 = copy.deepcopy(self.state)
         
         # With probability epsilon make a random action; otherwise, choose
         # best action.
-        epsilon = get_exploration_rate()
+        epsilon = self.get_exploration_rate(epoch, epoch_tot)
         if random() <= epsilon:
             a = randint(0, self.num_actions - 1)
         else:
+            self.set_train_mode(False)
             a = self.network.get_best_action(s1).item()
+            self.set_train_mode(True)
         
         # Receive reward from environment.
         r = self.make_action(action=self.actions[a])
@@ -343,14 +386,17 @@ class DQNAgent(Agent):
             self.memory.add_transition(s1, a, s2, isterminal, r)
 
         if self.rm_start_size <= self.memory.size:
-            # Update target network Q' every k steps
+            # Update target network Q' every k or more steps
             if self.global_step % self.target_net_freq == 0:
                 self.sess.run(self.target_update_ops)
-
+            
             # Learn from minibatch of replay memory samples
-            self.learn_from_memory(epoch, epoch_tot)
+            # Occurs ever <trajectory_length> steps to ensure the number
+            # of updates per epoch is constant
+            if self.global_step % self.memory.tr_len == 0:
+                self.learn_from_memory(epoch, epoch_tot)
 
-        self.global_step += 1        
+        self.global_step += 1     
 
     def _get_target_q(self, s1, a, s2, isterminal, r):
         # Update target Q for selected action using target network Q':
@@ -369,8 +415,21 @@ class DQNAgent(Agent):
     def get_action(self, state=None):
         if state is None: 
             state = self.state
+        if self.softmax_policy:
+            return self._get_softmax_action(state=state, T=self.T)
+        else:
+            return self._get_deterministic_action(state=state)
+            
+    def _get_deterministic_action(self, state=None):
         a_best = self.network.get_best_action(state)[0]
         return self.actions[a_best]
+
+    def _get_softmax_action(self, state=None, T=1):
+        q = self.network.get_q_values(state)[0]
+        q -= np.max(q) # numerical stability
+        pi = np.exp(q/T) / np.sum(np.exp(q/T))
+        a_soft = np.random.choice(np.arange(self.num_actions), p=pi)
+        return self.actions[a_soft]
 
     def save_model(self, model_name, global_step=None, save_meta=True,
                    save_summaries=True, save_target=False):

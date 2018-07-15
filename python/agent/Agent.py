@@ -9,6 +9,7 @@ from random import randint, random
 import json
 import warnings
 import os, errno
+from utils import recursive_dict_search
 
 class Agent:
     """
@@ -151,7 +152,7 @@ class Agent:
         self.num_game_var = len(self.state[1])
 
         # Cross check agent state with network input states
-        print("\nMapping of agent states --> network states:")
+        print("Mapping of agent states --> network states:")
         print("screen -->", self.network.state[0])
         i = 0
         for j in range(1, len(self.network.state)):
@@ -319,22 +320,7 @@ class Agent:
         agent = json.loads(open(agent_file).read())
 
         # Convert "None" string to None type (not supported in JSON)
-        def recursive_search(d, keys):
-            if isinstance(d, dict):
-                for k, v in zip(d.keys(), d.values()):
-                    keys.append(k)
-                    recursive_search(v, keys)
-                if len(keys) > 0: # avoids error at end
-                    keys.pop()
-            else:
-                if d == "None":
-                    t = agent 
-                    for key in keys[:-1]:
-                        t = t[key]
-                    t[keys[-1]] = None
-                keys.pop()
-
-        recursive_search(agent, [])
+        recursive_dict_search(agent, "None", None)
 
         # TODO: implement get method to catch KeyError
         self.agent_name = agent["agent_args"]["name"]
@@ -358,7 +344,7 @@ class Agent:
 
     def _set_shape_reward(self):
         if self.shape_reward_fns is None or len(self.shape_reward_fns) == 0:
-            return [None, lambda r: r]
+            return [lambda: None, lambda r: r]
         self.shape_reward_buffer = [0.0] * len(self.shape_reward_fns)
         init_fn_list, fn_list = [], []
         for i, fn in enumerate(self.shape_reward_fns):
@@ -446,8 +432,13 @@ class Agent:
 
     def reset_state(self):
         """Resets agent state to zeros."""
-        self.state[0] = np.zeros(self.network.input_shape, dtype=np.float32)
-        self.state[1] = np.zeros([self.num_game_var], dtype=np.float32)
+        #self.state[0] = np.zeros(self.network.input_shape, dtype=np.float32)
+        #self.state[1] = np.zeros([self.num_game_var], dtype=np.float32)
+        self.state = self.get_zero_state()
+
+    def get_zero_state(self):
+        return [np.zeros(self.network.input_shape, dtype=np.float32),
+                np.zeros([self.num_game_var], dtype=np.float32)]
 
     def reset_history(self):
         """Resets position and action history to empty."""
@@ -507,6 +498,10 @@ class Agent:
             state in FIFO order. If False, append to current state; assumes 
             that state has less than phi images (used for initializing state).
         """
+        # If testing, update network state if needed
+        if not self.train_mode:
+            self.network.update_rnn_state(self.state)
+        
         # Get current game variables if not specified
         if new_screen is None:
             new_screen = self.game.get_state().screen_buffer
@@ -601,13 +596,20 @@ class Agent:
         pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
         pos_z = self.game.get_game_variable(GameVariable.POSITION_Z)
         timestamp = self.game.get_episode_time()
-        self.position_history.append([timestamp, pos_x, pos_y, pos_z])
+        pos = [pos_x, pos_y, pos_z]
+        self.position_history.append([timestamp] + pos)
+        return pos
     
-    def track_action(self):
+    def track_action(self, index=False):
         """Adds current action of agent to action history."""
-        last_action = self.game.get_last_action()
         timestamp = self.game.get_episode_time()
-        self.action_history.append([timestamp] + last_action) 
+        last_action = self.game.get_last_action()
+        if index:
+            last_action = self.actions.index(last_action)
+            self.action_history.append([timestamp, last_action])
+        else:
+            self.action_history.append([timestamp] + last_action)
+        return last_action
 
     def get_score(self, var_list=None):
         """

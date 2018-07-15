@@ -27,7 +27,6 @@ class ACNetwork(Network):
         self.loss_pi = self.graph_dict["loss_pi"][0]
         self.loss_v = self.graph_dict["loss_v"][0]
         self.IS_weights = self.graph_dict["IS_weights"][0]
-        self.optimizer = self.graph_dict["optimizer"][0]
         self.train_step = self.graph_dict["train_step"][0]
     
     def learn(self, s1, a, q_sa, weights=None):
@@ -57,22 +56,19 @@ class ACNetwork(Network):
                         global_step=global_step,
                         write_meta_graph=save_meta)
         if save_summaries:
-            var_sum_ = self.sess.run(self.var_sum)
-            self.writer.add_summary(var_sum_, global_step)
-            if test_batch is not None:
-                s1, a, q_sa, w, _ = test_batch
-                s1 = self._check_state(s1)
-                a = self._check_actions(a)
-                feed_dict={self.state: s1,
-                           self.actions: a, 
-                           self.q_sa: q_sa,
-                           self.IS_weights: w}
-                neur_sum_ = self.sess.run(self.neur_sum,
-                                          feed_dict=feed_dict)
-                self.writer.add_summary(neur_sum_, global_step)
-                grad_sum_ = self.sess.run(self.grad_sum,
-                                          feed_dict=feed_dict)
-                self.writer.add_summary(grad_sum_, global_step)
+            if test_batch is None:
+                raise ValueError("Test batch must be provided "
+                                 + "to save summaries.")
+            s1, a, q_sa, w, _ = test_batch
+            s1 = self._check_state(s1)
+            a = self._check_actions(a)
+            feed_dict={self.state: s1,
+                        self.actions: a, 
+                        self.q_sa: q_sa,
+                        self.IS_weights: w}
+            sum_list_ = self.sess.run(self.sum_list, feed_dict=feed_dict)
+            self.writer.add_summary(sum_list_, global_step)
+            self.writer.flush()
             # TODO: implement event accumulator to save files (esp. histograms)
             # to CSV files.
             #self.ea.Reload()

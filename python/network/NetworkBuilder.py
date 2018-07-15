@@ -1,5 +1,9 @@
 import tensorflow as tf
 from network.layers import create_layer
+from network.ops import create_op
+from network.losses import create_loss_fn
+from network.optimizers import create_optimizer, create_train_step
+from utils import recursive_dict_search
 import json
 
 RESERVED_NAMES = ["state", "optimizer", "train_step"]
@@ -40,6 +44,22 @@ class NetworkBuilder:
                 else:                          data_format = "NHWC"
         self.data_format = data_format
 
+    def _add_feature(self, feature_type, feature):
+        if feature_type.lower() == "placeholders":
+            return self.add_placeholder(feature)
+        elif feature_type.lower() == "layers":
+            return self.add_layer(feature)
+        elif feature_type.lower() == "ops":
+            return self.add_op(feature)
+        elif feature_type.lower() == "losses":
+            return self.add_loss_fn(feature)
+        elif feature_type.lower() == "optimizers":
+            return self.add_optimizer(feature)
+        elif feature_type.lower() == "train_steps":
+            return self.add_train_step(feature)
+        else:
+            raise ValueError("Unknown feature type \"" + feature_type + "\".")
+
     # Adds input layer to graph
     def add_input_layer(self, ph):
         t = ph["kwargs"]["shape"] # for aesthetics
@@ -77,151 +97,87 @@ class NetworkBuilder:
 
     # Adds placeholder to graph
     def add_placeholder(self, ph):
-        if "shape" in ph["kwargs"]:
-            for i in range(len(ph["kwargs"]["shape"])):
-                if ph["kwargs"]["shape"][i] == "None":
-                    ph["kwargs"]["shape"][i] = None
+        # Below should be covered by recursive_dict_search
+        #if "shape" in ph["kwargs"]:
+        #    for i in range(len(ph["kwargs"]["shape"])):
+        #        if ph["kwargs"]["shape"][i] == "None":
+        #            ph["kwargs"]["shape"][i] = None
         return tf.placeholder(ph["data_type"], **ph["kwargs"])
     
     # Adds layer to graph
-    def add_layer(self, layer):
+    def add_layer(self, layer={}, **kwargs):
         layer_type = layer["type"].lower()
         input_layer = self._get_object(layer["input"])
+        try:
+            is_training = self._get_object("is_training")
+        except KeyError:
+            is_training = None
+        try:
+            batch_size = self._get_object("batch_size")
+        except KeyError:
+            batch_size = None
         return create_layer(input_layer,
                             layer,
-                            data_format=self.data_format)
+                            data_format=self.data_format,
+                            is_training=is_training,
+                            batch_size=batch_size,
+                            **kwargs)
     
     # Adds operation to graph
-    def add_op(self, op):
-        input_op = self._get_object(op["input"])
-        op_type = op["type"].lower()
-        if op_type == "argmax":
-            return tf.argmax(input_op, **op["kwargs"])
-        elif op_type == "mean_squared_error":
-            return tf.losses.mean_squared_error(*input_op, **op["kwargs"])
+    def add_op(self, op={}, **kwargs):
+        # Replace references in input list with graph_dict objects
+        try:
+            input_op = self._get_object(op["input"])
+        except KeyError:
+            input_op = []
         
-        ###########################################################
-        # Add new op support here.
-        # elif op_type == "new_op":
-        #     return <...>
-        ###########################################################
-
-        else:
-            raise ValueError("Op \"" + op["type"] + "\" not yet defined.")
+        # Replace references in keyword args with graph_dict objects
+        try:
+            for k, v in op["kwargs"].items():
+                if v in self.graph_dict:
+                    op["kwargs"][k] = self._get_object(v)
+        except KeyError:
+            pass
+        
+        return create_op(input_op, op, **kwargs)
 
     # Adds loss function to graph
-    def add_loss_fn(self, loss_type, target, prediction, 
-                    weights=None, params=None):
-        error = tf.subtract(target, prediction, name="error")
-        if weights is not None:
-            error = weights * error
-        if loss_type.lower() == "mean_squared_error": 
-            mse = tf.reduce_mean(tf.square(error))
-            tf.add_to_collection(tf.GraphKeys.LOSSES, mse)
-            return mse
-        elif loss_type.lower() == "huber":
-            delta = params[0]
-            huber_loss = tf.where(tf.abs(error) < delta, 
-                                0.5*tf.square(error),
-                                delta*(tf.abs(error) - 0.5*delta),
-                                name="huber_loss")
-            tf.add_to_collection(tf.GraphKeys.LOSSES, huber_loss)
-            return huber_loss
-        elif loss_type.lower() == "advantage":
-            beta = tf.constant(params[0], dtype=tf.float32, name="beta")
-            pi = params[1]
-            pi_a = tf.gather_nd(pi, 
-                                self.graph_dict["actions"][0],
-                                name="pi_a")
-            # Note the negative sign on adv_loss and positive (actually double
-            # negative) on entropy_loss to use grad descent instead of ascent
-            adv_loss = -tf.multiply(tf.log(pi_a), error, name="advantage_loss")
-            entropy_loss = tf.reduce_sum(pi * tf.log(pi), name="entropy_loss")
-            pi_loss_fn = tf.add(adv_loss, beta * entropy_loss,
-                                name="policy_loss")
-            tf.add_to_collection(tf.GraphKeys.LOSSES, pi_loss_fn)
-            return pi_loss_fn
+    def add_loss_fn(self, loss={}, **kwargs):
+        # Replace references in input list with graph_dict objects
+        try:
+            input_loss = self._get_object(loss["input"])
+        except KeyError:
+            input_loss = []
+        
+        # Replace references in keyword args with graph_dict objects
+        try:
+            for k, v in loss["kwargs"].items():
+                if v in self.graph_dict:
+                    loss["kwargs"][k] = self._get_object(v)
+        except KeyError:
+            pass
 
-        ###########################################################
-        # Add new loss function support here.
-        # elif loss_type.lower() == "new_loss_fn":
-        #     return <...>
-        ###########################################################
-
-        else:
-            raise ValueError("Loss function \"" + loss_type + "\" not yet defined.")
+        return create_loss_fn(input_loss, loss, **kwargs)
 
     # Adds optimizer to graph
-    def add_optimizer(self, opt_type, loss, var_list, params=None):
-        """
-        To ensure that, if batch normalization is present in any layer, the
-        moving averages and variances are updated for each training step,
-        we must prepend assignment of train_step with:
+    def add_optimizer(self, opt={}, **kwargs):
+        return create_optimizer(opt, **kwargs)
 
-            update_ops = tf.GraphKeys.UPDATE_OPS
-            with tf.control_dependencies(update_ops):
-                train_step = ...
-        
-        """
-        def modify_gradients(grad, mod_type, *params):
-            if mod_type == "scale":
-                return params[0] * grad
-            elif mod_type == "clip_by_value":
-                return tf.clip_by_value(grad, params[0], params[1])
-            elif mod_type == "clip_by_norm":
-                return tf.clip_by_norm(grad, params[0])
-            else:
-                raise ValueError("Gradient modification type \"" + mod_type
-                                    + "not yet defined.")
+    # Adds train step from an optimizer to graph
+    def add_train_step(self, ts={}, **kwargs):
+        # Get optimizer object
+        opt = self._get_object(ts["optimizer"])
+        ts["optimizer"] = opt
 
-        if opt_type.lower() == "rmsprop":
-            optimizer = tf.train.RMSPropOptimizer(self.network.learning_rate, 
-                                                    epsilon=1e-10)
-            train_step = []
-            for l in loss:
-                gvs = optimizer.compute_gradients(l, var_list=var_list) # list of [grad(var), var]
-                update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS,
-                                               scope=self.network.scope)
-                with tf.control_dependencies(update_ops):
-                    train_step.append(optimizer.apply_gradients(gvs, name="train_step"))
-            return optimizer, train_step
-        elif opt_type.lower() == "rmsprop_clip":
-            # params = lists of [layer_name, clip_type]
-            # clip_type: scale, clip_by_value, clip_by_norm
-            optimizer = tf.train.RMSPropOptimizer(self.network.learning_rate, 
-                                                    epsilon=1e-10)
-            train_step = []
-            for l in loss:
-                mod_gvs = optimizer.compute_gradients(l, var_list=var_list) # list of [grad(var), var]
-                for par in params:
-                    layer_name = par[0]
-                    clip_type = par[1]
-                    with tf.name_scope("gradients/mod"):
-                        if layer_name.lower() == "all":
-                            mod_gvs = [[modify_gradients(g, clip_type, *par[2:]), v]
-                                    for g, v in mod_gvs]
-                        else:
-                            mod_gvs = [[modify_gradients(g, clip_type, *par[2:]), v]
-                                    if layer_name in v.name else [g, v] for g, v in mod_gvs]
-                update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS,
-                                               scope=self.network.scope)
-                with tf.control_dependencies(update_ops):
-                    train_step.append(optimizer.apply_gradients(mod_gvs, name="train_step"))
-            return optimizer, train_step
-                
-        ###########################################################
-        # Add new optimizer support here.
-        # elif opt.lower() == "new_opt":
-        #     return <...>
-        ###########################################################
-
-        else:
-            raise ValueError("Optimizer \"" + opt_type + "\" not yet defined.")
+        return create_train_step(ts, **kwargs)
 
     def load_json(self, network_file):
         # Load arguments from network file
         net = json.loads(open(network_file).read())
         self._set_data_format(net)
+
+        # Replace "None" string with None value
+        recursive_dict_search(net, "None", None)
 
         # Set specific network type
         if "type" not in net["global_features"]:
@@ -233,13 +189,25 @@ class NetworkBuilder:
             builder_type = _AC(self)
         elif net_type == "dueling_dqn":
             builder_type = _DuelingDQN(self)
+        elif net_type == "drqn":
+            builder_type = _DRQN(self)
+        elif net_type == "dueling_drqn":
+            builder_type = _DuelingDRQN(self)
         elif net_type == "position":
             builder_type = _PositionEncoder(self)
+        elif net_type == "decoder":
+            builder_type = _Decoder(self)
         elif net_type == "custom":
             builder_type = _Custom(self)
         else:
             raise ValueError("Unknown network type: " + net_type)
 
+        if net_type == "custom":
+            return self._build_custom_json(net)
+        else:
+            return self._build_preset_json(net, builder_type)
+
+    def _build_preset_json(self, net, builder_type):
         # Add placeholders
         builder_type._add_reserved_placeholders()
         self.graph_dict["state"] = [[], "p"]
@@ -252,11 +220,17 @@ class NetworkBuilder:
             self.graph_dict[ph["name"]] = [node, "p"]
 
         # Add layers
+        self.graph_dict["rnn_states"] = []
+        self.graph_dict["rnn_init_states"] = []
         for layer in net["layers"]:
             if layer["name"] in net["global_features"]["output_layer"]:
                 l = builder_type._add_output_layer(layer)
             else:
                 l = self.add_layer(layer)
+            if isinstance(l, list): # recurrent layer
+                self.graph_dict["rnn_states"].append(l[1])
+                self.graph_dict["rnn_init_states"].append(l[2])
+                l = l[0]
             self.graph_dict[layer["name"]] = [l, "l"]
         
         # Add ops
@@ -265,48 +239,42 @@ class NetworkBuilder:
             node = self.add_op(op)
             self.graph_dict[op["name"]] = [node, "o"]
         
-        # Add loss function
-        if "loss" in net["global_features"]:
-            # Gather loss parameters
-            loss_keys = net["global_features"]["loss"]
-            if isinstance(loss_keys, list):
-                loss_type = net["global_features"]["loss"][0]
-                loss_params = net["global_features"]["loss"][1:]
+        # Add loss functions
+        for loss in net["losses"]:
+            if loss["name"] in net["global_features"]["loss"]:
+                l = builder_type._add_loss_fn(loss)
             else:
-                loss_type = net["global_features"]["loss"]
-                loss_params = None
+                l = self.add_loss_fn(loss)
             
-            # Add network-specific loss function
-            with tf.name_scope("loss"):
-                builder_type._add_loss_fn(loss_type, loss_params)
-        else:
-            if self.network.train_mode and "loss" not in self.graph_dict: 
-                raise ValueError("loss fn not found in network file.")
+            # This may lead to double storage of the RL loss function if under
+            # a different name in the JSON file, but that's okay.
+            self.graph_dict[loss["name"]] = [l, "o"]
+
+        if self.network.train_mode and loss["name"] not in net["global_features"]: 
+            raise ValueError("Main loss fn not found in network file.")
         
-        # Add optimizer
-        if "optimizer" in net["global_features"]:
-            # TODO: does update op keep separate rms variables for gradient
-            # wrt to each loss fn?
-            opt_keys = net["global_features"]["optimizer"]
-            if type(opt_keys) == list:
-                opt_type = net["global_features"]["optimizer"][0]
-                opt_params = net["global_features"]["optimizer"][1:]
-            else:
-                opt_type = net["global_features"]["optimizer"]
-                opt_params = None
-            loss = tf.get_collection(tf.GraphKeys.LOSSES, 
-                                     scope=self.network.scope)
-            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
-                                     scope=self.network.scope)
-            opt, ts = self.add_optimizer(opt_type=opt_type,
-                                         loss=loss,
-                                         var_list=var_list,
-                                         params=opt_params)
-            self.graph_dict["optimizer"] = [opt, "s"]
-            self.graph_dict["train_step"] = [ts, "s"]
-        else:
-            if self.network.train_mode:
-                raise ValueError("optimizer not found in network file.") 
+        # Add optimizers
+        for opt in net["optimizers"]:
+            if self.network.learning_rate is not None:
+                try:
+                    opt["kwargs"]["learning_rate"] = self.network.learning_rate
+                except KeyError:
+                    opt["kwargs"] = {"learning_rate": self.network.learning_rate}
+            optimizer = self.add_optimizer(opt)
+            self.graph_dict[opt["name"]] = [optimizer, "s"]
+        if self.network.train_mode and len(net["optimizers"]) == 0:
+            raise ValueError("optimizer not found in network file.")    
+
+        # Create train steps
+        train_steps = []
+        for ts in net["train_steps"]:
+            train_step = self.add_train_step(ts)
+            for train_step_ in train_step:
+                train_steps.append(train_step_)
+            self.graph_dict[ts["name"]] = [train_step, "s"]
+        self.graph_dict["train_step"] = [train_steps, "s"]
+        if self.network.train_mode and len(net["train_steps"]) == 0:
+            raise ValueError("optimizer not found in network file.") 
         
         # Final check on use of reserved names
         for tf_type in ["placeholders", "layers", "ops"]:
@@ -315,15 +283,60 @@ class NetworkBuilder:
                     raise ValueError("Name \"" + n["name"] + "\" in " + tf_type + " is "
                                      + "reserved. Please choose different name.")
 
-
         return self.graph_dict, self.data_format           
 
-    def add_summaries(self):
+    def _build_custom_json(self, net):
+        # Add features in order of dependence (brute force method).
+        # Can try smarter algorithm later if have time. If really have
+        # extra time, probably could incorporate graph theory here.
+        
+        # Initial run-through, saving out-of-order features
+        feat_list = []
+        i = 0
+        for feat_type, feats in net.items():
+            if feat_type in ["global_features"]:
+                continue
+            for feat in feats:
+                try:
+                    node = self._add_feature(feat_type, feat)
+                    if not isinstance(node, list):
+                        node = [node]
+                    name = feat.get("name", "feature_%d" % i)
+                    self.graph_dict[name] = node + [feat_type] # covers RNNs
+                    i += 1
+                except (KeyError, TypeError) as e:
+                    feat_list.append([feat_type, feat])
+        
+        # Continuous run-through, looping until all features built
+        while len(feat_list) > 0:
+            start_len = len(feat_list)
+            for j, [feat_type, feat] in enumerate(feat_list):
+                try:
+                    node = self._add_feature(feat_type, feat)
+                    if not isinstance(node, list):
+                        node = [node]
+                    name = feat.get("name", "feature_%d" % i)
+                    self.graph_dict[name] = node + [feat_type] # covers RNNs
+                    i += 1
+                    _ = feat_list.pop(j)
+                except (KeyError, TypeError):
+                    pass
+            if start_len == len(feat_list):
+                msg = (', ').join([str(feat.get("name", "unnamed" + feat_type)) 
+                                   for feat_type, feat in feat_list])
+                raise SyntaxError("Features " + msg + " could not be added to graph.")
+
+        return self.graph_dict, self.data_format 
+
+    def add_summaries(self, var_list=None, val_list=None, loss_list=None):
         # Create summaries for trainable variables (weights and biases)
         var_sum = []
+        if var_list is None:
+            # Get all trainable variables
+            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
+                                         scope=self.network.scope)
         with tf.name_scope("trainable_variables"):
-            for var in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
-                                         scope=self.network.scope):
+            for var in var_list:
                 with tf.name_scope(var.name[:-2]):
                     mean = tf.reduce_mean(var)
                     var_sum.append(tf.summary.scalar("mean", mean))
@@ -336,26 +349,31 @@ class NetworkBuilder:
         
         # Create summaries for neurons (% activated, values)
         neur_sum = []
+        if val_list is None:
+            # Get all layers that are not empty lists
+            val_list = self.graph_dict
+            val_list = [v for v in val_list if (isinstance(val_list[v], list)
+                                                and (len(val_list[v]) > 0)
+                                                and (val_list[v][-1] == "l"))]
         with tf.name_scope("neurons"):
-            for name in self.graph_dict:
-                if self.graph_dict[name][1] == "l":
-                    layer = self.graph_dict[name][0]
-                    with tf.name_scope(name):
-                        num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
-                        num_act = tf.cast(tf.count_nonzero(layer), tf.float64)
-                        frac_act = tf.div(num_act, num_elements) # TODO: get fraction of neurons ever activated
-                        neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
-                        neur_sum.append(tf.summary.histogram("values", layer))
+            for v in val_list:
+                layer = self.graph_dict[v][0]
+                with tf.name_scope(v):
+                    num_elements = tf.cast(tf.size(layer, name="size"), tf.float64)
+                    num_act = tf.cast(tf.count_nonzero(layer), tf.float64)
+                    frac_act = tf.div(num_act, num_elements) # TODO: get fraction of neurons ever activated
+                    neur_sum.append(tf.summary.scalar("frac_activated", frac_act))
+                    neur_sum.append(tf.summary.histogram("values", layer))
         
         # Create summaries for gradients
         grad_sum = []
+        if loss_list is None:
+            # Get all losses classified under LOSSES GraphKey
+            loss_list = tf.get_collection(tf.GraphKeys.LOSSES,
+                                        scope=self.network.scope)
+        optimizer = self.graph_dict["optimizer"][0]
         with tf.name_scope("gradients"):
-            var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 
-                                        scope=self.network.scope)
-            loss = tf.get_collection(tf.GraphKeys.LOSSES,
-                                        scope=self.network.scope)
-            optimizer = self.graph_dict["optimizer"][0]
-            for i, l in enumerate(loss):
+            for i, l in enumerate(loss_list):
                 gvs = optimizer.compute_gradients(l, var_list=var_list)
                 for g, v in gvs:
                     with tf.name_scope(v.name[:-2]):
@@ -365,13 +383,11 @@ class NetworkBuilder:
         # Create summaries for losses
         loss_sum = []
         with tf.name_scope("losses"):
-            loss = tf.get_collection(tf.GraphKeys.LOSSES,
-                                     scope=self.network.scope)
-            for l in loss:
+            for l in loss_list:
                 mean_loss = tf.reduce_mean(l)
                 loss_sum.append(tf.summary.scalar(l.name[:-2], mean_loss)) 
 
-        return var_sum, neur_sum, grad_sum, loss_sum
+        return [s for s in [var_sum, neur_sum, grad_sum, loss_sum] if len(s) > 0]
 
 class _DQN:
     def __init__(self, network_builder):
@@ -388,6 +404,9 @@ class _DQN:
         self.nb.graph_dict["actions"] = [tf.placeholder(tf.int32,
                                                 shape=[None, 2],
                                                 name="actions"), "p"]
+        self.nb.graph_dict["IS_weights"] = [tf.placeholder(tf.float32, 
+                                                shape=[None], 
+                                                name="IS_weights"), "p"]
 
     def _add_output_layer(self, layer):
         layer["name"] = "Q"
@@ -399,21 +418,20 @@ class _DQN:
                                 name="best_action")
         self.nb.graph_dict["best_action"] = [best_action, "o"]
     
-    def _add_loss_fn(self, loss_type, loss_params):
+    def _add_loss_fn(self, loss_dict):
         # Extract Q(s,a) and utilize importance sampling weights
         q_sa = tf.gather_nd(self.nb.graph_dict["Q"][0], 
                             self.nb.graph_dict["actions"][0], 
                             name="q_sa")
-        w = tf.placeholder(tf.float32, shape=[None], name="IS_weights")
     
         # Add loss function
-        loss_fn = self.nb.add_loss_fn(loss_type=loss_type,
-                                    target=self.nb.graph_dict["target_q"][0],
-                                    prediction=q_sa,
-                                    weights=w,
-                                    params=loss_params)
-        self.nb.graph_dict["IS_weights"] = [w, "p"]
+        loss_fn = self.nb.add_loss_fn(loss_dict,
+                                      target=self.nb.graph_dict["target_q"][0],
+                                      prediction=q_sa,
+                                      weights=self.nb.graph_dict["IS_weights"][0])
         self.nb.graph_dict["loss"] = [loss_fn, "o"]
+
+        return loss_fn
 
 class _DuelingDQN(_DQN):
     def __init__(self, network_builder):
@@ -448,6 +466,102 @@ class _DuelingDQN(_DQN):
                                 name="best_action")
         self.nb.graph_dict["best_action"] = [best_action, "o"]
 
+class _DRQN(_DQN):
+    def __init__(self, network_builder):
+        _DQN.__init__(self, network_builder)
+    
+    # Override DQN function to add batch_size
+    def _add_reserved_placeholders(self):
+        # <actions> must be [?, 2] rather than [None] due to tf indexing 
+        # constraints (tf.gather_nd). Alternatively, could switch to 
+        # indexing similar to 
+        # https://github.com/awjuliani/DeepRL-Agents/blob/master/Vanilla-Policy.ipynb
+        self.nb.graph_dict["target_q"] = [tf.placeholder(tf.float32, 
+                                                shape=[None],
+                                                name="target_q"), "p"]
+        self.nb.graph_dict["actions"] = [tf.placeholder(tf.int32,
+                                                shape=[None, 2],
+                                                name="actions"), "p"]
+        self.nb.graph_dict["IS_weights"] = [tf.placeholder(tf.float32, 
+                                                shape=[None], 
+                                                name="IS_weights"), "p"]
+        self.nb.graph_dict["batch_size"] = [tf.placeholder(tf.int32,
+                                                           shape=[],
+                                                           name="batch_size"), "p"]
+
+    # Override DQN function to apply loss mask
+    def _add_loss_fn(self, loss_dict):
+        # Extract Q(s,a) and utilize importance sampling weights
+        q_sa = tf.gather_nd(self.nb.graph_dict["Q"][0], 
+                            self.nb.graph_dict["actions"][0], 
+                            name="q_sa")
+
+        # Create mask to ignore first mask_len losses in each trace
+        if "mask" in loss_dict:
+            w = self.nb.add_op(op_type="rnn_loss_mask",
+                               weights=self.nb.graph_dict["IS_weights"][0],
+                               mask_len=loss_dict["mask"],
+                               batch_size=self.nb.graph_dict["batch_size"][0])
+        else:
+            w = self.nb.graph_dict["IS_weights"][0]
+    
+        # Add loss function
+        loss_fn = self.nb.add_loss_fn(loss_dict,
+                                      target=self.nb.graph_dict["target_q"][0],
+                                      prediction=q_sa,
+                                      weights=w)
+        self.nb.graph_dict["loss"] = [loss_fn, "o"]
+
+        return loss_fn
+
+class _DuelingDRQN(_DuelingDQN):
+    def __init__(self, network_builder):
+        _DuelingDQN.__init__(self, network_builder)
+    
+    # Override DQN function to add batch_size
+    def _add_reserved_placeholders(self):
+        # <actions> must be [?, 2] rather than [None] due to tf indexing 
+        # constraints (tf.gather_nd). Alternatively, could switch to 
+        # indexing similar to 
+        # https://github.com/awjuliani/DeepRL-Agents/blob/master/Vanilla-Policy.ipynb
+        self.nb.graph_dict["target_q"] = [tf.placeholder(tf.float32, 
+                                                shape=[None],
+                                                name="target_q"), "p"]
+        self.nb.graph_dict["actions"] = [tf.placeholder(tf.int32,
+                                                shape=[None, 2],
+                                                name="actions"), "p"]
+        self.nb.graph_dict["IS_weights"] = [tf.placeholder(tf.float32, 
+                                                shape=[None], 
+                                                name="IS_weights"), "p"]
+        self.nb.graph_dict["batch_size"] = [tf.placeholder(tf.int32,
+                                                           shape=[],
+                                                           name="batch_size"), "p"]
+    
+    def _add_loss_fn(self, loss_dict):
+        # Extract Q(s,a) and utilize importance sampling weights
+        q_sa = tf.gather_nd(self.nb.graph_dict["Q"][0], 
+                            self.nb.graph_dict["actions"][0], 
+                            name="q_sa")
+
+        # Create mask to ignore first mask_len losses in each trace
+        if "mask" in loss_dict:
+            w = self.nb.add_op(op_type="rnn_loss_mask",
+                                weights=self.nb.graph_dict["IS_weights"][0],
+                                mask_len=loss_dict["mask"],
+                                batch_size=self.nb.graph_dict["batch_size"][0])
+        else:
+            w = self.nb.graph_dict["IS_weights"][0]
+    
+        # Add loss function
+        loss_fn = self.nb.add_loss_fn(loss_dict,
+                                      target=self.nb.graph_dict["target_q"][0],
+                                      prediction=q_sa,
+                                      weights=w)
+        self.nb.graph_dict["loss"] = [loss_fn, "o"]
+
+        return loss_fn
+
+### Not configured with new format ###
 class _AC:
     def __init__(self, network_builder):
         self.nb = network_builder
@@ -504,15 +618,20 @@ class _AC:
                                             prediction=v,
                                             weights=w,
                                             params=loss_params)
+            
+            # Total loss
+            total_loss = tf.add(pi_loss_fn, v_loss_fn)
+
         else:
             raise ValueError("Loss type \"" + loss_type + "not recognized.")
         
-        self.nb.graph_dict["IS_weights"] = [w, "p"]
         self.nb.graph_dict["loss_pi"] = [pi_loss_fn, "o"]
         self.nb.graph_dict["loss_v"] = [v_loss_fn, "o"]
 
-class _PositionEncoder:
+        return total_loss
 
+### Not configured with new format ###
+class _PositionEncoder:
     def __init__(self, network_builder):
         self.nb = network_builder
 
@@ -540,9 +659,113 @@ class _PositionEncoder:
                             weights=w, params=loss_params)
         self.nb.graph_dict["IS_weights"] = [w, "p"]
         self.nb.graph_dict["loss"] = [loss_fn, "o"]
+        return loss_fn
 
-class _Custom:
+class _Decoder:
+    LOSS_OUTPUTS = ["position", "r", "action"]
 
+    def __init__(self, network_builder):
+        self.nb = network_builder
+        self.loss_list = []
+
+    def _add_reserved_placeholders(self):
+        self.nb.graph_dict["target_pos"] = [tf.placeholder(tf.float32, 
+                                                           shape=[None, 2],
+                                                           name="position"), "p"]
+        self.nb.graph_dict["target_act"] = [tf.placeholder(tf.int32, 
+                                                           shape=[None], 
+                                                           name="action"), "p"]
+        self.nb.graph_dict["IS_weights"] = [tf.placeholder(tf.float32, 
+                                                           shape=[None], 
+                                                           name="IS_weights"), "p"]
+    
+    def _add_output_layer(self, layer):
+        if layer["name"].lower() in ["pos", "position"]:
+            layer["name"] = "POS"
+            layer["num_outputs"] = 2
+        elif layer["name"].lower() == "r":
+            layer["name"] = "R"
+            layer["num_outputs"] = 1
+        elif layer["name"].lower() in ["act", "actions"]:
+            layer["name"] = "ACT_logits"
+            #layer["num_outputs"] = self.nb.network.encoding_net.num_outputs
+        return self.nb.add_layer(layer)
+    
+    def _add_reserved_ops(self):
+        # Create softmax for action prediction (logits needed for stable loss fn)
+        if "ACT_logits" in self.nb.graph_dict:
+            act_logits = self.nb.graph_dict["ACT_logits"][0]
+            self.nb.graph_dict["ACT_softmax"] = tf.nn.softmax(act_logits)
+    
+    def _add_loss_fn(self, loss_dict):
+        # Get IS weights and loss output type
+        w = self.nb.graph_dict["IS_weights"][0]
+        try:
+            loss_output = loss_dict["output"]
+        except KeyError:
+            raise SyntaxError("Loss output must be provided.")
+
+        # Position loss
+        if loss_output.lower() == "position":
+            with tf.name_scope("loss_pos"):
+                pred_pos = self.nb.graph_dict["POS"][0]
+                pred_len = pred_pos.get_shape().as_list()[1]
+                target_pos = self.nb.graph_dict["target_pos"][0]
+                target_pos = tf.reshape(target_pos, shape=[-1, pred_len, 2])
+                w_ = tf.expand_dims(tf.expand_dims(w, axis=1), axis=2)
+                loss_pos = self.nb.add_loss_fn(loss_dict, 
+                                               target=target_pos, 
+                                               prediction=pred_pos, 
+                                               weights=w_)
+                self.nb.graph_dict["loss_pos"] = [loss_pos, "o"]
+                self.loss_list.append(loss_pos)
+        
+        # Radius loss
+        if loss_output.lower() == "r":
+            with tf.name_scope("loss_r"):
+                pred_r = self.nb.graph_dict["R"][0]
+                pred_len = pred_r.get_shape().as_list()[1]
+                if "POS" not in self.nb.graph_dict:
+                    target_pos = self.nb.graph_dict["target_pos"][0]
+                    target_pos = tf.reshape(target_pos, shape=[-1, pred_len, 2])
+                target_r = tf.sqrt(tf.reduce_sum(tf.square(target_pos), 
+                                                 axis=2, 
+                                                 keep_dims=True),
+                                   name="target_r")
+                w_ = tf.expand_dims(tf.expand_dims(w, axis=1), axis=2)
+                loss_r = self.nb.add_loss_fn(loss_dict,
+                                             target=target_r,
+                                             prediction=pred_r,
+                                             weights=w_)
+                self.nb.graph_dict["loss_r"] = [loss_r, "o"]
+                self.loss_list.append(loss_r)
+        
+        # Action loss: default is cross-entropy
+        if loss_output.lower() == "action":
+            with tf.name_scope("loss_act"):
+                pred_act = self.nb.graph_dict["ACT_logits"][0]
+                pred_len = pred_act.get_shape().as_list()[1]
+                target_act = self.nb.graph_dict["target_act"][0]
+                target_act_rs = tf.reshape(target_act, shape=[-1, pred_len])
+                target_act_oh = tf.one_hot(target_act_rs, self.nb.network.encoding_net.num_outputs)
+                w_ = tf.expand_dims(w, axis=1)
+                loss_act = self.nb.add_loss_fn(loss_dict, 
+                                               target=target_act_oh, 
+                                               prediction=pred_act, 
+                                               weights=w_)
+                self.nb.graph_dict["loss_act"] = [loss_act, "o"]
+                self.loss_list.append(loss_act)
+
+        # Add all losses in loss_list to create single total_loss node.
+        # This will update the graph_dict every time the function is called,
+        # but the final value will represent all loss functions.
+        loss_tot = tf.add_n(loss_list, name="loss_tot")
+        self.nb.graph_dict["loss_tot"] = [loss_tot, "o"]
+
+        return loss_tot
+
+# Do not use the class below. It is just a template for new class creation.
+class _Template:
     def __init__(self, network_builder):
         self.nb = network_builder
 
@@ -558,8 +781,12 @@ class _Custom:
     def _add_reserved_ops(self):
         pass
     
-    def _add_loss_fn(self, loss_type, loss_params):
+    def _add_loss_fn(self, loss_dict):
         target = self.nb.graph_dict["target"]
         prediction = self.nb.graph_dict[self.output_name]
-        self.nb.add_loss_fn(loss_type, target, prediction, 
-                            weights=None, params=loss_params)
+        loss_fn = self.nb.add_loss_fn(loss_dict,
+                                      target=target, 
+                                      prediction=prediction, 
+                                      weights=None)
+        return loss_fn
+        

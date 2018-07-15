@@ -1,28 +1,47 @@
 import tensorflow as tf
 
-def create_layer(input_layer, layer_dict, data_format="NHWC"):
-    layer_type = layer_dict["type"]
+def create_layer(input_layer, 
+                 layer_dict={}, 
+                 data_format="NHWC", 
+                 is_training=None,
+                 batch_size=None,
+                 **kwargs):
+    # Get layer type either through dict or kwarg
+    try:
+        layer_type = layer_dict["type"]
+    except KeyError:
+        layer_type = kwargs.pop("layer_type", None)
+        if layer_type is None:
+            raise SyntaxError("Layer type must be provided.")
+    
+    # Avoid KeyError
+    if "kwargs" not in layer_dict:
+        layer_dict["kwargs"] = {}
+    
+    # Return layer of specific type
     if layer_type.lower() == "conv2d":
         layer_dict["kwargs"]["data_format"] = data_format
-        return conv2d(input_layer, **layer_dict["kwargs"])
+        return conv2d(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "flatten":
         layer_dict["kwargs"]["data_format"] = data_format
-        return flatten(input_layer, **layer_dict["kwargs"])
+        return flatten(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "fully_connected":
-        return fully_connected(input_layer, **layer_dict["kwargs"])
+        return fully_connected(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "multi_input_fully_connected":
-        return multi_input_fully_connected(input_layer, **layer_dict["kwargs"])
+        return multi_input_fully_connected(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "dropout":
-        return dropout(input_layer, **layer_dict["kwargs"])
+        layer_dict["kwargs"]["is_training"] = is_training
+        return dropout(input_layer, **layer_dict["kwargs"], **kwargs)
+    elif layer_type.lower() == "noisy":
+        layer_dict["kwargs"]["is_training"] = is_training
+        return noisy(input_layer, **layer_dict["kwargs"], **kwargs)
+    elif layer_type.lower() == "rnn":
+        layer_dict["kwargs"]["batch_size"] = batch_size
+        return rnn(input_layer, **layer_dict["kwargs"], **kwargs)
+    elif layer_type.lower() == "stack":
+        return stack(input_layer, **layer_dict["kwargs"], **kwargs)
     else:
         raise ValueError("Layer type \"" + layer_type + "\" not supported.")
-
-def _assign_kwargs(layer_kwargs):
-    # Format:
-    # if _ in layer_kwargs:
-    #     if _ == _:
-    #         return _
-    pass
 
 def _check_list(arg):
     if isinstance(arg, list):
@@ -63,7 +82,10 @@ def _apply_activation(activation_type, x, *args):
     elif activation_type.lower() == "leaky_relu":
         return tf.maximum(x, 0.1 * x, name="Leaky_Relu")
     elif activation_type.lower() == "softmax":
-        return tf.nn.softmax(x)
+        row_max = tf.reduce_max(x, axis=1, keep_dims=True)
+        x_shifted = x - row_max # for numeric stability
+        exp = tf.exp(x_shifted)
+        return exp / tf.reduce_sum(exp, axis=1, keep_dims=True)
     elif activation_type.lower() == "none":
         return x
     else:
@@ -290,13 +312,74 @@ def multi_input_fully_connected(input_layers,
 
         return out
 
+def noisy(x,
+          mean=0.0,
+          stddev=1.0,
+          seed=None,
+          is_training=None,
+          scope="noisy"):
+    with tf.name_scope(scope):
+        # Create is_training placeholder if not specified
+        if is_training is None:
+            is_training = tf.placeholder(tf.bool, name="is_training")
+            print("Warning: No placeholder found for \"is_training\". "
+                    + "One has been automatically created but may not be " 
+                    + "passed to the Agent object. Consider adding "
+                    + "placeholder if using JSON file.")
+        
+        # Add noise if is_training = True
+        input_shape = tf.shape(x)
+        noise = tf.random_normal(input_shape,
+                                 mean=mean, 
+                                 stddev=stddev, 
+                                 seed=seed)
+        out = tf.where(is_training,
+                       x + noise,
+                       x)
+                      
+        return out
+
+def dropout(x,
+            keep_prob=0.5,
+            is_training=None,
+            scope="dropout"):
+    with tf.name_scope(scope):
+        # Create is_training placeholder if not specified
+        if is_training is None:
+            is_training = tf.placeholder(tf.bool, name="is_training")
+            print("Warning: No placeholder found for \"is_training\". "
+                    + "One has been automatically created but may not be " 
+                    + "passed to the Agent object. Consider adding "
+                    + "placeholder if using JSON file.")
+        
+        # NOTE: is hard coding keep_prob better than using placeholder?
+        input_shape = tf.shape(x)
+        rand = tf.random_uniform(input_shape)
+        mask = tf.cast(tf.less_equal(rand, keep_prob), tf.float32, name="mask")
+        out = tf.where(is_training,
+                       x * mask,
+                       x)
+
+        return out
+
+def stack(x,
+          axis=-1,
+          scope="stack"):
+    with tf.name_scope(scope):
+        return tf.stack(x, axis=axis, name="stack")
+
+###############################################################################
+# Layers in development
+###############################################################################
+
+# Need to confirm population stats are being updated appropriately
 def batch_norm(x,
                decay=0.999,
                epsilon=0.001,
                data_format=None,
                norm_dim="global",
                is_training=None,
-               scope="BatchNorm"):
+               scope="batchnorm"):
     """
     norm_dim: Breadth of normalization to perform.
     - global: Normalize channel-by-channel over batch size, height, and width
@@ -327,18 +410,18 @@ def batch_norm(x,
         
         # Try to grab is_training placeholder from graph if already exists
         # Otherwise create is_training placeholder
-        is_training = is_training
+        #is_training = is_training
+        #if is_training is None:
+        #    for op in tf.get_default_graph().get_operations():
+        #        if op.type == "Placeholder" and op.name.endswith("is_training"):
+        #            is_training = tf.get_default_graph().get_tensor_by_name(op.name + ":0")
+        #            break
         if is_training is None:
-            for op in tf.get_default_graph().get_operations():
-                if op.type == "Placeholder" and op.name.endswith("is_training"):
-                    is_training = tf.get_default_graph().get_tensor_by_name(op.name + ":0")
-                    break
-            if is_training is None:
-                is_training = tf.placeholder(tf.bool, name="is_training")
-                print("Warning: No placeholder found for \"is_training\". "
-                      + "One has been automatically created but may not be " 
-                      + "passed to the Agent object. Consider adding "
-                      + "placeholder if using JSON file.")
+            is_training = tf.placeholder(tf.bool, name="is_training")
+            print("Warning: No placeholder found for \"is_training\". "
+                    + "One has been automatically created but may not be " 
+                    + "passed to the Agent object. Consider adding "
+                    + "placeholder if using JSON file.")
 
         # Apply batch normalizing transform to x:
         # x_hat = (x - μ)/(σ^2 + ε)^0.5
@@ -359,7 +442,11 @@ def batch_norm(x,
                     batch_mean_rs = tf.reshape(batch_mean, param_shape)
                     batch_var_rs = tf.reshape(batch_var, param_shape)
                     return (x - batch_mean_rs) / (tf.sqrt(batch_var_rs + epsilon))
-        
+        # Add update ops to tf collection (so they will be updated every 
+        # learning step via with control dependencies)
+        tf.add_to_collection(tf.GraphKeys.UPDATE_OPS,
+                             [update_pop_mean, update_pop_var])
+
         # If testing, use population statistics for transformation
         def x_hat_test():
             with tf.name_scope("pop_stats"):
@@ -378,14 +465,62 @@ def batch_norm(x,
 
         return out
 
-    def dropout(x,
-                keep_prob=0.5,
-                scope="DropOut"):
-        with tf.name_scope(scope):
-            input_shape = tf.shape(x)
-            rand = tf.random_uniform(input_shape)
-            mask = tf.cast(tf.less_equal(x, rand), tf.float32)
-            out = tf.cond(is_training,
-                          x * mask,
-                          x)
-            return out
+def rnn(x,
+        num_hidden,
+        trace_length=None,
+        batch_size=None,
+        init_state=None,
+        cell_type="lstm",
+        scope="RNN"):
+    with tf.name_scope(scope):
+        # Assume flattened input shape = [batch_size*trace_length, hidden_in]
+        # in sequential order: {x_i, ..., x_(i+t), x_j, ..., x_(j+t), ...},
+        # where t = trace_length and i, j are random integers
+        input_shape = x.get_shape().as_list() # specified
+        hidden_in = input_shape[1]
+
+        # Create trace_length placeholder if neither trace_length nor batch_size
+        # specified; otherwise, one can be inferred from the other
+        if trace_length is None and batch_size is None:
+            trace_length = tf.placeholder(tf.int32, name="trace_length")
+            batch_size = tf.shape(x)[0] // trace_length # grab at runtime
+            print("Warning: No placeholders found for \"trace_length\", \"batch_size\". "
+                    + "One has been automatically created but may not be " 
+                    + "passed to the Agent object. Consider adding "
+                    + "placeholder if using JSON file.")
+        elif trace_length is None: # batch_size specified
+            trace_length = tf.shape(x)[0] // batch_size # grab at runtime
+        elif batch_size is None: # trace_length specified
+            batch_size = tf.shape(x)[0] // trace_length # grab at runtime
+        
+        # Reshape into [[x_i, ..., x_(i+t)], [x_j, ..., x_(j+t)], ...]
+        x = tf.reshape(x, [batch_size, trace_length, hidden_in])
+
+        # Get RNN cell type
+        if cell_type.lower() == "lstm":
+            rnn_cell = tf.contrib.rnn.LSTMCell(num_units=num_hidden)
+        elif cell_type.lower() == "basic_rnn":
+            rnn_cell = tf.contrib.rnn.BasicRNNCell(num_units=num_hidden)
+        elif cell_type.lower() == "gru":
+            rnn_cell = tf.contrib.rnn.GRUCell(num_units=num_hidden)
+        
+        # Create initial state if not specified
+        if init_state is None:
+            init_state = rnn_cell.zero_state(batch_size, tf.float32)
+
+        # Create dynamic RNN
+        out, state = tf.nn.dynamic_rnn(inputs=x,
+                                       cell=rnn_cell,
+                                       dtype=tf.float32,
+                                       initial_state=init_state)
+        out = tf.reshape(out, shape=[-1, num_hidden])
+
+        return [out, state, init_state]
+
+# TODO list:
+# - Add <return> parameter to specify what values to return:
+#   - Output
+#   - Weights
+#   - Biases
+#   - RNN states
+#   - Etc.

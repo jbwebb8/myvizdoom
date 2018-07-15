@@ -1,19 +1,36 @@
 {
     "global_features": {
         "type": "DQN",
-        "input_layer": "state",
+        "input_layer": ["screen", "health", "velocity"],
         "output_layer": "Q",
-        "loss": ["huber", 1.0],
-        "optimizer": "rmsprop"        
+        "loss": "loss"        
     },
     
     "placeholders": [
         {
-            "name": "state",
+            "name": "screen",
             "data_type": "float32",
             "kwargs": {
                 "shape": [84, 84],
-                "name": "state"
+                "name": "screen"
+            } 
+        },
+
+        {
+            "name": "health",
+            "data_type": "float32",
+            "kwargs": {
+                "shape": [1],
+                "name": "health"
+            } 
+        },
+
+        {
+            "name": "velocity",
+            "data_type": "float32",
+            "kwargs": {
+                "shape": [2],
+                "name": "velocity"
             } 
         }
     ],
@@ -22,7 +39,7 @@
         {
             "name": "CONV_1",
             "type": "conv2d",
-            "input": "state",
+            "input": "screen",
             "kwargs": {
                 "scope": "CONV_1",
                 "num_outputs": 32, 
@@ -30,7 +47,7 @@
                 "stride": [4, 4],
                 "padding": "VALID",
                 "activation_fn": "relu",
-                "weights_initializer": ["random_normal", 0, 0.1], 
+                "weights_initializer": "xavier", 
                 "biases_initializer": ["constant", 0.1]
             }
         },
@@ -46,7 +63,7 @@
                 "stride": [2, 2],
                 "padding": "VALID",
                 "activation_fn": "relu",
-                "weights_initializer": ["random_normal", 0, 0.1], 
+                "weights_initializer": "xavier", 
                 "biases_initializer": ["constant", 0.1]
             }
         },
@@ -62,13 +79,13 @@
 
         {
             "name": "FC_1",
-            "type": "fully_connected",
-            "input": "CONV_2_FLAT",
+            "type": "multi_input_fully_connected",
+            "input": ["CONV_2_FLAT", "health", "velocity"],
             "kwargs": {
                 "scope": "FC_1",        
-                "num_outputs": 128,
+                "num_outputs": 512,
                 "activation_fn": "relu",
-                "weights_initializer": ["random_normal", 0, 0.1], 
+                "weights_initializer": "xavier", 
                 "biases_initializer": ["constant", 0.1]
             }
         },
@@ -81,12 +98,40 @@
                 "scope": "Q",
                 "num_outputs": 1,
                 "activation_fn": "None",
-                "weights_initializer": ["random_normal", 0, 0.1], 
+                "weights_initializer": "xavier", 
                 "biases_initializer": ["constant", 0.1]
             }
         }
     ],
 
     "ops": [
+    ],
+
+    "losses": [
+        {
+            "name": "loss",
+            "type": "huber",
+            "loss_dict": {
+                "delta": 1.0,
+                "scope": "loss"
+            }
+        }
+    ],
+
+    "optimizers": [
+        {
+            "name": "optimizer",
+            "type": "rmsprop"
+        }
+    ],
+ 
+    "train_steps":[
+        {
+            "name": "train_step",
+            "optimizer": "optimizer",
+            "kwargs":{
+                "loss_scope": "loss"
+            }
+        }
     ]
 }

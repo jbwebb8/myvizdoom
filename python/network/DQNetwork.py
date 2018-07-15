@@ -10,7 +10,6 @@ class DQNetwork(Network):
     - target_q
     - loss
     - IS_weights
-    - optimizer
     - train_step
     - best_action
     """
@@ -36,7 +35,6 @@ class DQNetwork(Network):
         self.target_q = self.graph_dict["target_q"][0]
         self.loss = self.graph_dict["loss"][0]
         self.IS_weights = self.graph_dict["IS_weights"][0]
-        self.optimizer = self.graph_dict["optimizer"][0]
         self.train_step = self.graph_dict["train_step"][0]
         self.best_a = self.graph_dict["best_action"][0]
     
@@ -72,26 +70,20 @@ class DQNetwork(Network):
                         global_step=global_step,
                         write_meta_graph=save_meta)
         if save_summaries:
-            var_sum_ = self.sess.run(self.var_sum)
-            self.writer.add_summary(var_sum_, global_step)
-            if test_batch is not None:
-                s1, a, target_q, w, _ = test_batch
-                s1 = self._check_state(s1)
-                a = self._check_actions(a)
-                feed_dict={s_: s for s_, s in zip(self.state, s1)}
-                feed_dict.update({self.actions: a, 
-                                  self.target_q: target_q,
-                                  self.IS_weights: w})
-                feed_dict = self._check_train_mode(feed_dict)
-                neur_sum_ = self.sess.run(self.neur_sum,
-                                          feed_dict=feed_dict)
-                self.writer.add_summary(neur_sum_, global_step)
-                grad_sum_ = self.sess.run(self.grad_sum,
-                                          feed_dict=feed_dict)
-                self.writer.add_summary(grad_sum_, global_step)
-                loss_sum_ = self.sess.run(self.loss_sum,
-                                          feed_dict=feed_dict)
-                self.writer.add_summary(loss_sum_, global_step)
+            if test_batch is None:
+                raise ValueError("Test batch must be provided "
+                                 + "to save summaries.")
+            s1, a, target_q, w, _ = test_batch
+            s1 = self._check_state(s1)
+            a = self._check_actions(a)
+            feed_dict={s_: s for s_, s in zip(self.state, s1)}
+            feed_dict.update({self.actions: a, 
+                              self.target_q: target_q,
+                              self.IS_weights: w})
+            feed_dict = self._check_train_mode(feed_dict)
+            sum_list_ = self.sess.run(self.sum_list, feed_dict=feed_dict)
+            self.writer.add_summary(sum_list_, global_step)
+            self.writer.flush()
             # TODO: implement event accumulator to save files (esp. histograms)
             # to CSV files.
             #self.ea.Reload()
