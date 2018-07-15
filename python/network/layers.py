@@ -512,7 +512,8 @@ def rnn(x,
         out, state = tf.nn.dynamic_rnn(inputs=x,
                                        cell=rnn_cell,
                                        dtype=tf.float32,
-                                       initial_state=init_state)
+                                       initial_state=init_state,
+                                       scope=scope)
         out = tf.reshape(out, shape=[-1, num_hidden])
 
         return [out, state, init_state]

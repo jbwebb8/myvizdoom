@@ -435,6 +435,7 @@ class Agent:
         #self.state[0] = np.zeros(self.network.input_shape, dtype=np.float32)
         #self.state[1] = np.zeros([self.num_game_var], dtype=np.float32)
         self.state = self.get_zero_state()
+        self.network.reset_rnn_state()
 
     def get_zero_state(self):
         return [np.zeros(self.network.input_shape, dtype=np.float32),
@@ -498,9 +499,8 @@ class Agent:
             state in FIFO order. If False, append to current state; assumes 
             that state has less than phi images (used for initializing state).
         """
-        # If testing, update network state if needed
-        if not self.train_mode:
-            self.network.update_rnn_state(self.state)
+        # Update network state if needed to reflect time (t-1)
+        self.network.update_rnn_state(self.state)
         
         # Get current game variables if not specified
         if new_screen is None:
