@@ -371,14 +371,17 @@ class NetworkBuilder:
             # Get all losses classified under LOSSES GraphKey
             loss_list = tf.get_collection(tf.GraphKeys.LOSSES,
                                         scope=self.network.scope)
-        optimizer = self.graph_dict["optimizer"][0]
-        with tf.name_scope("gradients"):
-            for i, l in enumerate(loss_list):
-                gvs = optimizer.compute_gradients(l, var_list=var_list)
-                for g, v in gvs:
-                    with tf.name_scope(v.name[:-2]):
-                        if g is not None:
-                            grad_sum.append(tf.summary.histogram("grads_%d" % i, g))
+        try:
+            optimizer = self.graph_dict["optimizer"][0]
+            with tf.name_scope("gradients"):
+                for i, l in enumerate(loss_list):
+                    gvs = optimizer.compute_gradients(l, var_list=var_list)
+                    for g, v in gvs:
+                        with tf.name_scope(v.name[:-2]):
+                            if g is not None:
+                                grad_sum.append(tf.summary.histogram("grads_%d" % i, g))
+        except KeyError: # no optimizer
+            pass
 
         # Create summaries for losses
         loss_sum = []
