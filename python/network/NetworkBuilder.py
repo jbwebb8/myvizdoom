@@ -240,9 +240,11 @@ class NetworkBuilder:
             self.graph_dict[op["name"]] = [node, "o"]
         
         # Add loss functions
+        main_loss_fn = False
         for loss in net["losses"]:
             if loss["name"] in net["global_features"]["loss"]:
                 l = builder_type._add_loss_fn(loss)
+                main_loss_fn = True
             else:
                 l = self.add_loss_fn(loss)
             
@@ -250,7 +252,7 @@ class NetworkBuilder:
             # a different name in the JSON file, but that's okay.
             self.graph_dict[loss["name"]] = [l, "o"]
 
-        if self.network.train_mode and loss["name"] not in net["global_features"]: 
+        if self.network.train_mode and not main_loss_fn:
             raise ValueError("Main loss fn not found in network file.")
         
         # Add optimizers
@@ -263,7 +265,7 @@ class NetworkBuilder:
             optimizer = self.add_optimizer(opt)
             self.graph_dict[opt["name"]] = [optimizer, "s"]
         if self.network.train_mode and len(net["optimizers"]) == 0:
-            raise ValueError("optimizer not found in network file.")    
+            raise ValueError("Optimizer not found in network file.")    
 
         # Create train steps
         train_steps = []
@@ -274,7 +276,7 @@ class NetworkBuilder:
             self.graph_dict[ts["name"]] = [train_step, "s"]
         self.graph_dict["train_step"] = [train_steps, "s"]
         if self.network.train_mode and len(net["train_steps"]) == 0:
-            raise ValueError("optimizer not found in network file.") 
+            raise ValueError("Training step not found in network file.") 
         
         # Final check on use of reserved names
         for tf_type in ["placeholders", "layers", "ops"]:
