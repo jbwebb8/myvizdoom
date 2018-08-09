@@ -229,6 +229,18 @@ class Agent:
                 actions.pop(0) # remove no op
             return actions
 
+        # One action for each available button (no combinations)
+        if action_set == "simple":
+            num_buttons = self.game.get_available_buttons_size()
+            actions = []
+            for i in range(num_buttons):
+                a = [0] * num_buttons
+                a[i] = 1
+                actions.append(a)
+            if not no_op:
+                actions.pop(0) # remove no op
+            return actions
+
         # Default action set
         if action_set == "default":
             # Grab indices corresponding to buttons

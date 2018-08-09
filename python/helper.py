@@ -41,6 +41,11 @@ def create_memory(memory_type, **kwargs):
                     "position": PositionReplayMemory.PositionReplayMemory}
     return memory_types[memory_type](**kwargs)
 
+def create_wrapper(env, env_type, **kwargs):
+    from env import Gridworld
+    env_types = {"gridworld": Gridworld.Gridworld}
+    return env_types[env_type](env, **kwargs)
+
 ###############################################################################
 # Dictionaries encoding DoomGame features
 ###############################################################################
