@@ -3,8 +3,8 @@ import tensorflow as tf
 def create_layer(input_layer, 
                  layer_dict={}, 
                  data_format="NHWC", 
-                 is_training=None,
-                 batch_size=None,
+                 #is_training=None,
+                 #batch_size=None,
                  **kwargs):
     # Get layer type either through dict or kwarg
     try:
@@ -30,13 +30,13 @@ def create_layer(input_layer,
     elif layer_type.lower() == "multi_input_fully_connected":
         return multi_input_fully_connected(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "dropout":
-        layer_dict["kwargs"]["is_training"] = is_training
+        #layer_dict["kwargs"]["is_training"] = is_training
         return dropout(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "noisy":
-        layer_dict["kwargs"]["is_training"] = is_training
+        #layer_dict["kwargs"]["is_training"] = is_training
         return noisy(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "rnn":
-        layer_dict["kwargs"]["batch_size"] = batch_size
+        #layer_dict["kwargs"]["batch_size"] = batch_size
         return rnn(input_layer, **layer_dict["kwargs"], **kwargs)
     elif layer_type.lower() == "stack":
         return stack(input_layer, **layer_dict["kwargs"], **kwargs)
@@ -102,7 +102,8 @@ def conv2d(input_layer,
            weights_initializer="random_normal",
            biases_initializer=None,
            trainable=True,
-           scope="CONV"):
+           scope="CONV",
+           **kwargs):
     with tf.name_scope(scope):
         input_shape = input_layer.get_shape().as_list()
         
@@ -178,7 +179,8 @@ def conv2d(input_layer,
 
 def flatten(input_layer, 
             data_format="NCHW",
-            scope="FLAT"):
+            scope="FLAT",
+            **kwargs):
     with tf.name_scope(scope):
         # Yes, I basically copied tf.contrib.layers.flatten, but
         # it was a good learning experience!
@@ -212,7 +214,8 @@ def fully_connected(input_layer,
                     weights_initializer="random_normal",
                     biases_initializer=None,
                     trainable=True,
-                    scope="FC"):
+                    scope="FC",
+                    **kwargs):
     with tf.name_scope(scope):
         input_shape = input_layer.get_shape().as_list()
         
@@ -270,7 +273,8 @@ def multi_input_fully_connected(input_layers,
                                 weights_initializer="random_normal",
                                 biases_initializer=None,
                                 trainable=True,
-                                scope="FC"):
+                                scope="FC",
+                                **kwargs):
     with tf.name_scope(scope):
         affine = []
         for idx, layer in enumerate(input_layers):
@@ -317,24 +321,36 @@ def noisy(x,
           stddev=1.0,
           seed=None,
           is_training=None,
-          scope="noisy"):
+          noise_scale=None,
+          scope="noisy",
+          **kwargs):
     with tf.name_scope(scope):
-        # Create is_training placeholder if not specified
+        # Create is_training and noise_scale placeholders if not specified
         if is_training is None:
             is_training = tf.placeholder(tf.bool, name="is_training")
             print("Warning: No placeholder found for \"is_training\". "
                     + "One has been automatically created but may not be " 
                     + "passed to the Agent object. Consider adding "
                     + "placeholder if using JSON file.")
+        if noise_scale is None:
+            noise_scale = tf.placeholder(tf.float32, name="noise_scale")
+            print("Warning: No placeholder found for \"noise_scale\". "
+                    + "One has been automatically created but may not be " 
+                    + "passed to the Agent object. Consider adding "
+                    + "placeholder if using JSON file.")
         
-        # Add noise if is_training = True
+        # Generate noise scaled by beta = noise_scale * abs(X)
         input_shape = tf.shape(x)
         noise = tf.random_normal(input_shape,
                                  mean=mean, 
                                  stddev=stddev, 
-                                 seed=seed)
+                                 seed=seed,
+                                 name="noise")
+        epsilon = tf.multiply(noise_scale, tf.abs(x), name="beta")
+        
+        # Add noise if is_training = True
         out = tf.where(is_training,
-                       x + noise,
+                       x + (epsilon * noise),
                        x)
                       
         return out
@@ -342,7 +358,8 @@ def noisy(x,
 def dropout(x,
             keep_prob=0.5,
             is_training=None,
-            scope="dropout"):
+            scope="dropout",
+            **kwargs):
     with tf.name_scope(scope):
         # Create is_training placeholder if not specified
         if is_training is None:
@@ -364,7 +381,8 @@ def dropout(x,
 
 def stack(x,
           axis=-1,
-          scope="stack"):
+          scope="stack",
+          **kwargs):
     with tf.name_scope(scope):
         return tf.stack(x, axis=axis, name="stack")
 

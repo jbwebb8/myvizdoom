@@ -116,11 +116,16 @@ class NetworkBuilder:
             batch_size = self._get_object("batch_size")
         except KeyError:
             batch_size = None
+        try:
+            noise_scale = self._get_object("noise_scale")
+        except KeyError:
+            noise_scale = None
         return create_layer(input_layer,
                             layer,
                             data_format=self.data_format,
                             is_training=is_training,
                             batch_size=batch_size,
+                            noise_scale=noise_scale,
                             **kwargs)
     
     # Adds operation to graph

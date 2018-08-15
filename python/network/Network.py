@@ -65,8 +65,15 @@ class Network:
                 self.input_res = self.input_shape[1:]
             else:
                 self.input_res = self.input_shape[:-1]
+
+            # Add optional placeholders
             try:
                 self.is_training = self.graph_dict["is_training"][0]
+            except KeyError:
+                pass
+            try:
+                self.noise_scale = self.graph_dict["noise_scale"][0]
+                self.noise_level = 0.0
             except KeyError:
                 pass
 
@@ -188,6 +195,15 @@ class Network:
                               zip(self.rnn_init_states, rnn_init_states_)})
             feed_dict[self.batch_size] = batch_size_
             
+        except AttributeError:
+            pass
+
+        # Feed noise_scale if exists
+        try:
+            if self.train_mode:
+                feed_dict[self.noise_scale] = self.noise_level
+            else:
+                feed_dict[self.noise_scale] = 0.0
         except AttributeError:
             pass
 

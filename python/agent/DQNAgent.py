@@ -48,6 +48,7 @@ class DQNAgent(Agent):
     DEFAULT_DQN_AGENT_ARGS = {"softmax_policy": False,
                               "T": 1,
                               "n_step": 1,
+                              "exploration_mode": "epsilon-greedy",
                               "epsilon_start": 1.0,
                               "epsilon_end": 0.1,
                               "epsilon_const_rate": 0.1,
@@ -80,6 +81,8 @@ class DQNAgent(Agent):
         else:
             self.n_step             = kwargs.pop("n_step",
                                                  DEFAULT_DQN_AGENT_ARGS["n_step"])
+            self.exploration_mode   = kwargs.pop("exploration_mode",
+                                                 DEFAULT_DQN_AGENT_ARGS["exploration_mode"])
             self.epsilon_start      = kwargs.pop("epsilon_start", 
                                                  DEFAULT_DQN_AGENT_ARGS["epsilon_start"])
             self.epsilon_end        = kwargs.pop("epsilon_end", 
@@ -102,7 +105,7 @@ class DQNAgent(Agent):
                                                  DEFAULT_DQN_AGENT_ARGS["replay_memory_start_size"])
             self.rm_tr_len_params   = kwargs.pop("trajectory_length",
                                                  DEFAULT_DQN_AGENT_ARGS["trajectory_length"])
-                        
+            
         # Create target network and replay memory if training
         if self.train_mode:
             # Create target network to bootstrap Q'(s', a')
@@ -153,6 +156,8 @@ class DQNAgent(Agent):
         self.T = agent["agent_args"].get(
             "T", self.DEFAULT_DQN_AGENT_ARGS["T"])
         self.n_step = agent["learning_args"]["n_step"]
+        self.exploration_mode = agent["memory_args"].get(
+            "exploration_mode", self.DEFAULT_DQN_AGENT_ARGS["exploration_mode"])
         self.epsilon_start = agent["learning_args"]["epsilon_start"]
         self.epsilon_end = agent["learning_args"]["epsilon_end"]
         self.epsilon_const_rate = agent["learning_args"]["epsilon_const_rate"]
@@ -355,15 +360,23 @@ class DQNAgent(Agent):
         # NOTE: is copying array most efficient implementation?
         s1 = copy.deepcopy(self.state)
         
-        # With probability epsilon make a random action; otherwise, choose
-        # best action.
-        epsilon = self.get_exploration_rate(epoch, epoch_tot)
-        if random() <= epsilon:
-            a = randint(0, self.num_actions - 1)
-        else:
-            self.set_train_mode(False)
+        # Make exploratory action based on exploration mode
+        if self.exploration_mode == "epsilon-greedy":
+            # With probability epsilon make a random action; otherwise, choose
+            # best action.
+            epsilon = self.get_exploration_rate(epoch, epoch_tot)
+            if random() <= epsilon:
+                a = randint(0, self.num_actions - 1)
+            else:
+                self.set_train_mode(False)
+                a = self.network.get_best_action(s1).item()
+                self.set_train_mode(True)
+        elif self.exploration_mode == "noisy":
+            # Add scaled noise to hidden layer(s) and select best action
+            epsilon = self.get_exploration_rate(epoch, epoch_tot)
+            self.network.noise_level = epsilon
             a = self.network.get_best_action(s1).item()
-            self.set_train_mode(True)
+            self.network.noise_level = 0.0
         
         # Receive reward from environment.
         r = self.make_action(action=self.actions[a])
@@ -391,7 +404,7 @@ class DQNAgent(Agent):
                 self.sess.run(self.target_update_ops)
             
             # Learn from minibatch of replay memory samples
-            # Occurs ever <trajectory_length> steps to ensure the number
+            # Occurs every <trajectory_length> steps to ensure the number
             # of updates per epoch is constant
             if self.global_step % self.memory.tr_len == 0:
                 self.learn_from_memory(epoch, epoch_tot)
