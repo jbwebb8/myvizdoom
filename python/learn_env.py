@@ -21,8 +21,10 @@ from Toolbox import Toolbox
 
 # Environment setup
 from vizdoom import *
-sys.path.insert(0, "../gridworld")
-from gridworld import gameEnv
+#sys.path.insert(0, "../gridworld")
+#from gridworld import gameEnv
+#from env.Atari import ATARI_ENVS 
+ENV_TYPES = ["vizdoom", "gridworld", "atari"]
 
 # Command line arguments
 parser = argparse.ArgumentParser(description="Train an agent.")
@@ -60,7 +62,7 @@ parser.add_argument("-n", "--name", default="train", metavar="",
                     help="experiment name (for saving files)")
 parser.add_argument("-d", "--description", default="training", metavar="", 
                     help="description of experiment")
-parser.add_argument("--env", default="vizdoom", choices=["vizdoom", "gridworld"],
+parser.add_argument("--env", default="vizdoom", choices=ENV_TYPES,
                     help="name of game environment")
 args = parser.parse_args()
 
@@ -123,19 +125,19 @@ def save_exp_details(folder, agent):
             new_fp = '.'.join(['.'.join(t[0:-1]) + '_1', t[-1]])
         copy(fp, new_fp)
 
-# Initializes DoomGame from config file
+# Initializes game from config file
 def initialize_game(config_file):
     print("Initializing game... "), sys.stdout.flush()
+    
     if env_type == "vizdoom":
         game = DoomGame()
-        game.load_config(config_file)
-        game.init()
-    elif env_type == "gridworld":
-        env = gameEnv(partial=False, size=5)
-        game = create_wrapper(env, env_type)
-        game.load_config(config_file)
+    elif env_type in ENV_TYPES:
+        game = create_wrapper(env_type)
     else:
-        raise ValueError("Unknown environment \"env_type\".")
+        raise ValueError("Unknown environment \"%s\"." % env_type)
+
+    game.load_config(config_file)
+    game.init()
 
     return game  
 
