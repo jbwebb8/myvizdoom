@@ -322,6 +322,7 @@ def noisy(x,
           seed=None,
           is_training=None,
           noise_scale=None,
+          scale_type="layer",
           scope="noisy",
           **kwargs):
     with tf.name_scope(scope):
@@ -339,14 +340,21 @@ def noisy(x,
                     + "passed to the Agent object. Consider adding "
                     + "placeholder if using JSON file.")
         
-        # Generate noise scaled by beta = noise_scale * abs(X)
+        # Generate noise
         input_shape = tf.shape(x)
         noise = tf.random_normal(input_shape,
                                  mean=mean, 
                                  stddev=stddev, 
                                  seed=seed,
                                  name="noise")
-        epsilon = tf.multiply(noise_scale, tf.abs(x), name="beta")
+        
+        # Scale noise by layer or by unit
+        if scale_type.lower() == "layer":
+            epsilon = tf.multiply(noise_scale, tf.ones(input_shape), name="epsilon")
+        elif scale_type.lower() == "unit":
+            epsilon = tf.multiply(noise_scale, tf.abs(x), name="epsilon")
+        else:
+            raise ValueError("Unknown type of noise scale \"%s\"" % scale_type)
         
         # Add noise if is_training = True
         out = tf.where(is_training,
