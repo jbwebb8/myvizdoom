@@ -115,13 +115,8 @@ class Atari(Game):
         return (self.is_terminal or (self.episode_time >= self.episode_timeout))
 
     def get_available_buttons(self):
-        """Returns list of one-hot vectors encoding actions"""
-        actions = []
-        for i in range(self.env.action_space.n):
-            a = [0] * self.env.action_space.n
-            a[i] = 1
-            actions.append(a)
-        return actions
+        """Returns list of available action indices"""
+        return self.env.env.get_action_meanings()
 
     def get_available_buttons_size(self):
         """Returns number of actions"""
@@ -146,7 +141,7 @@ class Atari(Game):
         """Make action that is repeated frame_repeat times"""
         
         if isinstance(action, list):
-            a = -1 # no-op
+            a = None
             for i, action_ in enumerate(action):
                 if action_ == 1:
                     a = i
@@ -171,7 +166,7 @@ class Atari(Game):
         return reward
 
     def get_last_action(self):
-        """Returns index of last action taken by agent."""
+        """Returns last action taken by agent."""
 
         return self.last_action
     

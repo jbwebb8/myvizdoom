@@ -79,7 +79,7 @@ class Game(ABC):
     
     @abstractmethod
     def get_available_buttons(self):
-        """Returns list of one-hot vectors encoding actions"""
+        """Returns list of available action indices"""
         pass
 
     @abstractmethod

@@ -63,6 +63,7 @@ class Agent:
                           "frame_repeat":       4,
                           "position_timeout":   None,
                           "no_op":              False,
+                          "noop_timeout":       None,
                           "reward_scale":       1.0,
                           "shape_reward_fns":   None}
 
@@ -83,10 +84,16 @@ class Agent:
         self._make_directory([self.net_dir, self.main_net_dir])
 
         # Initialize action space and gameplay
-        self.action_indices = np.asarray(self.game.get_available_buttons())
+        # TODO: change get_available_buttons() to provide action meanings
+        self.action_meanings = self.game.get_available_buttons()
         self.actions = self._set_actions(action_set)
         self.num_actions = len(self.actions)        
         self.position_repeat = 0
+        self.noop_repeat = 0
+        self.noop_index = None
+        for i, a in enumerate(self.action_meanings):
+            if a.lower() == 'noop':
+                self.noop_index = i
         
         # Load learning and network parameters
         if agent_file is not None:
@@ -324,6 +331,13 @@ class Agent:
                 action_list[-1][j] = np.asscalar(action_list[-1][j])
         return action_list
 
+    def _action_list_to_index(self, action):
+        for i, action_ in enumerate(action):
+            if action_ == 1:
+                a = i
+                break
+        return a
+
     def _load_agent_file(self, agent_file):
         """Grabs arguments from agent file"""
         # Open JSON file
@@ -343,6 +357,8 @@ class Agent:
             "position_timeout", self.DEFAULT_AGENT_ARGS["position_timeout"])
         self.no_op = agent["agent_args"].get(
             "no_op", self.DEFAULT_AGENT_ARGS["no_op"])
+        self.noop_timeout = agent["agent_args"].get(
+            "noop_timeout", self.DEFAULT_AGENT_ARGS["noop_timeout"])
         self.net_file = agent["network_args"]["name"]
         self.net_type = agent["network_args"]["type"]
         self.alpha = agent["network_args"]["alpha"]
@@ -362,10 +378,10 @@ class Agent:
         for i, fn in enumerate(self.shape_reward_fns):
             if fn[0].lower == "user1":
                 def init_shape_user1():
-                    self.shape_reward_buffer[i] = self.game.get_game_variable(GameVariable.USER1)
+                    self.shape_reward_buffer[i] = self.game.get_game_variable('USER1')
                 def shape_user1(r):
                     # Credit: shaping.py @ github.com/mwydmuch/ViZDoom
-                    fixed_user1 = self.game.get_game_variable(GameVariable.USER1)
+                    fixed_user1 = self.game.get_game_variable('USER1')
                     shaping_reward = doom_fixed_to_double(fixed_user1)
                     shaping_reward = shaping_reward - self.shape_reward_buffer[i]
                     r += shaping_reward
@@ -375,9 +391,9 @@ class Agent:
                 fn_list.append(shape_user1)
             elif fn[0].lower() == "health_loss":
                 def init_shape_health_loss():
-                    self.shape_reward_buffer[i] = self.game.get_game_variable(GameVariable.HEALTH)
+                    self.shape_reward_buffer[i] = self.game.get_game_variable('HEALTH')
                 def shape_health_loss(r):
-                    h = self.game.get_game_variable(GameVariable.HEALTH)
+                    h = self.game.get_game_variable('HEALTH')
                     if h < self.shape_reward_buffer[i]:
                         r += fn[1] * (h - self.shape_reward_buffer[i])
                     self.shape_reward_buffer[i] = h
@@ -386,9 +402,9 @@ class Agent:
                 fn_list.append(shape_health_loss)
             elif fn[0].lower() == "health_diff":
                 def init_shape_health_diff():
-                    self.shape_reward_buffer[i] = self.game.get_game_variable(GameVariable.HEALTH)
+                    self.shape_reward_buffer[i] = self.game.get_game_variable('HEALTH')
                 def shape_health_diff(r):
-                    h = self.game.get_game_variable(GameVariable.HEALTH)
+                    h = self.game.get_game_variable('HEALTH')
                     r += fn[1] * (h - self.shape_reward_buffer[i])
                     self.shape_reward_buffer[i] = h
                     return r
@@ -396,9 +412,9 @@ class Agent:
                 fn_list.append(shape_health_diff)
             elif fn[0].lower() == "ammo_loss":
                 def init_shape_ammo_loss():
-                    self.shape_reward_buffer[i] = self.game.get_game_variable(GameVariable.AMMO1)
+                    self.shape_reward_buffer[i] = self.game.get_game_variable('AMMO1')
                 def shape_ammo_loss(r):
-                    ammo = self.game.get_game_variable(GameVariable.AMMO1)
+                    ammo = self.game.get_game_variable('AMMO1')
                     if ammo < self.shape_reward_buffer[i]:
                         r += fn[1] * (ammo - self.shape_reward_buffer[i])
                     self.shape_reward_buffer[i] = ammo
@@ -407,14 +423,14 @@ class Agent:
                 fn_list.append(shape_ammo_loss)
             elif fn[0].lower() == "distance":
                 def init_shape_distance():
-                    p_x = self.game.get_game_variable(GameVariable.POSITION_X)
-                    p_y = self.game.get_game_variable(GameVariable.POSITION_Y)
-                    p_z = self.game.get_game_variable(GameVariable.POSITION_Z)
+                    p_x = self.game.get_game_variable('POSITION_X')
+                    p_y = self.game.get_game_variable('POSITION_Y')
+                    p_z = self.game.get_game_variable('POSITION_Z')
                     self.shape_reward_buffer[i] = [p_x, p_y, p_z]    
                 def shape_distance(r):
-                    p_x = self.game.get_game_variable(GameVariable.POSITION_X)
-                    p_y = self.game.get_game_variable(GameVariable.POSITION_Y)
-                    p_z = self.game.get_game_variable(GameVariable.POSITION_Z)
+                    p_x = self.game.get_game_variable('POSITION_X')
+                    p_y = self.game.get_game_variable('POSITION_Y')
+                    p_z = self.game.get_game_variable('POSITION_Z')
                     p_diff = (np.asarray([p_x, p_y, p_z]) 
                                  - np.asarray(self.shape_reward_buffer[i]))
                     dist_diff = np.sqrt(np.sum(p_diff ** 2))
@@ -562,9 +578,9 @@ class Agent:
             return action
 
         # Get current position
-        pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
-        pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
-        pos_z = self.game.get_game_variable(GameVariable.POSITION_Z)
+        pos_x = self.game.get_game_variable('POSITION_X')
+        pos_y = self.game.get_game_variable('POSITION_Y')
+        pos_z = self.game.get_game_variable('POSITION_Z')
         
         # If position unchanged, increment counter; otherwise, (re)set to zero
         try:
@@ -585,15 +601,43 @@ class Agent:
         
         return action
 
+    def check_noop_timeout(self, action):
+        # Check if noop timeout exists
+        if self.noop_timeout is None:
+            return action
+        
+        # If noop selected, increment counter; otherwise, (re)set to zero
+        try:
+            if action == self.noop:
+                self.noop_repeat += 1
+            else:
+                self.noop_repeat = 0
+        except IndexError:
+            self.noop_repeat = 0
+
+        # Get random action other than previous one if timeout exceeded
+        if self.noop_repeat >= self.noop_timeout:
+            a = randint(0, self.num_actions - 1)
+            action = self.actions[a]
+            while action == self.action_history[-1]:
+                a = randint(0, self.num_actions - 1)
+                action = self.actions[a]
+        
+        return action
+
     def make_action(self, action=None, state=None, timeout=True):
         if action is None:
             # Get action from network
             if state is None: 
                 state = self.state
             action = self.get_action(state)
-        if timeout and self.position_timeout is not None:
-            # Check position timeout
-            action = self.check_position_timeout(action)
+        if timeout:
+            if self.position_timeout is not None:
+                # Check position timeout
+                action = self.check_position_timeout(action)
+            elif self.noop_timeout is not None:
+                # Check noop timeout
+                action = self.check_noop_timeout(action)
         
         # Make action, track agent, and return reward
         self.track_position()
@@ -604,9 +648,9 @@ class Agent:
 
     def track_position(self):
         """Adds current position of agent to position history."""
-        pos_x = self.game.get_game_variable(GameVariable.POSITION_X)
-        pos_y = self.game.get_game_variable(GameVariable.POSITION_Y)
-        pos_z = self.game.get_game_variable(GameVariable.POSITION_Z)
+        pos_x = self.game.get_game_variable('POSITION_X')
+        pos_y = self.game.get_game_variable('POSITION_Y')
+        pos_z = self.game.get_game_variable('POSITION_Z')
         timestamp = self.game.get_episode_time()
         pos = [pos_x, pos_y, pos_z]
         self.position_history.append([timestamp] + pos)
@@ -630,7 +674,7 @@ class Agent:
         Args:
         - var_list (optional, default: None): List of DoomGame USER variables 
             that represent the score(s) to return. Format should be
-            [GameVariable.USERXX, ...], where XX is between 1 and 60. If None,
+            ['USERXX', ...], where XX is between 1 and 60. If None,
             defaults to USER0 (which is reward visible to agent).
         
         Returns:
