@@ -4,7 +4,9 @@ from env.Wrapper import Game, GameState
 from helper import get_game_variables as get_gvs
 import numpy as np
 
-class Doom(Game):
+class DoomMeta(G)
+
+class Doom(Game, DoomGame):
     """
     Wrapper class for DoomGame to confer functions with slight
     modifications to be compatible with Game superclass.
@@ -14,10 +16,18 @@ class Doom(Game):
                  verbose=False, 
                  **kwargs):
 
-        self.game = DoomGame()
+        #self.game = DoomGame()
 
         # Game settings
         self.verbose = verbose
+
+    def _get_game_variable(self, gv_key):
+        """Return value of game variable in environment"""
+        return self.get_game_variable(get_gvs(gv_key))
+    
+class Holder:
+    def __init__(self):
+        pass
 
     def load_config(self, config_file):
         """Loads DoomGame configuration file."""
@@ -26,10 +36,6 @@ class Doom(Game):
     def get_available_game_variables(self):
         """Returns existing game variables in environment"""
         return self.game.get_available_game_variables()
-
-    def _get_game_variable(self, gv_key):
-        """Return value of game variable in environment"""
-        return self.game.get_game_variable(get_gvs(gv_key))
 
     def get_state(self):
         return self.game.get_state()

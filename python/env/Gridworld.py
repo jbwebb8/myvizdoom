@@ -84,14 +84,9 @@ class Gridworld(Game):
         return (self.is_terminal or (self.episode_time >= self.episode_timeout))
 
     def get_available_buttons(self):
-        """Returns list of one-hot vectors encoding actions"""
-
-        actions = []
-        for i in range(self.env.actions):
-            a = [0] * self.env.actions
-            a[i] = 1
-            actions.append(a)
-        return actions
+        """Returns list of available action meanings"""
+        #TODO: write dict for gridworld
+        return None
 
     def get_available_buttons_size(self):
         """Returns number of actions"""
