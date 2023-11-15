@@ -14,6 +14,7 @@ def initialize_vizdoom(config_file_path):
     game = DoomGame()
     game.load_config(config_file_path)
     game.set_window_visible(True)
+    game.set_mode(Mode.SPECTATOR)
     game.init()
     print("Done.")
     return game
@@ -34,12 +35,14 @@ for i in range(episodes):
     print("Episode #" + str(i + 1))
     game.new_episode()
     frame = 0
+    running_r = 0
     while not game.is_episode_finished():
         # Get state, advance current user action, and obtain reward
         state = game.get_state()
         game.advance_action()
         last_action = game.get_last_action()
         reward = game.get_last_reward()
+        running_r += reward
 
         # Print results
         frame += 1
@@ -47,10 +50,16 @@ for i in range(episodes):
             print("State #" + str(state.number))
             print("Game variables: ", state.game_variables)
             print("Action:", last_action)
-            print("Reward:", reward)
+            print("Reward: %.2f (%.2f total)" % (reward, running_r))
+            print("X:", game.get_game_variable(GameVariable.POSITION_X))
             print("=====================")
 
     print("Episode finished!")
+    print("State #" + str(state.number))
+    print("Game variables: ", state.game_variables)
+    print("Action:", last_action)
+    print("Last reward: %.2f" % reward)
+    print("X:", game.get_game_variable(GameVariable.POSITION_X))
     print("Total reward:", game.get_total_reward())
     print("************************")
     sleep(2.0)
